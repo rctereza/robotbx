@@ -1,0 +1,21 @@
+package com.rctereza.robotbx;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class Constants {
+
+	public static final String PROGRAM_NAME = "Receitanet BX";
+	public static final String PROGRAM_PATH = "C:\\Program Files (x86)\\Programas RFB\\Receitanet BX";
+	public static final String PROGRAM_COMMAND = "\"C:\\Program Files (x86)\\Programas RFB\\Receitanet BX\\ReceitanetBX.exe\"";
+	public static final String PROGRAM_CERTIFICATES = "C:\\Temp\\java\\certificates";
+
+	public static final String PROGRAM_PERIOD_START = "01012021";
+	public static final String PROGRAM_PERIOD_END = getCurrentDate();
+	
+	private static String getCurrentDate() {
+		Date currentDate = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("ddMMyyyy");
+        return formatter.format(currentDate);
+	}
+}
