@@ -32,16 +32,16 @@ public class OpenExternalProgram implements Runnable  {
 
 			// Read output from the command
 			BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			String s;
-			System.out.println(threadName + "Standard Output:");
+			String s = "";
+			System.out.print(threadName + "Standard Output: ");
 			while ((s = stdInput.readLine()) != null) {
-				System.out.println(threadName + s);
+				System.out.println(s);
 				startLatch.countDown();
 			}
 
 			// Read any errors from the command
 			BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-			System.out.println(threadName + "Standard Error (if any):");
+			System.out.print(threadName + "Standard Error (if any): ");
 			while ((s = stdError.readLine()) != null) {
 				System.out.println(threadName + s);
 			}

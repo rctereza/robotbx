@@ -1,0 +1,648 @@
+https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html
+
+Automating User Interface Interactions (Desktop Automation):
+
+    The java.awt.Robot class in the Java AWT package enables programmatic control of the mouse and keyboard.
+    This is primarily used for test automation, creating self-running demonstrations, or other applications requiring simulated user input.
+    It allows for actions like typing text, clicking buttons, and moving the mouse cursor, effectively automating interactions with desktop applications.
+
+
+The Robot class in the Java AWT package is used to generate native system input events for the purposes of test automation, self-running demos, 
+and other applications where control of the mouse and keyboard is needed. The primary purpose of Robot is to facilitate automated testing of Java platform implementations. 
+In simple terms, the class provides control over the mouse and keyboard devices. Here is an example of how the Robot class takes control of the keyboard and types out into a blank Notepad document. 
+Notepad is called using Process and Runtime, as discussed in this article.
+
+The Process class present in the java.lang package contains many useful methods such as killing a subprocess, making a thread wait for some time, 
+returning the I/O stream of the subprocess etc. Subsequently, the Runtime class provides a portal to interact with the Java runtime environment. 
+It contains methods to execute a process, give the number of available processors, display the free memory in the JVM, among others.
+// A sample Java program (Written for Windows OS)
+// to demonstrate creation of external process 
+// using Runtime and Process
+class CoolStuff
+{
+    public static void main(String[] args)
+    {
+        try
+        {
+            // Command to create an external process
+            String command = "C:\Program Files (x86)"+
+                 "\Google\Chrome\Application\chrome.exe";
+
+            // Running the above command
+            Runtime run  = Runtime.getRuntime();
+            Process proc = run.exec(command);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+}
+
+//Another Example
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+public class CommandExecutor {
+    public static void main(String[] args) {
+        try {
+            // Command to execute (e.g., list files in current directory)
+            String[] command;
+            if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                command = new String[]{"cmd.exe", "/c", "dir"}; // Windows
+            } else {
+                command = new String[]{"ls", "-l"}; // Linux/macOS
+            }
+
+            Process process = Runtime.getRuntime().exec(command);
+
+            // Read output from the command
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String s;
+            System.out.println("Standard Output:");
+            while ((s = stdInput.readLine()) != null) {
+                System.out.println(s);
+            }
+
+            // Read any errors from the command
+            BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            System.out.println("Standard Error (if any):");
+            while ((s = stdError.readLine()) != null) {
+                System.out.println(s);
+            }
+
+            // Wait for the process to complete and get the exit code
+            int exitCode = process.waitFor();
+            System.out.println("Process exited with code: " + exitCode);
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// Java program to demonstrate use of ProcessBuilder
+// to compile and run external files.
+import java.util.*;
+import java.io.*;
+class Main
+{
+    public static void main(String [] args) throws IOException
+    {
+        try {
+            // create a process
+            ProcessBuilder pb = new ProcessBuilder(&quot;cmd&quot;);
+
+            // take all commands as input in a text file
+            File commands = new File(&quot;E:\\test\\commands.txt&quot;);
+
+            // File where error logs should be written
+            File error = new File(&quot;E:\\test\\error.txt&quot;);
+
+            // File where output should be written
+            File output = new File(&quot;E:\\test\\output.txt&quot;);
+
+            // redirect all the files
+            pb.redirectInput(commands);
+            pb.redirectOutput(output);
+            pb.redirectError(error);
+
+            // start the process
+            pb.start();
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+}
+
+import java.io.IOException;
+
+public class RunProgramInDirectory {
+    public static void main(String[] args) {
+        String directoryPath = "C:\\Program Files (x86)\\Programas RFB\\Receitanet BX"; // Correctly escaped backslashes
+        String command = "\"C:\\Program Files (x86)\\Programas RFB\\Receitanet BX\\ReceitanetBX.exe\""; // Add quotes to handle spaces
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        processBuilder.directory(new java.io.File(directoryPath)); // Set the working directory
+
+        try {
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+            System.out.println("Program exited with code: " + exitCode);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+You can also use ProcessBuilder with a list of arguments
+The ProcessBuilder can also be provided with a list of arguments to handle complex paths more cleanly. This avoids issues with spaces in the command:
+
+import java.io.IOException;
+import java.util.Arrays;
+
+public class RunProgramInDirectory {
+    public static void main(String[] args) {
+        String directoryPath = "C:\\Program Files (x86)\\Programas RFB\\Receitanet BX";
+        String command = "ReceitanetBX.exe"; // Just the executable name, as we already specified the directory
+
+        ProcessBuilder processBuilder = new ProcessBuilder(
+            Arrays.asList("cmd", "/c", command)
+        );
+        processBuilder.directory(new java.io.File(directoryPath)); // Set the working directory
+
+        try {
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+            System.out.println("Program exited with code: " + exitCode);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+1. Simulating Mouse Movements and Clicks
+This example shows how to move the mouse to a specific location on the screen and perform a click.
+
+import java.awt.*;
+import java.awt.event.InputEvent;
+
+public class RobotExample {
+    public static void main(String[] args) throws AWTException {
+        Robot robot = new Robot();
+        
+        // Move the mouse to x=500, y=500 on the screen
+        robot.mouseMove(500, 500);
+        
+        // Simulate a mouse press and release (click)
+        robot.mousePress(InputEvent.BUTTON1_MASK);  // Left-click
+        robot.mouseRelease(InputEvent.BUTTON1_MASK);
+        
+        System.out.println("Mouse click performed at (500, 500)");
+    }
+}
+
+2. Simulating Keyboard Input (Typing Text)
+This example shows how to simulate typing using the keyboard.
+
+import java.awt.*;
+import java.awt.event.KeyEvent;
+
+public class KeyboardExample {
+    public static void main(String[] args) throws AWTException {
+        Robot robot = new Robot();
+        
+        // Simulate pressing 'H', 'e', 'l', 'l', 'o' (to type "Hello")
+        robot.keyPress(KeyEvent.VK_H);
+        robot.keyRelease(KeyEvent.VK_H);
+        
+        robot.keyPress(KeyEvent.VK_E);
+        robot.keyRelease(KeyEvent.VK_E);
+        
+        robot.keyPress(KeyEvent.VK_L);
+        robot.keyRelease(KeyEvent.VK_L);
+        
+        robot.keyPress(KeyEvent.VK_L);
+        robot.keyRelease(KeyEvent.VK_L);
+        
+        robot.keyPress(KeyEvent.VK_O);
+        robot.keyRelease(KeyEvent.VK_O);
+        
+        System.out.println("Typed 'Hello' using Robot.");
+    }
+}
+
+3. Capturing the Screen (Screen Grab)
+You can use the Robot class to capture part of the screen as an image. This example takes a screenshot of a specific area.
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+
+public class ScreenCaptureExample {
+    public static void main(String[] args) throws AWTException, Exception {
+        Robot robot = new Robot();
+        
+        // Define the area to capture (x, y, width, height)
+        Rectangle captureRect = new Rectangle(0, 0, 500, 500);
+        
+        // Capture the screen area as an image
+        BufferedImage screenshot = robot.createScreenCapture(captureRect);
+        
+        // Save the captured image to a file
+        ImageIO.write(screenshot, "PNG", new File("screenshot.png"));
+        
+        System.out.println("Screen capture saved as 'screenshot.png'");
+    }
+}
+
+4. Delaying Actions
+You can also introduce delays between actions using robot.delay(ms) to simulate realistic user interaction.
+
+import java.awt.*;
+import java.awt.event.KeyEvent;
+
+public class DelayedInputExample {
+    public static void main(String[] args) throws AWTException {
+        Robot robot = new Robot();
+        
+        // Move the mouse to (200, 200) on the screen
+        robot.mouseMove(200, 200);
+        robot.delay(1000); // 1-second delay
+        
+        // Simulate typing 'A' with a delay
+        robot.keyPress(KeyEvent.VK_A);
+        robot.keyRelease(KeyEvent.VK_A);
+        robot.delay(500); // 0.5-second delay
+        
+        // Simulate typing 'B'
+        robot.keyPress(KeyEvent.VK_B);
+        robot.keyRelease(KeyEvent.VK_B);
+        
+        System.out.println("Typed 'AB' with delays between actions.");
+    }
+}
+
+5. Simulating Alt+Tab (Switching Windows)
+This example demonstrates how to simulate pressing Alt + Tab to switch between open windows.
+
+import java.awt.*;
+import java.awt.event.KeyEvent;
+
+public class AltTabExample {
+    public static void main(String[] args) throws AWTException {
+        Robot robot = new Robot();
+        
+        // Press Alt
+        robot.keyPress(KeyEvent.VK_ALT);
+        
+        // Press Tab to switch windows
+        robot.keyPress(KeyEvent.VK_TAB);
+        robot.keyRelease(KeyEvent.VK_TAB);
+        
+        // Release Alt
+        robot.keyRelease(KeyEvent.VK_ALT);
+        
+        System.out.println("Alt+Tab pressed to switch windows.");
+    }
+}
+
+6. Automating GUI Interactions (e.g., Opening an Application, Clicking on Buttons)
+In this example, we'll simulate launching an application and clicking on a button within the application window.
+Steps:
+Launch an application (e.g., Notepad).
+Wait for the application to open.
+Click on specific coordinates inside the application.
+
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+
+public class AdvancedAutomationExample {
+    public static void main(String[] args) throws AWTException, IOException {
+        // Create Robot instance
+        Robot robot = new Robot();
+        
+        // Step 1: Open Notepad (Windows only)
+        Runtime.getRuntime().exec("notepad.exe");
+        robot.delay(2000);  // Wait for 2 seconds to allow the application to open
+        
+        // Step 2: Move the mouse to a specific point (e.g., the menu bar or a button)
+        robot.mouseMove(100, 100);  // Adjust the coordinates based on the screen resolution and window size
+        robot.mousePress(InputEvent.BUTTON1_MASK);
+        robot.mouseRelease(InputEvent.BUTTON1_MASK);
+        
+        robot.delay(500); // Add a short delay
+        
+        // Step 3: Simulate typing "Hello, World!"
+        String text = "Hello, World!";
+        for (char c : text.toCharArray()) {
+            robot.keyPress(KeyEvent.getExtendedKeyCodeForChar(c));
+            robot.keyRelease(KeyEvent.getExtendedKeyCodeForChar(c));
+            robot.delay(100);
+        }
+        
+        System.out.println("Opened Notepad and typed 'Hello, World!'");
+    }
+}
+
+7. Automating File Dialog Interaction (e.g., Open File Dialog)
+This example demonstrates how to interact with the "Open File" dialog of an application. We can simulate selecting a file and clicking the "Open" button.
+Steps:
+Simulate opening the file dialog (e.g., by sending Ctrl + O).
+Use Robot to navigate the dialog and select a file.
+
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+
+public class FileDialogAutomation {
+    public static void main(String[] args) throws AWTException {
+        // Create Robot instance
+        Robot robot = new Robot();
+        
+        // Step 1: Open a program (e.g., Notepad) and trigger the "Open File" dialog
+        try {
+            Runtime.getRuntime().exec("notepad.exe");
+            robot.delay(2000);  // Wait for Notepad to launch
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        // Step 2: Simulate pressing Ctrl+O to open the file dialog
+        robot.keyPress(KeyEvent.VK_CONTROL);
+        robot.keyPress(KeyEvent.VK_O);
+        robot.keyRelease(KeyEvent.VK_O);
+        robot.keyRelease(KeyEvent.VK_CONTROL);
+        robot.delay(1000);  // Wait for the dialog to appear
+        
+        // Step 3: Move the mouse and click on the "File name" input field
+        robot.mouseMove(400, 300);  // Adjust coordinates based on your screen resolution
+        robot.mousePress(InputEvent.BUTTON1_MASK);
+        robot.mouseRelease(InputEvent.BUTTON1_MASK);
+        
+        // Step 4: Type the file path (e.g., C:\example.txt)
+        String filePath = "C:\\example.txt";
+        for (char c : filePath.toCharArray()) {
+            robot.keyPress(KeyEvent.getExtendedKeyCodeForChar(c));
+            robot.keyRelease(KeyEvent.getExtendedKeyCodeForChar(c));
+            robot.delay(100);
+        }
+        
+        // Step 5: Press Enter to select the file and open it
+        robot.keyPress(KeyEvent.VK_ENTER);
+        robot.keyRelease(KeyEvent.VK_ENTER);
+        
+        System.out.println("Opened file dialog, selected file, and opened it.");
+    }
+}
+
+8. Advanced Mouse Dragging (e.g., Drag and Drop)
+In this example, we'll simulate a mouse drag and drop action, which could be used for moving files, resizing windows, or dragging GUI elements within an application.
+Steps:
+Move the mouse to the starting point (e.g., the file or window element).
+Press the mouse button to start the drag.
+Move the mouse to the target location and release the mouse button.
+
+import java.awt.*;
+import java.awt.event.*;
+
+public class MouseDragDropExample {
+    public static void main(String[] args) throws AWTException {
+        // Create Robot instance
+        Robot robot = new Robot();
+        
+        // Step 1: Move the mouse to the starting point (e.g., a file on the desktop)
+        robot.mouseMove(300, 300);  // Adjust coordinates based on your screen setup
+        robot.mousePress(InputEvent.BUTTON1_MASK);  // Start dragging
+        robot.delay(500);  // Small delay before dragging
+        
+        // Step 2: Drag the mouse to the target location (e.g., another area or window)
+        robot.mouseMove(600, 600);  // Adjust target coordinates
+        robot.delay(500);
+        
+        // Step 3: Release the mouse to drop the item
+        robot.mouseRelease(InputEvent.BUTTON1_MASK);
+        
+        System.out.println("Mouse drag-and-drop action completed.");
+    }
+}
+
+9. Automating Multiple Key Combinations and Special Key Presses
+In this example, we'll simulate a sequence of keyboard events, such as pressing Ctrl + Shift + N to open a new incognito window in Chrome or similar tasks.
+
+import java.awt.*;
+import java.awt.event.*;
+
+public class MultiKeyCombinationExample {
+    public static void main(String[] args) throws AWTException {
+        // Create Robot instance
+        Robot robot = new Robot();
+        
+        // Step 1: Simulate pressing Ctrl + Shift + N (e.g., for incognito mode in Chrome)
+        robot.keyPress(KeyEvent.VK_CONTROL);
+        robot.keyPress(KeyEvent.VK_SHIFT);
+        robot.keyPress(KeyEvent.VK_N);
+        robot.keyRelease(KeyEvent.VK_N);
+        robot.keyRelease(KeyEvent.VK_SHIFT);
+        robot.keyRelease(KeyEvent.VK_CONTROL);
+        
+        // Step 2: Add a short delay to simulate a pause between actions
+        robot.delay(1000);
+        
+        // Step 3: Simulate typing some text after the key combination
+        String text = "Testing automation!";
+        for (char c : text.toCharArray()) {
+            robot.keyPress(KeyEvent.getExtendedKeyCodeForChar(c));
+            robot.keyRelease(KeyEvent.getExtendedKeyCodeForChar(c));
+            robot.delay(100);
+        }
+        
+        System.out.println("Pressed Ctrl+Shift+N and typed text.");
+    }
+}
+
+10. Advanced Window Switching (Alt + Tab with Delay)
+This example shows how to use Alt + Tab with a delay to switch between multiple open windows. We can also simulate a few seconds between each Alt + Tab press.
+
+import java.awt.*;
+import java.awt.event.*;
+
+public class WindowSwitchingExample {
+    public static void main(String[] args) throws AWTException {
+        // Create Robot instance
+        Robot robot = new Robot();
+        
+        // Step 1: Press Alt+Tab to switch between windows
+        robot.keyPress(KeyEvent.VK_ALT);
+        robot.keyPress(KeyEvent.VK_TAB);
+        robot.keyRelease(KeyEvent.VK_TAB);
+        robot.keyRelease(KeyEvent.VK_ALT);
+        robot.delay(1000);  // Wait for 1 second before switching again
+        
+        // Step 2: Simulate another Alt+Tab press to switch to the next window
+        robot.keyPress(KeyEvent.VK_ALT);
+        robot.keyPress(KeyEvent.VK_TAB);
+        robot.keyRelease(KeyEvent.VK_TAB);
+        robot.keyRelease(KeyEvent.VK_ALT);
+        
+        System.out.println("Switched between windows using Alt+Tab.");
+    }
+}
+
+11. Using Java Accessibility API (for Java Applications)
+If you need to interact with Java-based GUIs (like JFrame, JDialog, etc.), the Java Accessibility API can be helpful. The Accessibility API allows you to query the properties of Java applications, including their window dimensions.
+However, this only works for Java-based applications. It will not work for native (non-Java) applications like Notepad or browsers.
+
+Example: Using Java Accessibility API for Java Applications
+
+import javax.accessibility.*;
+import javax.swing.*;
+import java.awt.*;
+
+public class WindowDimensions {
+    public static void main(String[] args) {
+        try {
+            // Create a simple JFrame for demo
+            JFrame frame = new JFrame("Test Window");
+            frame.setSize(800, 600);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setVisible(true);
+            
+            // Give some time for the JFrame to initialize
+            Thread.sleep(1000);
+
+            // Retrieve the window's Accessibility information
+            AccessibleContext ac = frame.getAccessibleContext();
+            Accessible accessible = ac.getAccessibleChild(0); // the child of the main frame
+            
+            // Get the position and size
+            Rectangle bounds = frame.getBounds();
+            System.out.println("Window Position: " + bounds.x + "," + bounds.y);
+            System.out.println("Window Size: " + bounds.width + "x" + bounds.height);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+Limitations:
+This only works for Java applications.
+It does not work for non-Java applications such as Notepad, Chrome, etc.
+
+12. Using JNA (Java Native Access) for Native Applications
+To interact with non-Java applications (like Windows apps), you can use JNA (Java Native Access), which provides a way to call native system libraries and APIs from Java.
+You can use JNA to call Windows APIs like FindWindow and GetWindowRect to retrieve the dimensions of application windows.
+Steps:
+Add the JNA library to your project.
+Use the Windows API functions to get window handles and their dimensions.
+Example: Using JNA to Get Window Dimensions on Windows
+First, add the JNA library to your project (you can get the JNA library from JNA's GitHub repository https://github.com/java-native-access/jna)
+
+import com.sun.jna.*;
+import com.sun.jna.win32.*;
+
+public class GetWindowDimensions {
+    // Define User32 interface to interact with Windows API
+    public interface User32 extends StdCallLibrary {
+        User32 INSTANCE = (User32) Native.load("user32", User32.class);
+
+        int FindWindowA(String lpClassName, String lpWindowName);
+        boolean GetWindowRect(int hwnd, RECT rect);
+    }
+
+    // Define RECT structure for window position and size
+    public static class RECT extends Structure {
+        public int left;
+        public int top;
+        public int right;
+        public int bottom;
+
+        @Override
+        protected List getFieldOrder() {
+            return Arrays.asList("left", "top", "right", "bottom");
+        }
+    }
+
+    public static void main(String[] args) {
+        // Find a window by its title
+        String windowTitle = "Untitled - Notepad"; // Replace with the title of the target window
+        int hwnd = User32.INSTANCE.FindWindowA(null, windowTitle);
+
+        if (hwnd != 0) {
+            RECT rect = new RECT();
+            if (User32.INSTANCE.GetWindowRect(hwnd, rect)) {
+                // Calculate width and height
+                int width = rect.right - rect.left;
+                int height = rect.bottom - rect.top;
+
+                System.out.println("Window Dimensions:");
+                System.out.println("Width: " + width);
+                System.out.println("Height: " + height);
+            } else {
+                System.out.println("Failed to get window dimensions.");
+            }
+        } else {
+            System.out.println("Window not found.");
+        }
+    }
+}
+
+Explanation:
+JNA Interface: We define the User32 interface to access the Windows API functions (FindWindowA and GetWindowRect).
+FindWindowA: This function finds a window by its title (windowTitle in this case).
+GetWindowRect: This function retrieves the dimensions of the window (stored in a RECT structure).
+RECT: This structure holds the window's position and dimensions (left, top, right, bottom).
+
+Steps to Run the JNA Example:
+Add JNA to your project (you can download the JNA jar from the JNA GitHub repository
+Replace the windowTitle with the title of the window you want to interact with (e.g., "Untitled - Notepad" for Notepad).
+Run the Java code, and it will print the window's width and height.
+
+Limitations:
+This is Windows-specific. For macOS or Linux, you would need to use platform-specific native libraries (e.g., using AppleScript for macOS or xwininfo for Linux).
+Requires JNA: JNA allows you to access native libraries, so the code depends on having this library included.
+
+Getting All Open Windows (Using JNA)
+You can list all open windows and query their dimensions using EnumWindows and GetWindowRect.
+Here’s an example to list all open windows and their dimensions:
+
+import com.sun.jna.*;
+import com.sun.jna.win32.*;
+
+public class ListWindows {
+    public interface User32 extends StdCallLibrary {
+        User32 INSTANCE = (User32) Native.load("user32", User32.class);
+
+        int EnumWindows(WndProc wndProc, Pointer arg);
+        boolean GetWindowRect(int hwnd, RECT rect);
+
+        interface WndProc extends Callback {
+            boolean invoke(int hwnd, Pointer arg);
+        }
+    }
+
+    public static class RECT extends Structure {
+        public int left;
+        public int top;
+        public int right;
+        public int bottom;
+
+        @Override
+        protected List getFieldOrder() {
+            return Arrays.asList("left", "top", "right", "bottom");
+        }
+    }
+
+    public static void main(String[] args) {
+        User32.INSTANCE.EnumWindows(new User32.WndProc() {
+            @Override
+            public boolean invoke(int hwnd, Pointer arg) {
+                RECT rect = new RECT();
+                if (User32.INSTANCE.GetWindowRect(hwnd, rect)) {
+                    // Output window dimensions
+                    int width = rect.right - rect.left;
+                    int height = rect.bottom - rect.top;
+
+                    System.out.println("Window Handle: " + hwnd);
+                    System.out.println("Width: " + width + ", Height: " + height);
+                }
+                return true;  // Continue enumerating
+            }
+        }, null);
+    }
+}
+
+This code uses EnumWindows to enumerate all open windows and prints the dimensions of each window.
+
+Conclusion:
+For Java Applications: You can use the Java Accessibility API to query window dimensions if the window is a Java-based application.
+For Native Applications (Windows): You can use JNA to access Windows API functions (FindWindow, GetWindowRect, etc.) to get the dimensions of other application windows.
+Platform-Specific: The JNA approach is Windows-specific, and you would need different tools for macOS or Linux.
+

@@ -10,7 +10,7 @@ public class Constants {
 	public static final String PROGRAM_COMMAND = "\"C:\\Program Files (x86)\\Programas RFB\\Receitanet BX\\ReceitanetBX.exe\"";
 	public static final String PROGRAM_CERTIFICATES = "C:\\Temp\\java\\certificates";
 
-	public static final String PROGRAM_PERIOD_START = "01012021";
+	public static final String PROGRAM_PERIOD_START = "01012020";
 	public static final String PROGRAM_PERIOD_END = getCurrentDate();
 	
 	private static String getCurrentDate() {
