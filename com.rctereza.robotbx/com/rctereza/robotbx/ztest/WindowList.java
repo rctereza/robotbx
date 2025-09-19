@@ -9,7 +9,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.win32.StdCallLibrary;
 
-public class ListWindows {
+public class WindowList {
 
 	public interface User32 extends StdCallLibrary {
         User32 INSTANCE = (User32) Native.load("user32", User32.class);

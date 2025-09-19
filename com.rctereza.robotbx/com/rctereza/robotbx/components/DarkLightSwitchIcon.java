@@ -18,6 +18,67 @@ import javax.swing.JComponent;
 
 public class DarkLightSwitchIcon implements AnimatedIcon {
 
+    private int iconGap = 3;
+    private int centerSpace = 5;
+
+    private Icon darkIcon = new FlatSVGIcon("images/dark.svg", 0.4f);
+    private Icon lightIcon = new FlatSVGIcon("images/light.svg", 0.4f);
+
+    private Color darkColor = new Color(80, 80, 80);
+    private Color lightColor = new Color(230, 230, 230);
+
+    @Override
+    public void paintIconAnimated(Component c, Graphics g, int x, int y, float animatedValue) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        FlatUIUtils.setRenderingHints(g2);
+        Color color = ColorFunctions.mix(darkColor, lightColor, animatedValue);
+        int size = getIconHeight();
+        int width = getIconWidth();
+        float arc = Math.min(getBorderArc(c), size);
+        float animatedX = x + (width - size) * animatedValue;
+
+        g2.setColor(color);
+        g2.fill(new RoundRectangle2D.Double(animatedX, y, size, size, arc, arc));
+        float darkY = (y - size + (animatedValue * size));
+        float lightY = y + animatedValue * size;
+        g2.setClip(new Rectangle(x, y, width, size));
+        paintIcon(c, (Graphics2D) g2.create(), animatedX, darkY, darkIcon, animatedValue);
+        paintIcon(c, (Graphics2D) g2.create(), animatedX, lightY, lightIcon, 1f - animatedValue);
+        g2.dispose();
+    }
+
+    private void paintIcon(Component c, Graphics2D g, float x, float y, Icon icon, float alpha) {
+        int gap = UIScale.scale(iconGap);
+        g.translate(x, y);
+        g.setComposite(AlphaComposite.SrcOver.derive(alpha));
+        icon.paintIcon(c, g, gap, gap);
+        g.dispose();
+    }
+
+    private float getBorderArc(Component com) {
+        return FlatUIUtils.getBorderArc((JComponent) com);
+    }
+
+    @Override
+    public int getAnimationDuration() {
+        return 500;
+    }
+
+    @Override
+    public float getValue(Component c) {
+        return ((AbstractButton) c).isSelected() ? 1 : 0;
+    }
+
+    @Override
+    public int getIconWidth() {
+        return darkIcon.getIconWidth() + lightIcon.getIconWidth() + UIScale.scale(centerSpace) + UIScale.scale(iconGap) * 4;
+    }
+
+    @Override
+    public int getIconHeight() {
+        return Math.max(darkIcon.getIconHeight(), lightIcon.getIconHeight()) + UIScale.scale(iconGap) * 2;
+    }
+    
     public int getIconGap() {
         return iconGap;
     }
@@ -64,66 +125,5 @@ public class DarkLightSwitchIcon implements AnimatedIcon {
 
     public void setLightColor(Color lightColor) {
         this.lightColor = lightColor;
-    }
-
-    private int iconGap = 3;
-    private int centerSpace = 5;
-
-    private Icon darkIcon = new FlatSVGIcon("raven/themes/dark.svg", 0.4f);
-    private Icon lightIcon = new FlatSVGIcon("raven/themes/light.svg", 0.4f);
-
-    private Color darkColor = new Color(80, 80, 80);
-    private Color lightColor = new Color(230, 230, 230);
-
-    private float getBorderArc(Component com) {
-        return FlatUIUtils.getBorderArc((JComponent) com);
-    }
-
-    @Override
-    public int getAnimationDuration() {
-        return 500;
-    }
-
-    @Override
-    public void paintIconAnimated(Component c, Graphics g, int x, int y, float animatedValue) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        FlatUIUtils.setRenderingHints(g2);
-        Color color = ColorFunctions.mix(darkColor, lightColor, animatedValue);
-        int size = getIconHeight();
-        int width = getIconWidth();
-        float arc = Math.min(getBorderArc(c), size);
-        float animatedX = x + (width - size) * animatedValue;
-
-        g2.setColor(color);
-        g2.fill(new RoundRectangle2D.Double(animatedX, y, size, size, arc, arc));
-        float darkY = (y - size + (animatedValue * size));
-        float lightY = y + animatedValue * size;
-        g2.setClip(new Rectangle(x, y, width, size));
-        paintIcon(c, (Graphics2D) g2.create(), animatedX, darkY, darkIcon, animatedValue);
-        paintIcon(c, (Graphics2D) g2.create(), animatedX, lightY, lightIcon, 1f - animatedValue);
-        g2.dispose();
-    }
-
-    private void paintIcon(Component c, Graphics2D g, float x, float y, Icon icon, float alpha) {
-        int gap = UIScale.scale(iconGap);
-        g.translate(x, y);
-        g.setComposite(AlphaComposite.SrcOver.derive(alpha));
-        icon.paintIcon(c, g, gap, gap);
-        g.dispose();
-    }
-
-    @Override
-    public float getValue(Component c) {
-        return ((AbstractButton) c).isSelected() ? 1 : 0;
-    }
-
-    @Override
-    public int getIconWidth() {
-        return darkIcon.getIconWidth() + lightIcon.getIconWidth() + UIScale.scale(centerSpace) + UIScale.scale(iconGap) * 4;
-    }
-
-    @Override
-    public int getIconHeight() {
-        return Math.max(darkIcon.getIconHeight(), lightIcon.getIconHeight()) + UIScale.scale(iconGap) * 2;
     }
 }
