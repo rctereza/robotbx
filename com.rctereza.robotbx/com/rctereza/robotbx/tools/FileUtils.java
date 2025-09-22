@@ -7,16 +7,36 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.models.Certificate;
 
 public class FileUtils {
 
+	public static void saveCertificatePathChosen(String path) {
+		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
+        prefs.put(Constants.CERTIFICATE_PATH, path);
+	}
+	
+	public static String getCertificatePathSaved() {
+		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
+		return prefs.get(Constants.CERTIFICATE_PATH, "");
+	}
+	
+	
+	public static List<Certificate> getListOfCertificates(String path) {
+		return getList(path);
+	}
+	
 	public static List<Certificate> getListOfCertificates() {
+		return getList(Constants.PROGRAM_CERTIFICATES);
+	}
+	
+	private static List<Certificate> getList(String path) {
 		Integer counter = 1;
 		ArrayList<Certificate> list = new ArrayList<>();
-		Path folder = Paths.get(Constants.PROGRAM_CERTIFICATES);
+		Path folder = Paths.get(path);
 		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder, "*.pfx")) {
 			for (Path entry : stream) {
 				String filename = entry.getFileName().toString();

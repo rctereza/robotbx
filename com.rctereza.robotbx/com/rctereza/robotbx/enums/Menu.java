@@ -1,12 +1,12 @@
 package com.rctereza.robotbx.enums;
 
-public enum MenuOption {
+public enum Menu {
 	CLOSE("Close"),
 	MINIMIZE("Minimize");
 
     private String value;
 
-    MenuOption (String value) {
+    Menu (String value) {
         this.value = value;
     }
 

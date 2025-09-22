@@ -19,6 +19,9 @@ public class Constants {
 	public static final String PROGRAM_CERTIFICATES = "C:\\Temp\\java\\certificates";
 	public static final String PROGRAM_PERIOD_START = "01012020";
 	public static final String PROGRAM_PERIOD_END = getCurrentDate();
+	
+	public static final String CERTIFICATE_PATH = "certificatePath";
+	public static final String SCHEME_THEME = "schemeTheme";
 
 	private static String getCurrentDate() {
 		Date currentDate = new Date();
