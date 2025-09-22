@@ -1,10 +1,10 @@
 package com.rctereza.robotbx;
 
 import java.awt.AWTException;
+import java.awt.EventQueue;
 import java.awt.Font;
 
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
@@ -59,7 +59,7 @@ public class Main {
 			}
 		});
 		
-		SwingUtilities.invokeLater(new Runnable() {
+		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				showApp();
 			}

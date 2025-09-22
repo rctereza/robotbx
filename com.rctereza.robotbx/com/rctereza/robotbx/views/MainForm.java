@@ -4,6 +4,7 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -51,11 +52,11 @@ public class MainForm extends JFrame {
 
 	private DarkLightSwitchIcon darkLightSwitchIcon;
 
-	private JLabel screenResolutionLabel;
-	private JTextField screenResolutionTextField;
-	
 	private JLabel themeLabel;
 	private JToggleButton themeButton;
+
+	private JLabel screenResolutionLabel;
+	private JTextField screenResolutionTextField;
 
 	private JLabel certificateLabel;
 	private JComboBox<Certificate> certificateComboBox;
@@ -63,10 +64,12 @@ public class MainForm extends JFrame {
 
 	private JLabel passwordLabel;
 	private JTextField passwordTextField;
-	
+
 	private JLabel profileLabel;
 	private JRadioButton profileContribuinte;
 	private JRadioButton profileProcurador;
+	private JComboBox<String> profileTypeComboBox;
+	private JTextField profileTypeValueTextField;
 
 	private JLabel reportLabel;
 	private JRadioButton reportSpedContribuicoes;
@@ -74,10 +77,10 @@ public class MainForm extends JFrame {
 	private JRadioButton reportSpedECF;
 	private JRadioButton reportSpedEFD;
 	private JRadioButton reportSpedFiscal;
-	
+
 	private JButton runButton;
 
-	//	private static Controller controller;
+	// private static Controller controller;
 
 	private Listenable listener;
 
@@ -95,8 +98,8 @@ public class MainForm extends JFrame {
 				listener.value(Menu.MINIMIZE.getValue());
 			}
 		});
-		
-		//LINE 0
+
+		// LINE 0
 		darkLightSwitchIcon = new DarkLightSwitchIcon();
 		darkLightSwitchIcon.setCenterSpace(20);
 
@@ -119,25 +122,26 @@ public class MainForm extends JFrame {
 				}, 500, TimeUnit.MILLISECONDS);
 			}
 		});
-		
+
 		if (Scheme.isLafDark()) {
 			themeButton.setSelected(true);
 		}
 
-		//LINE 1
+		// LINE 1
 		screenResolutionLabel = new JLabel("Screen Resoltuion");
 		screenResolutionTextField = new JTextField();
 		screenResolutionTextField.setText(ScreenResolution.getResolution());
 		screenResolutionTextField.setEditable(false);
-		
-		//LINE 2
-		certificateLabel = new JLabel("Certificate");
 
+		// LINE 2
+		certificateLabel = new JLabel("Certificate");
 		certificateComboBox = new JComboBox<>();
-		certificateComboBox.addItemListener(e -> {
-			if (e.getStateChange() == ItemEvent.SELECTED) {
-				Certificate certificate = (Certificate) e.getItem();
-				passwordTextField.setText(certificate.FILE_PASS());
+		certificateComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Certificate certificate = (Certificate) e.getItem();
+					passwordTextField.setText(certificate.FILE_PASS());
+				}
 			}
 		});
 
@@ -157,27 +161,49 @@ public class MainForm extends JFrame {
 
 		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
 
-		//LINE 3
+		// LINE 3
 		passwordLabel = new JLabel("Password");
 		passwordTextField = new JTextField();
-		
-		//LINE 4
+
+		// LINE 4
 		profileLabel = new JLabel("Profile");
 		profileContribuinte = new JRadioButton("Contribuinte", true);
+		profileContribuinte.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				profileTypeComboBox.setVisible(false);
+				profileTypeValueTextField.setVisible(false);
+			}
+		});
+
 		profileProcurador = new JRadioButton("Procurador");
+		profileProcurador.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				profileTypeComboBox.setVisible(true);
+				profileTypeValueTextField.setVisible(true);
+			}
+		});
 
 		ButtonGroup profileGroup = new ButtonGroup();
 		profileGroup.add(profileContribuinte);
 		profileGroup.add(profileProcurador);
 
-		//LINE 5
+		String[] profileTypes = { "CPF", "CNPJ" };
+		profileTypeComboBox = new JComboBox<String>(profileTypes);
+		profileTypeComboBox.setVisible(false);
+
+		profileTypeValueTextField = new JTextField();
+		profileTypeValueTextField.setVisible(false);
+
+		// LINE 5
 		reportLabel = new JLabel("Report");
 		reportSpedContribuicoes = new JRadioButton(Sped.CONTRIBUICOES.getValue(), true);
-		reportSpedContabil= new JRadioButton(Sped.CONTABIL.getValue());
-		reportSpedECF= new JRadioButton(Sped.ECF.getValue());
-		reportSpedEFD= new JRadioButton(Sped.EFD.getValue());
-		reportSpedFiscal= new JRadioButton(Sped.FISCAL.getValue());
-		
+		reportSpedContabil = new JRadioButton(Sped.CONTABIL.getValue());
+		reportSpedECF = new JRadioButton(Sped.ECF.getValue());
+		reportSpedEFD = new JRadioButton(Sped.EFD.getValue());
+		reportSpedFiscal = new JRadioButton(Sped.FISCAL.getValue());
+
 		ButtonGroup reportGroup = new ButtonGroup();
 		reportGroup.add(reportSpedContribuicoes);
 		reportGroup.add(reportSpedContabil);
@@ -185,15 +211,15 @@ public class MainForm extends JFrame {
 		reportGroup.add(reportSpedEFD);
 		reportGroup.add(reportSpedFiscal);
 
-		//LINE 6
+		// LINE 6
 		runButton = new JButton("Run");
 		runButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("Button clicked!");
-            }
-        });
-		
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Button clicked!");
+			}
+		});
+
 //		JPanel panel = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]", "[]10[]10[]"));
 		JPanel panel = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
 
@@ -209,7 +235,9 @@ public class MainForm extends JFrame {
 		panel.add(passwordTextField, "pushx, growx, wrap");
 		panel.add(profileLabel, "left, sg 1");
 		panel.add(profileContribuinte, "split");
-		panel.add(profileProcurador, "wrap");
+		panel.add(profileProcurador);
+		panel.add(profileTypeComboBox);
+		panel.add(profileTypeValueTextField, "pushx, growx, wrap");
 		panel.add(reportLabel, "left, sg 1");
 		panel.add(reportSpedContribuicoes, "split");
 		panel.add(reportSpedContabil);
@@ -217,7 +245,7 @@ public class MainForm extends JFrame {
 		panel.add(reportSpedEFD);
 		panel.add(reportSpedFiscal, "wrap");
 		panel.add(runButton, "cell 1 6, wrap");
-		
+
 		this.add(panel);
 
 		setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
@@ -234,19 +262,23 @@ public class MainForm extends JFrame {
 		if (FlatLaf.isLafDark() != dark) {
 			if (!dark) {
 				Scheme.removeLafDark();
-				EventQueue.invokeLater(() -> {
-					FlatAnimatedLafChange.showSnapshot();
-					FlatIntelliJLaf.setup();
-					FlatLaf.updateUI();
-					FlatAnimatedLafChange.hideSnapshotWithAnimation();
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						FlatAnimatedLafChange.showSnapshot();
+						FlatIntelliJLaf.setup();
+						FlatLaf.updateUI();
+						FlatAnimatedLafChange.hideSnapshotWithAnimation();
+					}
 				});
 			} else {
 				Scheme.setLafDark();
-				EventQueue.invokeLater(() -> {
-					FlatAnimatedLafChange.showSnapshot();
-					FlatDarculaLaf.setup();
-					FlatLaf.updateUI();
-					FlatAnimatedLafChange.hideSnapshotWithAnimation();
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						FlatAnimatedLafChange.showSnapshot();
+						FlatDarculaLaf.setup();
+						FlatLaf.updateUI();
+						FlatAnimatedLafChange.hideSnapshotWithAnimation();
+					}
 				});
 			}
 		}
