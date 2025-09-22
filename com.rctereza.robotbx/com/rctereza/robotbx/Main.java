@@ -7,12 +7,14 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.rctereza.robotbx.controllers.Controller;
-import com.rctereza.robotbx.enums.MenuOption;
 import com.rctereza.robotbx.interfaces.Listenable;
+import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.views.MainForm;
+import com.rctereza.robotbx.enums.Menu;
 
 public class Main {
 
@@ -45,7 +47,7 @@ public class Main {
 			public void value(Object... objs) {
 				if (objs != null && objs.length > 0) {
 					String action = (String) objs[0];
-					if (action.equals(MenuOption.CLOSE.getValue())) {
+					if (action.equals(Menu.CLOSE.getValue())) {
 						if (JOptionPane.showConfirmDialog(null, "Close the application?", "Confirm",
 								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 							mainForm.dispose();
@@ -67,8 +69,13 @@ public class Main {
 
 	public static void main(String[] args) throws AWTException, InterruptedException {
 		FlatRobotoFont.install();
-		UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 14));
-		FlatIntelliJLaf.setup();
+		UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 12));
+		if (Scheme.isLafDark()) {
+			FlatDarculaLaf.setup();
+		}
+		else {
+			FlatIntelliJLaf.setup();
+		}
 		Main.getInstance().init();
 	}
 
