@@ -7,8 +7,8 @@ public class Constants {
 
 	private Constants() {}
 
-	public static final int WINDOW_WIDTH = 800;
-	public static final int WINDOW_HEIGHT = 600;
+	public static final int WINDOW_WIDTH = 850;
+	public static final int WINDOW_HEIGHT = 400;
 
 	public static final String SOFTWARE_NAME = "Receitanet BX Robot";
 	public static final String SOFTWARE_VERSION = "1.00";
@@ -19,6 +19,9 @@ public class Constants {
 	public static final String PROGRAM_CERTIFICATES = "C:\\Temp\\java\\certificates";
 	public static final String PROGRAM_PERIOD_START = "01012020";
 	public static final String PROGRAM_PERIOD_END = getCurrentDate();
+	
+	public static final String CERTIFICATE_PATH = "certificatePath";
+	public static final String SCHEME_THEME = "schemeTheme";
 
 	private static String getCurrentDate() {
 		Date currentDate = new Date();
