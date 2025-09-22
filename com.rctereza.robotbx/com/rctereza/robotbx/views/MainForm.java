@@ -33,13 +33,13 @@ import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.components.DarkLightSwitchIcon;
 import com.rctereza.robotbx.controllers.Controller;
+import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.enums.Sped;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
-import com.rctereza.robotbx.enums.Menu;
 
 import net.miginfocom.swing.MigLayout;
 

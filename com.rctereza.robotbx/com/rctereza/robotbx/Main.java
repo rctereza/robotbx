@@ -11,10 +11,10 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.rctereza.robotbx.controllers.Controller;
+import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.views.MainForm;
-import com.rctereza.robotbx.enums.Menu;
 
 public class Main {
 
