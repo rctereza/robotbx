@@ -11,6 +11,7 @@ module com.rctereza.robotbx {
 	
 	requires transitive com.sun.jna.platform;
 	requires transitive com.sun.jna;
+	requires java.prefs;
 	
 	exports com.rctereza.robotbx.models;
 	exports com.rctereza.robotbx.tools;

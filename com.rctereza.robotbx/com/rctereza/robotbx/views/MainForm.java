@@ -119,7 +119,7 @@ public class MainForm extends JFrame {
 		panel.add(themeButton, "wrap");
 		panel.add(certificateLabel, "left, sg 1");
 		panel.add(certificateField, "pushx, growx");
-		panel.add(certificateButton, "left, wrap");
+		panel.add(certificateButton, "right, wrap");
 		
 		this.add(panel);
 
