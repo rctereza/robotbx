@@ -4,7 +4,6 @@ import java.awt.AWTException;
 import java.awt.EventQueue;
 import java.awt.Font;
 
-import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
@@ -48,12 +47,12 @@ public class Main {
 				if (objs != null && objs.length > 0) {
 					String action = (String) objs[0];
 					if (action.equals(Menu.CLOSE.getValue())) {
-						if (JOptionPane.showConfirmDialog(null, "Close the application?", "Confirm",
-								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+//						if (JOptionPane.showConfirmDialog(null, "Close the application?", "Confirm",
+//								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
 							mainForm.dispose();
 							System.gc();
 							System.exit(0);
-						}
+//						}
 					}
 				}
 			}

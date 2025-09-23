@@ -7,8 +7,8 @@ public class Constants {
 
 	private Constants() {}
 
-	public static final int WINDOW_WIDTH = 850;
-	public static final int WINDOW_HEIGHT = 400;
+	public static final int WINDOW_WIDTH = 900;
+	public static final int WINDOW_HEIGHT = 600;
 
 	public static final String SOFTWARE_NAME = "Receitanet BX Robot";
 	public static final String SOFTWARE_VERSION = "1.00";

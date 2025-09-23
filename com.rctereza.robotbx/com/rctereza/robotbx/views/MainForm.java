@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -23,8 +24,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.border.TitledBorder;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatDarculaLaf;
@@ -41,6 +44,7 @@ import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
+import com.rctereza.robotbx.tools.SpedUtils;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -49,9 +53,11 @@ public class MainForm extends JFrame {
 	private static final long serialVersionUID = 8829044892271317875L;
 
 	private static final String softwareNameAndVersion = Constants.SOFTWARE_NAME + " " + Constants.SOFTWARE_VERSION;
-
+	
 	private DarkLightSwitchIcon darkLightSwitchIcon;
 
+	private JPanel panelMain;
+	
 	private JLabel themeLabel;
 	private JToggleButton themeButton;
 
@@ -71,14 +77,18 @@ public class MainForm extends JFrame {
 	private JComboBox<String> profileTypeComboBox;
 	private JTextField profileTypeValueTextField;
 
-	private JLabel reportLabel;
-	private JRadioButton reportSpedContribuicoes;
-	private JRadioButton reportSpedContabil;
-	private JRadioButton reportSpedECF;
-	private JRadioButton reportSpedEFD;
-	private JRadioButton reportSpedFiscal;
+	private JLabel systemLabel;
+	private JComboBox<String> systemComboBox;
 
-	private JButton runButton;
+	private JLabel systemFileTypeLabel;
+	private JComboBox<String> systemFileTypeComboBox;
+
+	private JLabel systemSearchTypeLabel;
+	private JComboBox<String> systemSearchTypeComboBox;
+
+	private JPanel systemSearchFieldsPanel;
+	
+	private JButton searchButton;
 
 	// private static Controller controller;
 
@@ -128,13 +138,13 @@ public class MainForm extends JFrame {
 		}
 
 		// LINE 1
-		screenResolutionLabel = new JLabel("Screen Resoltuion");
+		screenResolutionLabel = new JLabel("Monitor Resolução");
 		screenResolutionTextField = new JTextField();
 		screenResolutionTextField.setText(ScreenResolution.getResolution());
 		screenResolutionTextField.setEditable(false);
 
 		// LINE 2
-		certificateLabel = new JLabel("Certificate");
+		certificateLabel = new JLabel("Selecione um certificado");
 		certificateComboBox = new JComboBox<>();
 		certificateComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
@@ -145,7 +155,7 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		certificateLoadButton = new JButton("Load");
+		certificateLoadButton = new JButton("Carregar");
 		certificateLoadButton.addActionListener(e -> {
 			JFileChooser chooser = new JFileChooser();
 			chooser.setDialogTitle("Select a folder");
@@ -162,11 +172,11 @@ public class MainForm extends JFrame {
 		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
 
 		// LINE 3
-		passwordLabel = new JLabel("Password");
+		passwordLabel = new JLabel("Senha do certificado");
 		passwordTextField = new JTextField();
 
 		// LINE 4
-		profileLabel = new JLabel("Profile");
+		profileLabel = new JLabel("Selecione um perfil");
 		profileContribuinte = new JRadioButton("Contribuinte", true);
 		profileContribuinte.addActionListener(new ActionListener() {
 			@Override
@@ -197,23 +207,66 @@ public class MainForm extends JFrame {
 		profileTypeValueTextField.setVisible(false);
 
 		// LINE 5
-		reportLabel = new JLabel("Report");
-		reportSpedContribuicoes = new JRadioButton(Sped.CONTRIBUICOES.getValue(), true);
-		reportSpedContabil = new JRadioButton(Sped.CONTABIL.getValue());
-		reportSpedECF = new JRadioButton(Sped.ECF.getValue());
-		reportSpedEFD = new JRadioButton(Sped.EFD.getValue());
-		reportSpedFiscal = new JRadioButton(Sped.FISCAL.getValue());
+		systemLabel = new JLabel("Selecione um sistema");
+		systemComboBox = new JComboBox<String>(SpedUtils.getSystemList());
+		systemComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Sped value = Sped.getSped(e.getItem().toString());
 
-		ButtonGroup reportGroup = new ButtonGroup();
-		reportGroup.add(reportSpedContribuicoes);
-		reportGroup.add(reportSpedContabil);
-		reportGroup.add(reportSpedECF);
-		reportGroup.add(reportSpedEFD);
-		reportGroup.add(reportSpedFiscal);
+					DefaultComboBoxModel<String> modelForSystemFileType = new DefaultComboBoxModel<>();
+					modelForSystemFileType.addAll(SpedUtils.getSystemFileTypeList(value));
+					systemFileTypeComboBox.removeAllItems();
+					systemFileTypeComboBox.setModel(modelForSystemFileType);
+					systemFileTypeComboBox.setSelectedIndex(0);
+				}
+			}
+		});
 
-		// LINE 6
-		runButton = new JButton("Run");
-		runButton.addActionListener(new ActionListener() {
+		//LINE 6
+		systemFileTypeLabel = new JLabel("Selecione um tipo de arquivo");
+		systemFileTypeComboBox = new JComboBox<String>(SpedUtils.getSystemFileType(Sped.CONTRIBUICOES));
+		systemFileTypeComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Sped value = Sped.getSped(systemComboBox.getSelectedItem().toString());
+					
+					DefaultComboBoxModel<String> modelForSystemSearchType = new DefaultComboBoxModel<>();
+					modelForSystemSearchType.addAll(SpedUtils.getSystemSearchTypeList(value,e.getItem().toString()));
+					systemSearchTypeComboBox.removeAllItems();
+					systemSearchTypeComboBox.setModel(modelForSystemSearchType);
+					systemSearchTypeComboBox.setSelectedIndex(0);
+				}
+			}
+		});
+		
+		//LINE 7
+		systemSearchTypeLabel = new JLabel("Selecione um tipo de pesquisa");
+		systemSearchTypeComboBox = new JComboBox<String>(SpedUtils.getSystemSearchType(Sped.CONTRIBUICOES, ""));
+		systemSearchTypeComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Sped system = Sped.getSped(systemComboBox.getSelectedItem().toString());
+					String systemFileType = systemFileTypeComboBox.getSelectedItem().toString();
+					
+					panelMain.remove(systemSearchFieldsPanel);
+					systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, e.getItem().toString());
+					panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
+					panelMain.revalidate();
+					panelMain.repaint();
+				}
+			}
+		});
+	
+		//LINE 8
+		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
+		
+		//LINE 9
+		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "");
+		
+		//LINE 10
+		searchButton = new JButton("Pesquisar");
+		searchButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("Button clicked!");
@@ -221,32 +274,38 @@ public class MainForm extends JFrame {
 		});
 
 //		JPanel panel = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]", "[]10[]10[]"));
-		JPanel panel = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
+		panelMain = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
 
-		panel.add(themeLabel, "split, span3, right");
-		panel.add(themeButton, "wrap");
+		panelMain.add(themeLabel, "split, span3, right");
+		panelMain.add(themeButton, "wrap");
+		//panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "split, span, growx, pushx, wrap");
+		panelMain.add(screenResolutionLabel, "left, sg 1");
+		panelMain.add(screenResolutionTextField, "pushx, growx, wrap");
+		panelMain.add(certificateLabel, "left, sg 1");
+		panelMain.add(certificateComboBox, "pushx, growx");
+		panelMain.add(certificateLoadButton, "left, wrap");
+		panelMain.add(passwordLabel, "left, sg 1");
+		panelMain.add(passwordTextField, "pushx, growx, wrap");
+		panelMain.add(profileLabel, "left, sg 1");
+		panelMain.add(profileContribuinte, "split");
+		panelMain.add(profileProcurador);
+		panelMain.add(profileTypeComboBox);
+		panelMain.add(profileTypeValueTextField, "pushx, growx, wrap");
+		panelMain.add(systemLabel, "left, sg 1");
+		panelMain.add(systemComboBox, "wrap");
+		panelMain.add(systemFileTypeLabel, "left, sg 1");
+		panelMain.add(systemFileTypeComboBox, "wrap");
+		panelMain.add(systemSearchTypeLabel, "left, sg 1");
+		panelMain.add(systemSearchTypeComboBox, "wrap");
+		panelMain.add(horizontalLine, "span, grow, wrap");
+		panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
+		panelMain.add(searchButton, "cell 0 10, wrap");
 
-		panel.add(screenResolutionLabel, "left, sg 1");
-		panel.add(screenResolutionTextField, "pushx, growx, wrap");
-		panel.add(certificateLabel, "left, sg 1");
-		panel.add(certificateComboBox, "pushx, growx");
-		panel.add(certificateLoadButton, "left, wrap");
-		panel.add(passwordLabel, "left, sg 1");
-		panel.add(passwordTextField, "pushx, growx, wrap");
-		panel.add(profileLabel, "left, sg 1");
-		panel.add(profileContribuinte, "split");
-		panel.add(profileProcurador);
-		panel.add(profileTypeComboBox);
-		panel.add(profileTypeValueTextField, "pushx, growx, wrap");
-		panel.add(reportLabel, "left, sg 1");
-		panel.add(reportSpedContribuicoes, "split");
-		panel.add(reportSpedContabil);
-		panel.add(reportSpedECF);
-		panel.add(reportSpedEFD);
-		panel.add(reportSpedFiscal, "wrap");
-		panel.add(runButton, "cell 1 6, wrap");
-
-		this.add(panel);
+		TitledBorder title;
+		title = BorderFactory.createTitledBorder("Pesquisa de Arquivos");
+		panelMain.setBorder(title);
+		
+		this.add(panelMain);
 
 		setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
