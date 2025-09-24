@@ -1,5 +1,5 @@
 module com.rctereza.robotbx {
-	requires java.desktop;
+	requires transitive java.desktop;
 	requires java.prefs;
 
 	requires com.miglayout.swing;
@@ -8,7 +8,7 @@ module com.rctereza.robotbx {
 	requires com.formdev.flatlaf.extras;
 	requires com.formdev.flatlaf.fonts.roboto;
 
-	requires transitive com.github.weisj.jsvg;
+	requires com.github.weisj.jsvg;
 	
 	requires transitive com.sun.jna.platform;
 	requires transitive com.sun.jna;

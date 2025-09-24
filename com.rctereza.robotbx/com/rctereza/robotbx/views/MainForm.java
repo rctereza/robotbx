@@ -8,6 +8,7 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,14 +21,18 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.border.TitledBorder;
+import javax.swing.text.DefaultFormatterFactory;
+import javax.swing.text.MaskFormatter;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatDarculaLaf;
@@ -45,6 +50,7 @@ import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
 import com.rctereza.robotbx.tools.SpedUtils;
+import com.rctereza.robotbx.tools.ValidateCpfCnpj;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -53,11 +59,14 @@ public class MainForm extends JFrame {
 	private static final long serialVersionUID = 8829044892271317875L;
 
 	private static final String softwareNameAndVersion = Constants.SOFTWARE_NAME + " " + Constants.SOFTWARE_VERSION;
-	
+
+	private MaskFormatter cnpjMask;
+	private MaskFormatter cpfMask;
+
 	private DarkLightSwitchIcon darkLightSwitchIcon;
 
 	private JPanel panelMain;
-	
+
 	private JLabel themeLabel;
 	private JToggleButton themeButton;
 
@@ -75,7 +84,7 @@ public class MainForm extends JFrame {
 	private JRadioButton profileContribuinte;
 	private JRadioButton profileProcurador;
 	private JComboBox<String> profileTypeComboBox;
-	private JTextField profileTypeValueTextField;
+	private JFormattedTextField profileTypeValueTextField;
 
 	private JLabel systemLabel;
 	private JComboBox<String> systemComboBox;
@@ -87,14 +96,15 @@ public class MainForm extends JFrame {
 	private JComboBox<String> systemSearchTypeComboBox;
 
 	private JPanel systemSearchFieldsPanel;
-	
+
 	private JButton searchButton;
+	private JButton closeButton;
 
 	// private static Controller controller;
 
 	private Listenable listener;
 
-	public MainForm(Controller controller) {
+	public MainForm(Controller controller) throws ParseException {
 		super(softwareNameAndVersion);
 
 //		MainForm.controller = controller;
@@ -108,6 +118,12 @@ public class MainForm extends JFrame {
 				listener.value(Menu.MINIMIZE.getValue());
 			}
 		});
+
+		cnpjMask = new MaskFormatter("##.###.###/####-##");
+		cnpjMask.setPlaceholderCharacter('_');
+
+		cpfMask = new MaskFormatter("###.###.###-##");
+		cpfMask.setPlaceholderCharacter('_');
 
 		// LINE 0
 		darkLightSwitchIcon = new DarkLightSwitchIcon();
@@ -202,8 +218,19 @@ public class MainForm extends JFrame {
 		String[] profileTypes = { "CPF", "CNPJ" };
 		profileTypeComboBox = new JComboBox<String>(profileTypes);
 		profileTypeComboBox.setVisible(false);
+		profileTypeComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					profileTypeValueTextField.setValue(null);
+					if (profileTypeComboBox.getSelectedItem().toString().equals("CNPJ"))
+						profileTypeValueTextField.setFormatterFactory(new DefaultFormatterFactory(cnpjMask));
+					else
+						profileTypeValueTextField.setFormatterFactory(new DefaultFormatterFactory(cpfMask));
+				}
+			}
+		});
 
-		profileTypeValueTextField = new JTextField();
+		profileTypeValueTextField = new JFormattedTextField(cpfMask);
 		profileTypeValueTextField.setVisible(false);
 
 		// LINE 5
@@ -223,24 +250,24 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		//LINE 6
+		// LINE 6
 		systemFileTypeLabel = new JLabel("Selecione um tipo de arquivo");
 		systemFileTypeComboBox = new JComboBox<String>(SpedUtils.getSystemFileType(Sped.CONTRIBUICOES));
 		systemFileTypeComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
 					Sped value = Sped.getSped(systemComboBox.getSelectedItem().toString());
-					
+
 					DefaultComboBoxModel<String> modelForSystemSearchType = new DefaultComboBoxModel<>();
-					modelForSystemSearchType.addAll(SpedUtils.getSystemSearchTypeList(value,e.getItem().toString()));
+					modelForSystemSearchType.addAll(SpedUtils.getSystemSearchTypeList(value, e.getItem().toString()));
 					systemSearchTypeComboBox.removeAllItems();
 					systemSearchTypeComboBox.setModel(modelForSystemSearchType);
 					systemSearchTypeComboBox.setSelectedIndex(0);
 				}
 			}
 		});
-		
-		//LINE 7
+
+		// LINE 7
 		systemSearchTypeLabel = new JLabel("Selecione um tipo de pesquisa");
 		systemSearchTypeComboBox = new JComboBox<String>(SpedUtils.getSystemSearchType(Sped.CONTRIBUICOES, ""));
 		systemSearchTypeComboBox.addItemListener(new ItemListener() {
@@ -248,28 +275,48 @@ public class MainForm extends JFrame {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
 					Sped system = Sped.getSped(systemComboBox.getSelectedItem().toString());
 					String systemFileType = systemFileTypeComboBox.getSelectedItem().toString();
-					
+
 					panelMain.remove(systemSearchFieldsPanel);
-					systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, e.getItem().toString());
+					try {
+						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, e.getItem().toString());
+					} catch (ParseException e1) {
+						e1.printStackTrace();
+					}
 					panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
 					panelMain.revalidate();
 					panelMain.repaint();
 				}
 			}
 		});
-	
-		//LINE 8
+
+		// LINE 8
 		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
-		
-		//LINE 9
+
+		// LINE 9
 		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "");
-		
-		//LINE 10
+
+		// LINE 10
 		searchButton = new JButton("Pesquisar");
 		searchButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Button clicked!");
+				String result= validateFormFields();
+				if (result.equals("")) {
+					//Start the Robot
+				}
+				else {
+					//show warning message
+					 JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
+
+				}
+			}
+		});
+
+		closeButton = new JButton("Sair");
+		closeButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				listener.value(Menu.CLOSE.getValue());
 			}
 		});
 
@@ -278,7 +325,6 @@ public class MainForm extends JFrame {
 
 		panelMain.add(themeLabel, "split, span3, right");
 		panelMain.add(themeButton, "wrap");
-		//panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "split, span, growx, pushx, wrap");
 		panelMain.add(screenResolutionLabel, "left, sg 1");
 		panelMain.add(screenResolutionTextField, "pushx, growx, wrap");
 		panelMain.add(certificateLabel, "left, sg 1");
@@ -299,12 +345,13 @@ public class MainForm extends JFrame {
 		panelMain.add(systemSearchTypeComboBox, "wrap");
 		panelMain.add(horizontalLine, "span, grow, wrap");
 		panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
-		panelMain.add(searchButton, "cell 0 10, wrap");
+		panelMain.add(searchButton, "cell 0 10");
+		panelMain.add(closeButton, "cell 2 10, left, wrap");
 
 		TitledBorder title;
 		title = BorderFactory.createTitledBorder("Pesquisa de Arquivos");
 		panelMain.setBorder(title);
-		
+
 		this.add(panelMain);
 
 		setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
@@ -354,6 +401,31 @@ public class MainForm extends JFrame {
 				certificateComboBox.setModel(model);
 			}
 		}
+	}
+
+	private String validateFormFields() {
+		StringBuilder result = new StringBuilder("");
+		
+		if (certificateComboBox.getSelectedIndex() == -1) 
+			result.append("Favor selecionar um certificado.\n");
+		
+		if (passwordTextField.getText().isBlank()) 
+			result.append("Favor informar a senha do certificado.\n");
+
+		if (profileProcurador.isSelected()) {
+			if (profileTypeComboBox.getSelectedItem().equals("CPF")) {
+				if (!ValidateCpfCnpj.isCpfValid(profileTypeValueTextField.getText())) {
+					result.append("Favor informar um CPF válido.\n");
+				}
+			}
+			else {
+				if (!ValidateCpfCnpj.isCnpjValid(profileTypeValueTextField.getText())) {
+					result.append("Favor informar um CNPJ válido.\n");
+				}
+			}
+		}
+		
+		return result.toString();
 	}
 
 }

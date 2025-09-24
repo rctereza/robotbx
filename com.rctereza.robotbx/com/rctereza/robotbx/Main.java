@@ -3,6 +3,7 @@ package com.rctereza.robotbx;
 import java.awt.AWTException;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.text.ParseException;
 
 import javax.swing.UIManager;
 
@@ -34,7 +35,7 @@ public class Main {
 		mainForm.setVisible(true);
 	}
 	
-	private void init() throws AWTException, InterruptedException {
+	private void init() throws AWTException, InterruptedException, ParseException {
 		
 		controller = new Controller();
 //		controller.startThreads();
@@ -66,7 +67,7 @@ public class Main {
 		
 	}
 
-	public static void main(String[] args) throws AWTException, InterruptedException {
+	public static void main(String[] args) throws AWTException, InterruptedException, ParseException {
 		FlatRobotoFont.install();
 		UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 12));
 		if (Scheme.isLafDark()) {

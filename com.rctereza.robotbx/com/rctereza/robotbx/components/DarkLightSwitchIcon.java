@@ -1,10 +1,5 @@
 package com.rctereza.robotbx.components;
 
-import com.formdev.flatlaf.extras.FlatSVGIcon;
-import com.formdev.flatlaf.ui.FlatUIUtils;
-import com.formdev.flatlaf.util.AnimatedIcon;
-import com.formdev.flatlaf.util.ColorFunctions;
-import com.formdev.flatlaf.util.UIScale;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Component;
@@ -12,17 +7,24 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.RoundRectangle2D;
+
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
 import javax.swing.JComponent;
+
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.formdev.flatlaf.ui.FlatUIUtils;
+import com.formdev.flatlaf.util.AnimatedIcon;
+import com.formdev.flatlaf.util.ColorFunctions;
+import com.formdev.flatlaf.util.UIScale;
 
 public class DarkLightSwitchIcon implements AnimatedIcon {
 
     private int iconGap = 3;
     private int centerSpace = 5;
 
-    private Icon darkIcon = new FlatSVGIcon("images/dark.svg", 0.4f);
-    private Icon lightIcon = new FlatSVGIcon("images/light.svg", 0.4f);
+    private Icon darkIcon = getIcon("/images/dark.svg");
+    private Icon lightIcon = getIcon("/images/light.svg");
 
     private Color darkColor = new Color(80, 80, 80);
     private Color lightColor = new Color(230, 230, 230);
@@ -58,6 +60,15 @@ public class DarkLightSwitchIcon implements AnimatedIcon {
     private float getBorderArc(Component com) {
         return FlatUIUtils.getBorderArc((JComponent) com);
     }
+    
+    private Icon getIcon(String file) {
+		FlatSVGIcon icon = new FlatSVGIcon(DarkLightSwitchIcon.class.getResource(file));
+		FlatSVGIcon scaled = icon.derive(
+		    (int) (icon.getIconWidth() * 0.4f),
+		    (int) (icon.getIconHeight() * 0.4f)
+		);
+		return scaled;
+	}
 
     @Override
     public int getAnimationDuration() {

@@ -1,16 +1,20 @@
 package com.rctereza.robotbx.tools;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
+import javax.swing.text.MaskFormatter;
 
+import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Sped;
 
 import net.miginfocom.swing.MigLayout;
@@ -87,9 +91,15 @@ public class SpedUtils {
 		return list;
 	}
 
-	public static JPanel getSearchFields(Sped value, String fileType, String searchType) {
+	public static JPanel getSearchFields(Sped value, String fileType, String searchType) throws ParseException {
 		JPanel panel = null; // = new JPanel(new MigLayout("", "[][]", "[]"));
 
+		MaskFormatter cnpjMask = new MaskFormatter("##.###.###/####-##");
+		MaskFormatter dateMask = new MaskFormatter("##/##/####");
+
+		cnpjMask.setPlaceholderCharacter('_');
+		dateMask.setPlaceholderCharacter('_');
+		
 		if ((value.equals(Sped.CONTRIBUICOES) && (fileType.equals("Escrituração") || fileType.equals("")) && (searchType.equals("Período de Entrega") || searchType.equals("")))
 				|| (value.equals(Sped.CONTRIBUICOES) && fileType.equals("Escrituração") && searchType.equals("Período da Escrituração"))
 				|| (value.equals(Sped.CONTABIL) && fileType.equals("Escrituração Contábil Digital") && searchType.equals("Por Período da Escrituração"))
@@ -102,10 +112,14 @@ public class SpedUtils {
 			panel = new JPanel(new MigLayout("", "[][]", "[][]"));
 
 			JLabel inicioDateLabel = new JLabel("Data de início *");
-			JTextField inicioDateTextField = new JTextField(10);
+			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
+			inicioDateTextField.setColumns(8);
+			inicioDateTextField.setValue(Constants.PROGRAM_PERIOD_START);
 
 			JLabel fimDateLabel = new JLabel("Data de fim *");
-			JTextField fimDateTextField = new JTextField(10);
+			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
+			fimDateTextField.setColumns(8);
+			fimDateTextField.setValue(Constants.PROGRAM_PERIOD_END);
 			
 			panel.add(inicioDateLabel, "sg 1");
 			panel.add(inicioDateTextField, "wrap");
@@ -119,13 +133,18 @@ public class SpedUtils {
 			panel = new JPanel(new MigLayout("", "[][]", "[][][]"));
 
 			JLabel inicioDateLabel = new JLabel("Data de início *");
-			JTextField inicioDateTextField = new JTextField(10);
-
+			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
+			inicioDateTextField.setColumns(8);
+			inicioDateTextField.setValue(Constants.PROGRAM_PERIOD_START);
+			
 			JLabel fimDateLabel = new JLabel("Data de fim *");
-			JTextField fimDateTextField = new JTextField(10);
+			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
+			fimDateTextField.setColumns(8);
+			fimDateTextField.setValue(Constants.PROGRAM_PERIOD_END);
 			
 			JLabel incorporadoraCnpjLabel = new JLabel("CNPJ da Incorporada *");
-			JTextField incorporadoraCnpjTextField = new JTextField(20);	
+			JFormattedTextField incorporadoraCnpjTextField = new JFormattedTextField(cnpjMask);	
+			incorporadoraCnpjTextField.setColumns(12);
 			
 			panel.add(inicioDateLabel, "sg 1");
 			panel.add(inicioDateTextField, "wrap");
@@ -154,19 +173,24 @@ public class SpedUtils {
 			panel = new JPanel(new MigLayout("", "[][]", "[][][][][][]"));
 			
 			JLabel cnpjEstabelecimentoLabel = new JLabel("CNPJ do Estabelecimento");
-			JTextField cnpjEstabelecimentoTextField = new JTextField(20);
+			JFormattedTextField cnpjEstabelecimentoTextField = new JFormattedTextField(cnpjMask);
+			cnpjEstabelecimentoTextField.setColumns(12);
 			
 			JLabel buscarArquivosLabel = new JLabel("Buscar Arquivos de Todos os Estabelecimentos *");
 			JCheckBox buscarArquivosCheckBox = new JCheckBox("");
 			
 			JLabel incricaoEstadualLabel = new JLabel("Inscrição Estadual");
-			JTextField incricaoEstadualTextField = new JTextField(15);
+			JTextField incricaoEstadualTextField = new JTextField(10);
 			
 			JLabel inicioDateLabel = new JLabel("Data de início *");
-			JTextField inicioDateTextField = new JTextField(10);
-
+			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
+			inicioDateTextField.setColumns(8);
+			inicioDateTextField.setValue(Constants.PROGRAM_PERIOD_START);
+			
 			JLabel fimDateLabel = new JLabel("Data de fim *");
-			JTextField fimDateTextField = new JTextField(10);
+			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
+			fimDateTextField.setColumns(8);
+			fimDateTextField.setValue(Constants.PROGRAM_PERIOD_END);
 			
 			JLabel ultimoArquivoLabel = new JLabel("Ultimo arquivo transmitido *");
 			JCheckBox ultimoArquivoCheckBox = new JCheckBox("");
