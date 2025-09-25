@@ -1,0 +1,26 @@
+package com.rctereza.robotbx.models;
+
+public record ReceitaBx(  
+	  String MONITOR
+	, String CERTIFICADO
+	, String SENHA
+	, String PERFIL
+	, String PERFIL_TYPE
+	, String PERFIL_VALUE
+	, String SISTEMA
+	, String TIPO_ARQUIVO
+	, String TIPO_PESQUISA
+	, String DATA_INICIO
+	, String DATA_FIM
+	, String CNPJ_INCORPORADORA
+	, String TIPO_EVENTO
+	, String BAIXAR_ARQUIVO_ASSINADO
+	, String CNPJ_ESTABELECIMENTO
+	, String BUSCAR_TODOS_ESTABLECIMENTOS
+	, String INSCRICAO_ESTADUAL
+	, String ULTIMO_ARQUIVO_TRANSMITIDO
+) {
+	public ReceitaBx() {
+		this(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
+	}
+}

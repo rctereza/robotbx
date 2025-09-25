@@ -1,5 +1,6 @@
 package com.rctereza.robotbx.views;
 
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,6 +20,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
@@ -278,7 +280,8 @@ public class MainForm extends JFrame {
 
 					panelMain.remove(systemSearchFieldsPanel);
 					try {
-						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, e.getItem().toString());
+						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType,
+								e.getItem().toString());
 					} catch (ParseException e1) {
 						e1.printStackTrace();
 					}
@@ -300,13 +303,12 @@ public class MainForm extends JFrame {
 		searchButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String result= validateFormFields();
+				String result = validateFormFields();
 				if (result.equals("")) {
-					//Start the Robot
-				}
-				else {
-					//show warning message
-					 JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
+					// Start the Robot
+				} else {
+					// show warning message
+					JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
 
 				}
 			}
@@ -405,11 +407,11 @@ public class MainForm extends JFrame {
 
 	private String validateFormFields() {
 		StringBuilder result = new StringBuilder("");
-		
-		if (certificateComboBox.getSelectedIndex() == -1) 
+
+		if (certificateComboBox.getSelectedIndex() == -1)
 			result.append("Favor selecionar um certificado.\n");
-		
-		if (passwordTextField.getText().isBlank()) 
+
+		if (passwordTextField.getText().isBlank())
 			result.append("Favor informar a senha do certificado.\n");
 
 		if (profileProcurador.isSelected()) {
@@ -417,14 +419,26 @@ public class MainForm extends JFrame {
 				if (!ValidateCpfCnpj.isCpfValid(profileTypeValueTextField.getText())) {
 					result.append("Favor informar um CPF válido.\n");
 				}
-			}
-			else {
+			} else {
 				if (!ValidateCpfCnpj.isCnpjValid(profileTypeValueTextField.getText())) {
 					result.append("Favor informar um CNPJ válido.\n");
 				}
 			}
 		}
-		
+
+		for (Component c : systemSearchFieldsPanel.getComponents()) {
+			if (c instanceof JTextField) {
+				JTextField textField = (JTextField) c;
+				System.out.println("JTextField (Name: " + textField.getName() + "): " + textField.getText());
+			} else if (c instanceof JCheckBox) {
+				JCheckBox checkBox = (JCheckBox) c;
+				System.out.println("JCheckBox (Name: " + checkBox.getName() + "): " + checkBox.isSelected());
+			} else if (c instanceof JComboBox) {
+				JComboBox<?> comboBox = (JComboBox<?>) c;
+				System.out.println("JButton (Name: " + comboBox.getName() + "): " + comboBox.getSelectedItem().toString());
+			}
+		}
+
 		return result.toString();
 	}
 
