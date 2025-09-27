@@ -6,12 +6,19 @@ import java.util.List;
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
 import com.rctereza.robotbx.models.Certificate;
+import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
 import com.rctereza.robotbx.models.RobotCommand;
 
 public class RobotUtils {
 
+	public static Robot getRobot(ReceitaBx params) {
+//		List<Robot> list = getPreConfigfuredRobot(params.CERTIFICADO());
+//		return list.get(0);
+		return null;
+	}
+	
 	public static Robot getRobotBasedOnScreenResolution(Certificate certificate, String resolution) {
 		Robot result = new Robot();
 			
@@ -25,7 +32,14 @@ public class RobotUtils {
 		
 		return result;
 	}
-	
+
+//	public static List<Robot> getListOfPreConfigfuredRobots(ReceitaBx params) {
+//		ArrayList<Robot> result = new ArrayList<>();
+//		result.add(getRobot01(certificate));
+//		result.add(getRobot02(certificate));
+//		return result;
+//	}
+
 	public static List<Robot> getListOfPreConfigfuredRobots(Certificate certificate) {
 		ArrayList<Robot> result = new ArrayList<>();
 		result.add(getRobot01(certificate));

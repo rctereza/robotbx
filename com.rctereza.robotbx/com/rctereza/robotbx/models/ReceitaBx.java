@@ -1,8 +1,8 @@
 package com.rctereza.robotbx.models;
 
 public record ReceitaBx(  
-	  String MONITOR
-	, String CERTIFICADO
+	  String SCREEN
+	, Certificate CERTIFICADO
 	, String SENHA
 	, String PERFIL
 	, String PERFIL_TYPE
@@ -16,9 +16,9 @@ public record ReceitaBx(
 	, String TIPO_EVENTO
 	, String BAIXAR_ARQUIVO_ASSINADO
 	, String CNPJ_ESTABELECIMENTO
-	, String BUSCAR_TODOS_ESTABLECIMENTOS
+	, Boolean BUSCAR_TODOS_ESTABLECIMENTOS
 	, String INSCRICAO_ESTADUAL
-	, String ULTIMO_ARQUIVO_TRANSMITIDO
+	, Boolean ULTIMO_ARQUIVO_TRANSMITIDO
 ) {
 	public ReceitaBx() {
 		this(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);

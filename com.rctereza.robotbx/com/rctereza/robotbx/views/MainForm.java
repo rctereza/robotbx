@@ -1,5 +1,6 @@
 package com.rctereza.robotbx.views;
 
+import java.awt.AWTException;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -46,8 +47,10 @@ import com.rctereza.robotbx.components.DarkLightSwitchIcon;
 import com.rctereza.robotbx.controllers.Controller;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.enums.Sped;
+import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
+import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
@@ -102,14 +105,16 @@ public class MainForm extends JFrame {
 	private JButton searchButton;
 	private JButton closeButton;
 
-	// private static Controller controller;
+	private Controller controller;
+
+	private ReceitaBx receitaBx;
 
 	private Listenable listener;
 
 	public MainForm(Controller controller) throws ParseException {
 		super(softwareNameAndVersion);
 
-//		MainForm.controller = controller;
+		this.controller = controller;
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -176,7 +181,7 @@ public class MainForm extends JFrame {
 		certificateLoadButton = new JButton("Carregar");
 		certificateLoadButton.addActionListener(e -> {
 			JFileChooser chooser = new JFileChooser();
-			chooser.setDialogTitle("Select a folder");
+			chooser.setDialogTitle("Selecione a pasta do(s) certificado(s)");
 			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			chooser.setAcceptAllFileFilterUsed(false);
 
@@ -305,11 +310,14 @@ public class MainForm extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				String result = validateFormFields();
 				if (result.equals("")) {
-					// Start the Robot
+					try {
+						controller.startThreads(receitaBx);
+					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
+//						e1.printStackTrace();
+						JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+					}
 				} else {
-					// show warning message
 					JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
-
 				}
 			}
 		});
@@ -381,12 +389,14 @@ public class MainForm extends JFrame {
 			} else {
 				Scheme.setLafDark();
 				EventQueue.invokeLater(new Runnable() {
+
 					public void run() {
 						FlatAnimatedLafChange.showSnapshot();
 						FlatDarculaLaf.setup();
 						FlatLaf.updateUI();
 						FlatAnimatedLafChange.hideSnapshotWithAnimation();
 					}
+
 				});
 			}
 		}
@@ -408,35 +418,94 @@ public class MainForm extends JFrame {
 	private String validateFormFields() {
 		StringBuilder result = new StringBuilder("");
 
+		String SCREEN = screenResolutionTextField.getText();
+		Certificate CERTIFICADO = null;
+		String SENHA = "";
+		String PERFIL = "";
+		String PERFIL_TYPE = "";
+		String PERFIL_VALUE = "";
+		String SISTEMA = systemComboBox.getSelectedItem().toString();
+		String TIPO_ARQUIVO = systemFileTypeComboBox.getSelectedItem().toString();
+		String TIPO_PESQUISA = systemSearchTypeComboBox.getSelectedItem().toString();
+		String DATA_INICIO = "";
+		String DATA_FIM = "";
+		String CNPJ_INCORPORADORA = "";
+		String TIPO_EVENTO = "";
+		String BAIXAR_ARQUIVO_ASSINADO = "";
+		String CNPJ_ESTABELECIMENTO = "";
+		Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
+		String INSCRICAO_ESTADUAL = "";
+		Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
+
 		if (certificateComboBox.getSelectedIndex() == -1)
 			result.append("Favor selecionar um certificado.\n");
+		else
+			CERTIFICADO = (Certificate) certificateComboBox.getSelectedItem();
 
 		if (passwordTextField.getText().isBlank())
 			result.append("Favor informar a senha do certificado.\n");
+		else
+			SENHA = passwordTextField.getText();
 
 		if (profileProcurador.isSelected()) {
-			if (profileTypeComboBox.getSelectedItem().equals("CPF")) {
-				if (!ValidateCpfCnpj.isCpfValid(profileTypeValueTextField.getText())) {
+
+			PERFIL = profileProcurador.getText();
+			PERFIL_TYPE = profileTypeComboBox.getSelectedItem().toString();
+			PERFIL_VALUE = profileTypeValueTextField.getText();
+
+			if (PERFIL_TYPE.equals("CPF")) {
+				if (!ValidateCpfCnpj.isCpfValid(PERFIL_VALUE)) {
 					result.append("Favor informar um CPF válido.\n");
 				}
 			} else {
-				if (!ValidateCpfCnpj.isCnpjValid(profileTypeValueTextField.getText())) {
+				if (!ValidateCpfCnpj.isCnpjValid(PERFIL_VALUE)) {
 					result.append("Favor informar um CNPJ válido.\n");
 				}
 			}
+		} else {
+			PERFIL = profileContribuinte.getText();
 		}
 
 		for (Component c : systemSearchFieldsPanel.getComponents()) {
 			if (c instanceof JTextField) {
 				JTextField textField = (JTextField) c;
-				System.out.println("JTextField (Name: " + textField.getName() + "): " + textField.getText());
-			} else if (c instanceof JCheckBox) {
-				JCheckBox checkBox = (JCheckBox) c;
-				System.out.println("JCheckBox (Name: " + checkBox.getName() + "): " + checkBox.isSelected());
+//				System.out.println("JTextField : " + textField.getText());
+				if (textField.getName().equals("DATA_INICIO")) {
+					DATA_INICIO = textField.getText();
+				} else if (textField.getName().equals("DATA_FIM")) {
+					DATA_FIM = textField.getText();
+				} else if (textField.getName().equals("CNPJ_INCORPORADORA")) {
+					CNPJ_INCORPORADORA = textField.getText();
+				} else if (textField.getName().equals("CNPJ_ESTABELECIMENTO")) {
+					CNPJ_ESTABELECIMENTO = textField.getText();
+				} else if (textField.getName().equals("INSCRICAO_ESTADUAL")) {
+					INSCRICAO_ESTADUAL = textField.getText();
+				}
 			} else if (c instanceof JComboBox) {
 				JComboBox<?> comboBox = (JComboBox<?>) c;
-				System.out.println("JButton (Name: " + comboBox.getName() + "): " + comboBox.getSelectedItem().toString());
+//				System.out.println("JComboBox : " + comboBox.getSelectedItem().toString());
+				if (comboBox.getName().equals("TIPO_EVENTO")) {
+					TIPO_EVENTO = comboBox.getSelectedItem().toString();
+				} else if (comboBox.getName().equals("BAIXAR_ARQUIVO_ASSINADO")) {
+					BAIXAR_ARQUIVO_ASSINADO = comboBox.getSelectedItem().toString();
+				}
+			} else if (c instanceof JCheckBox) {
+				JCheckBox checkBox = (JCheckBox) c;
+//				System.out.println("JCheckBox : " + checkBox.getText());
+				if (checkBox.getName().equals("BUSCAR_TODOS_ESTABLECIMENTOS")) {
+					BUSCAR_TODOS_ESTABLECIMENTOS = checkBox.isSelected();
+				} else if (checkBox.getName().equals("ULTIMO_ARQUIVO_TRANSMITIDO")) {
+					ULTIMO_ARQUIVO_TRANSMITIDO = checkBox.isSelected();
+				}
 			}
+		}
+
+		if (result.isEmpty()) {
+			receitaBx = new ReceitaBx(SCREEN, CERTIFICADO, SENHA, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
+					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
+					ULTIMO_ARQUIVO_TRANSMITIDO);
+//			System.out.println(receitaBx);
 		}
 
 		return result.toString();
