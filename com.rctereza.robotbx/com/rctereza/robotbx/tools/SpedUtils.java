@@ -229,4 +229,10 @@ public class SpedUtils {
 
 		return panel;
 	}
+	
+//	private String getInicioDate() {
+//		String result = Constants.PROGRAM_PERIOD_START;
+//		
+//		return result;
+//	}
 }

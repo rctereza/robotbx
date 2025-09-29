@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import com.rctereza.robotbx.enums.Command;
-import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
 import com.rctereza.robotbx.models.RobotCommand;
@@ -19,13 +18,11 @@ public class ProcessExternalProgram implements Runnable {
 	private static final String threadName = "[" + ProcessExternalProgram.class.getName() + "] ";
 
 	private final CountDownLatch finishLatch;
-	private final ReceitaBx params;
 	private final Actions actions;
 	private final Robot robot;
 
-	public ProcessExternalProgram(CountDownLatch finishLatch, ReceitaBx params, Robot robot) throws AWTException {
+	public ProcessExternalProgram(CountDownLatch finishLatch, Robot robot) throws AWTException {
 		this.finishLatch = finishLatch;
-		this.params = params;
 		this.robot = robot;
 		actions = new Actions();
 	}
@@ -33,7 +30,6 @@ public class ProcessExternalProgram implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.println("Params.............: " + params);
 		System.out.println("Running............: " + robot.NAME());
 
 		List<RobotAction> listOfRobotActions = robot.ROBOT_ACTIONS();

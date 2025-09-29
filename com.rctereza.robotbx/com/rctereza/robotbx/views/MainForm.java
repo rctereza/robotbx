@@ -65,6 +65,8 @@ public class MainForm extends JFrame {
 
 	private static final String softwareNameAndVersion = Constants.SOFTWARE_NAME + " " + Constants.SOFTWARE_VERSION;
 
+	private static Controller controller;
+
 	private MaskFormatter cnpjMask;
 	private MaskFormatter cpfMask;
 
@@ -105,8 +107,6 @@ public class MainForm extends JFrame {
 	private JButton searchButton;
 	private JButton closeButton;
 
-	private Controller controller;
-
 	private ReceitaBx receitaBx;
 
 	private Listenable listener;
@@ -114,7 +114,7 @@ public class MainForm extends JFrame {
 	public MainForm(Controller controller) throws ParseException {
 		super(softwareNameAndVersion);
 
-		this.controller = controller;
+		MainForm.controller = controller;
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -311,7 +311,7 @@ public class MainForm extends JFrame {
 				String result = validateFormFields();
 				if (result.equals("")) {
 					try {
-						controller.startThreads(receitaBx);
+						MainForm.controller.startThreads(receitaBx);
 					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
 //						e1.printStackTrace();
 						JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

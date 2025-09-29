@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
-import com.rctereza.robotbx.models.Certificate;
+import com.rctereza.robotbx.enums.Sped;
 import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
@@ -13,18 +13,12 @@ import com.rctereza.robotbx.models.RobotCommand;
 
 public class RobotUtils {
 
-	public static Robot getRobot(ReceitaBx params) {
-//		List<Robot> list = getPreConfigfuredRobot(params.CERTIFICADO());
-//		return list.get(0);
-		return null;
-	}
-	
-	public static Robot getRobotBasedOnScreenResolution(Certificate certificate, String resolution) {
+	public static Robot getRobotBasedOnScreenResolution(ReceitaBx params) {
 		Robot result = new Robot();
 			
-		List<Robot> list = getListOfPreConfigfuredRobots(certificate);
+		List<Robot> list = getListOfPreConfigfuredRobots(params);
 		for (Robot robot: list) {
-			if (robot.NAME().contains(resolution) ) {
+			if (robot.NAME().contains(params.SCREEN()) ) {
 				result = robot;
 				break;
 			}
@@ -33,26 +27,19 @@ public class RobotUtils {
 		return result;
 	}
 
-//	public static List<Robot> getListOfPreConfigfuredRobots(ReceitaBx params) {
-//		ArrayList<Robot> result = new ArrayList<>();
-//		result.add(getRobot01(certificate));
-//		result.add(getRobot02(certificate));
-//		return result;
-//	}
-
-	public static List<Robot> getListOfPreConfigfuredRobots(Certificate certificate) {
+	public static List<Robot> getListOfPreConfigfuredRobots(ReceitaBx params) {
 		ArrayList<Robot> result = new ArrayList<>();
-		result.add(getRobot01(certificate));
-		result.add(getRobot02(certificate));
+		result.add(getRobot01(params));
+		result.add(getRobot02(params));
 		return result;
 	}
 	
-	private static Robot getRobot01(Certificate certificate) {
-		Robot result = new Robot(1,"Robot for 1366x768 resolution", 768, 1366, 418, 616, true, getRobot01Actions(certificate));
+	private static Robot getRobot01(ReceitaBx params) {
+		Robot result = new Robot(1,"Robot for 1366x768 resolution", 768, 1366, 418, 616, true, getRobot01Actions(params));
 		return result;
 	}
 	
-	private static List<RobotAction> getRobot01Actions(Certificate certificate) {
+	private static List<RobotAction> getRobot01Actions(ReceitaBx params) {
 		int counter = 10;
 		
 		ArrayList<RobotAction> actions = new ArrayList<>();
@@ -70,7 +57,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 598, 542, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-		commands.add(new RobotCommand(3, Command.PASTE, null, null, certificate.FILE_PATH() + "\\" + certificate.FILE_NAME(), true));
+		commands.add(new RobotCommand(3, Command.PASTE, null, null, params.CERTIFICADO().FILE_PATH() + "\\" + params.CERTIFICADO().FILE_NAME(), true));
 		actions.add(new RobotAction(counter += 10, "Colar o caminho do certificado", true, new ArrayList<>(commands)));
 		
 		commands.clear();
@@ -81,7 +68,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 617, 386, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-		commands.add(new RobotCommand(3, Command.PASTE, null, null, certificate.FILE_PASS(), true));
+		commands.add(new RobotCommand(3, Command.PASTE, null, null, params.CERTIFICADO().FILE_PASS(), true));
 		actions.add(new RobotAction(counter += 10, "Colar o password do certificado", true, new ArrayList<>(commands)));
 
 		commands.clear();
@@ -89,15 +76,39 @@ public class RobotUtils {
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
 		actions.add(new RobotAction(counter += 10, "Clicar no botão 'OK'", true, new ArrayList<>(commands)));
 		
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 850, 533, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar no campo 'selecionar o perfil'", true, new ArrayList<>(commands)));
-//
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 844, 566, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Selecionar o perfil 'Procurador'", true, new ArrayList<>(commands)));
+		if (params.PERFIL().equals("Procurador")) {
+			
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 691, 531, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar no campo 'selecionar o perfil'", true, new ArrayList<>(commands)));
+			
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 689, 531, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Selecionar o perfil 'Procurador'", true, new ArrayList<>(commands)));
+
+			if (params.PERFIL_TYPE().equals("CNPJ")) {
+
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.MOVE, 526, 531, null, true));
+				commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Quem você representa?'", true, new ArrayList<>(commands)));
+				
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.MOVE, 523, 531, null, true));
+				commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+				actions.add(new RobotAction(counter += 10, "Selecionar a opção 'CNPJ'", true, new ArrayList<>(commands)));
+				
+			}
+			
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 569, 531, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			commands.add(new RobotCommand(3, Command.PASTE, null, null, params.PERFIL_VALUE(), true));
+			actions.add(new RobotAction(counter += 10, "Colar o '" + params.PERFIL_TYPE() + "' informado nos parâmetros", true, new ArrayList<>(commands)));
+			
+		}
 
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 875, 568, null, true));
@@ -105,40 +116,46 @@ public class RobotUtils {
 		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(commands)));
 		
 		commands.clear();
-		commands.add(new RobotCommand(1, Command.MOVE, 264, 118, null, true));
+		commands.add(new RobotCommand(1, Command.MOVE, 245, 124, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
 		actions.add(new RobotAction(counter += 10, "Clicar na opção 'Pesquisa'", true, new ArrayList<>(commands)));
 
 		commands.clear();
-		commands.add(new RobotCommand(1, Command.MOVE, 887, 221, null, true));
+		commands.add(new RobotCommand(1, Command.MOVE, 555, 221, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
 		actions.add(new RobotAction(counter += 10, "Clicar no campo 'Selecione Sistema'", true, new ArrayList<>(commands)));
 				
-		commands.clear();
-		commands.add(new RobotCommand(1, Command.MOVE, 827, 243, null, true));
-		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Contribuições'", true, new ArrayList<>(commands)));
-
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 710, 255, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Contabil'", true, new ArrayList<>(commands)));
-//
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 688, 267, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED ECF'", true, new ArrayList<>(commands)));
-//
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 679, 286, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED EFD-Reinf'", true, new ArrayList<>(commands)));
-//
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 701, 297, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Fiscal-EFD ICMS IPI'", true, new ArrayList<>(commands)));
-
+		if (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 561, 240, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Contribuições'", true, new ArrayList<>(commands)));
+		}
+		else if (params.SISTEMA().equals(Sped.CONTABIL.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 565, 254, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Contabil'", true, new ArrayList<>(commands)));
+		}
+		else if (params.SISTEMA().equals(Sped.ECF.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 569, 269, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED ECF'", true, new ArrayList<>(commands)));
+		}
+		else if (params.SISTEMA().equals(Sped.EFD.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 572, 282, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED EFD-Reinf'", true, new ArrayList<>(commands)));
+		}
+		else if (params.SISTEMA().equals(Sped.FISCAL.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 579, 296, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Fiscal-EFD ICMS IPI'", true, new ArrayList<>(commands)));
+		}
+		
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 729, 252, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
@@ -190,12 +207,12 @@ public class RobotUtils {
 		return actions;	
 	}
 	
-	private static Robot getRobot02(Certificate certificate) {
-		Robot result = new Robot(1,"Robot for 1920x1080 resolution", 1080, 1920, 418, 616, true, getRobot02Actions(certificate));
+	private static Robot getRobot02(ReceitaBx params) {
+		Robot result = new Robot(1,"Robot for 1920x1080 resolution", 1080, 1920, 418, 616, true, getRobot02Actions(params));
 		return result;
 	}
 	
-	private static List<RobotAction> getRobot02Actions(Certificate certificate) {
+	private static List<RobotAction> getRobot02Actions(ReceitaBx params) {
 		int counter = 10;
 		
 		ArrayList<RobotAction> actions = new ArrayList<>();
@@ -213,7 +230,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 861, 700, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-		commands.add(new RobotCommand(3, Command.PASTE, null, null, certificate.FILE_PATH() + "\\" + certificate.FILE_NAME(), true));
+		commands.add(new RobotCommand(3, Command.PASTE, null, null, params.CERTIFICADO().FILE_PATH() + "\\" + params.CERTIFICADO().FILE_NAME(), true));
 		actions.add(new RobotAction(counter += 10, "Colar o caminho do certificado", true, new ArrayList<>(commands)));
 		
 		commands.clear();
@@ -224,7 +241,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 881, 543, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-		commands.add(new RobotCommand(3, Command.PASTE, null, null, certificate.FILE_PASS(), true));
+		commands.add(new RobotCommand(3, Command.PASTE, null, null, params.CERTIFICADO().FILE_PASS(), true));
 		actions.add(new RobotAction(counter += 10, "Colar o password do certificado", true, new ArrayList<>(commands)));
 
 		commands.clear();
@@ -232,15 +249,39 @@ public class RobotUtils {
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
 		actions.add(new RobotAction(counter += 10, "Clicar no botão 'OK'", true, new ArrayList<>(commands)));
 
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 951, 690, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar no campo 'selecionar o perfil'", true, new ArrayList<>(commands)));
-//
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 96wwwwwwww1, 720, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Selecionar o perfil 'Procurador'", true, new ArrayList<>(commands)));
+		if (params.PERFIL().equals("Procurador")) {
+			
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 953, 690, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar no campo 'selecionar o perfil'", true, new ArrayList<>(commands)));
+			
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 953, 721, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Selecionar o perfil 'Procurador'", true, new ArrayList<>(commands)));
+
+			if (params.PERFIL_TYPE().equals("CNPJ")) {
+
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.MOVE, 830, 687, null, true));
+				commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Quem você representa?'", true, new ArrayList<>(commands)));
+				
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.MOVE, 825, 717, null, true));
+				commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+				actions.add(new RobotAction(counter += 10, "Selecionar a opção 'CNPJ'", true, new ArrayList<>(commands)));
+				
+			}
+			
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 847, 688, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			commands.add(new RobotCommand(3, Command.PASTE, null, null, params.PERFIL_VALUE(), true));
+			actions.add(new RobotAction(counter += 10, "Colar o '" + params.PERFIL_TYPE() + "' informado nos parâmetros", true, new ArrayList<>(commands)));
+			
+		}
 
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 1160, 720, null, true));
@@ -253,35 +294,41 @@ public class RobotUtils {
 		actions.add(new RobotAction(counter += 10, "Clicar na opção 'Pesquisa'", true, new ArrayList<>(commands)));
 
 		commands.clear();
-		commands.add(new RobotCommand(1, Command.MOVE, 880, 377, null, true));
+		commands.add(new RobotCommand(1, Command.MOVE, 830, 379, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
 		actions.add(new RobotAction(counter += 10, "Clicar no campo 'Selecione Sistema'", true, new ArrayList<>(commands)));
-				
-		commands.clear();
-		commands.add(new RobotCommand(1, Command.MOVE, 877, 397, null, true));
-		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Contribuições'", true, new ArrayList<>(commands)));
 		
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 882, 410, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Contabil'", true, new ArrayList<>(commands)));
-//
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 873, 424, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED ECF'", true, new ArrayList<>(commands)));
-//
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 883, 437, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED EFD-Reinf'", true, new ArrayList<>(commands)));
-//
-//		commands.clear();
-//		commands.add(new RobotCommand(1, Command.MOVE, 877, 452, null, true));
-//		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
-//		actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Fiscal-EFD ICMS IPI'", true, new ArrayList<>(commands)));
-
+		if (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 835, 397, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Contribuições'", true, new ArrayList<>(commands)));
+		}
+		else if (params.SISTEMA().equals(Sped.CONTABIL.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 835, 412, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Contabil'", true, new ArrayList<>(commands)));
+		}
+		else if (params.SISTEMA().equals(Sped.ECF.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 835, 426, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED ECF'", true, new ArrayList<>(commands)));
+		}
+		else if (params.SISTEMA().equals(Sped.EFD.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 835, 440, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED EFD-Reinf'", true, new ArrayList<>(commands)));
+		}
+		else if (params.SISTEMA().equals(Sped.FISCAL.getValue())) {
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.MOVE, 835, 454, null, true));
+			commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));
+			actions.add(new RobotAction(counter += 10, "Clicar na opção 'SPED Fiscal-EFD ICMS IPI'", true, new ArrayList<>(commands)));
+		}
+		
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 876, 407, null, true));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, true));

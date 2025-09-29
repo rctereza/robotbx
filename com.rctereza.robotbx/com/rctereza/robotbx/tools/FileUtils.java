@@ -24,7 +24,6 @@ public class FileUtils {
 		return prefs.get(Constants.CERTIFICATE_PATH, "");
 	}
 	
-	
 	public static List<Certificate> getListOfCertificates(String path) {
 		return getList(path);
 	}
