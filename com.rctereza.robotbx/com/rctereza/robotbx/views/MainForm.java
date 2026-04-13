@@ -107,7 +107,7 @@ public class MainForm extends JFrame {
 	private JButton searchButton;
 	private JButton closeButton;
 
-	private ReceitaBx receitaBx;
+	private ReceitaBx receitaBx = FileUtils.loadReceitaBx();
 
 	private Listenable listener;
 
@@ -125,6 +125,8 @@ public class MainForm extends JFrame {
 				listener.value(Menu.MINIMIZE.getValue());
 			}
 		});
+
+		// FileUtils.removeCertificatePathChosen();
 
 		cnpjMask = new MaskFormatter("##.###.###/####-##");
 		cnpjMask.setPlaceholderCharacter('_');
@@ -171,10 +173,11 @@ public class MainForm extends JFrame {
 		certificateComboBox = new JComboBox<>();
 		certificateComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					Certificate certificate = (Certificate) e.getItem();
-					passwordTextField.setText(certificate.FILE_PASS());
-				}
+				/*
+				 * if (e.getStateChange() == ItemEvent.SELECTED) { Certificate certificate =
+				 * (Certificate) e.getItem();
+				 * passwordTextField.setText(certificate.FILE_PASS()); }
+				 */
 			}
 		});
 
@@ -193,10 +196,12 @@ public class MainForm extends JFrame {
 		});
 
 		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
+		certificateComboBox.setSelectedItem(receitaBx.CERTIFICADO());
 
 		// LINE 3
 		passwordLabel = new JLabel("Senha do certificado");
 		passwordTextField = new JTextField();
+		passwordTextField.setText(receitaBx.SENHA());
 
 		// LINE 4
 		profileLabel = new JLabel("Selecione um perfil");
@@ -240,6 +245,14 @@ public class MainForm extends JFrame {
 		profileTypeValueTextField = new JFormattedTextField(cpfMask);
 		profileTypeValueTextField.setVisible(false);
 
+		if (receitaBx.PERFIL().equals(profileProcurador.getText())) {
+			profileProcurador.setSelected(true);
+			profileTypeComboBox.setVisible(true);
+			profileTypeValueTextField.setVisible(true);
+			profileTypeComboBox.setSelectedItem(receitaBx.PERFIL_TYPE());
+			profileTypeValueTextField.setValue(receitaBx.PERFIL_VALUE());
+		}
+
 		// LINE 5
 		systemLabel = new JLabel("Selecione um sistema");
 		systemComboBox = new JComboBox<String>(SpedUtils.getSystemList());
@@ -282,17 +295,26 @@ public class MainForm extends JFrame {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
 					Sped system = Sped.getSped(systemComboBox.getSelectedItem().toString());
 					String systemFileType = systemFileTypeComboBox.getSelectedItem().toString();
-
-					panelMain.remove(systemSearchFieldsPanel);
-					try {
-						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType,
-								e.getItem().toString());
-					} catch (ParseException e1) {
-						e1.printStackTrace();
+					if (systemSearchFieldsPanel != null && systemSearchFieldsPanel.isShowing()) {
+						panelMain.remove(systemSearchFieldsPanel);
+						try {
+							systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType,
+									e.getItem().toString(), receitaBx);
+						} catch (ParseException e1) {
+							e1.printStackTrace();
+						}
+						panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
+						panelMain.revalidate();
+						panelMain.repaint();
 					}
-					panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
-					panelMain.revalidate();
-					panelMain.repaint();
+					else {
+						try {
+							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.SISTEMA()), receitaBx.TIPO_ARQUIVO(),
+									receitaBx.TIPO_PESQUISA(), receitaBx);
+						} catch (ParseException e1) {
+							e1.printStackTrace();
+						}
+					}
 				}
 			}
 		});
@@ -301,7 +323,11 @@ public class MainForm extends JFrame {
 		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
 
 		// LINE 9
-		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "");
+		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx);
+
+		systemComboBox.setSelectedItem(receitaBx.SISTEMA());
+		systemFileTypeComboBox.setSelectedItem(receitaBx.TIPO_ARQUIVO());
+		systemSearchTypeComboBox.setSelectedItem(receitaBx.TIPO_PESQUISA());
 
 		// LINE 10
 		searchButton = new JButton("Pesquisar");
@@ -338,7 +364,7 @@ public class MainForm extends JFrame {
 		panelMain.add(screenResolutionLabel, "left, sg 1");
 		panelMain.add(screenResolutionTextField, "pushx, growx, wrap");
 		panelMain.add(certificateLabel, "left, sg 1");
-		panelMain.add(certificateComboBox, "pushx, growx");
+		panelMain.add(certificateComboBox, "growx, w ::600");
 		panelMain.add(certificateLoadButton, "left, wrap");
 		panelMain.add(passwordLabel, "left, sg 1");
 		panelMain.add(passwordTextField, "pushx, growx, wrap");
@@ -505,7 +531,8 @@ public class MainForm extends JFrame {
 					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
 					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
 					ULTIMO_ARQUIVO_TRANSMITIDO);
-//			System.out.println(receitaBx);
+
+			FileUtils.saveReceitaBx(receitaBx);
 		}
 
 		return result.toString();

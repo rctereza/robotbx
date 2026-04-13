@@ -1,6 +1,11 @@
 package com.rctereza.robotbx.tools;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,6 +16,7 @@ import java.util.prefs.Preferences;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.models.Certificate;
+import com.rctereza.robotbx.models.ReceitaBx;
 
 public class FileUtils {
 
@@ -22,6 +28,11 @@ public class FileUtils {
 	public static String getCertificatePathSaved() {
 		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
 		return prefs.get(Constants.CERTIFICATE_PATH, "");
+	}
+	
+	public static void removeCertificatePathChosen() {
+		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
+		prefs.remove(Constants.CERTIFICATE_PATH);
 	}
 	
 	public static List<Certificate> getListOfCertificates(String path) {
@@ -51,13 +62,66 @@ public class FileUtils {
 	}
 	
 	private static String getCertificatePassword(String filename) {
-		String result = filename.substring(filename.indexOf("_SENHA") + 7,filename.indexOf("."));
+		String result = "";
+		/*
+		System.out.println(filename);
+		if (filename.toUpperCase().indexOf("_SENHA") > 0) {
+			result = filename.substring(filename.toUpperCase().indexOf("_SENHA") + 7,filename.indexOf("."));
+		}
+		else if (filename.toUpperCase().indexOf(" SENHA") > 0) {
+			result = filename.substring(filename.toUpperCase().indexOf(" SENHA") + 7,filename.indexOf("."));
+		}
+		else if (filename.toUpperCase().indexOf("- SENHA") > 0) {
+			result = filename.substring(filename.toUpperCase().indexOf("- SENHA") + 8,filename.indexOf("."));
+		}
+		else if (filename.toUpperCase().indexOf("(SENHA") > 0) {
+			result = filename.substring(filename.toUpperCase().indexOf("(SENHA") + 7,filename.indexOf("."));
+		} 
+		*/
 		return result;
 	}
 	
 	private static String getCertificateCustomer(String filename) {
-		String result = filename.substring(0,filename.indexOf("_SENHA"));
+		String result = filename;
+		/*
+		if (filename.toUpperCase().indexOf("_SENHA") > 0) {
+			result = filename.substring(0,filename.toUpperCase().indexOf("_SENHA"));
+		}
+		else if (filename.toUpperCase().indexOf(" SENHA") > 0) {
+			result = filename.substring(0,filename.toUpperCase().indexOf(" SENHA"));
+		}
+		else if (filename.toUpperCase().indexOf("- SENHA") > 0) {
+			result = filename.substring(0,filename.toUpperCase().indexOf("- SENHA"));
+		}
+		else if (filename.toUpperCase().indexOf("(SENHA") > 0) {
+			result = filename.substring(0,filename.toUpperCase().indexOf("(SENHA"));
+		}
+		*/
 		return result;
 	}
 	
+	public static void saveReceitaBx(ReceitaBx object) {
+		try (ObjectOutputStream out =
+		         new ObjectOutputStream(new FileOutputStream("config.dat"))) {
+		    out.writeObject(object);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static ReceitaBx loadReceitaBx() {
+		ReceitaBx receitabx = new ReceitaBx();
+		
+		try (ObjectInputStream in =
+		         new ObjectInputStream(new FileInputStream("config.dat"))) {
+			receitabx = (ReceitaBx) in.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			if (!(e instanceof FileNotFoundException)) {
+				e.printStackTrace();
+			}
+		}
+		
+		return receitabx;
+	}
+
 }

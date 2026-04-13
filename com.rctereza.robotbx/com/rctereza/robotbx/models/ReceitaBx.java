@@ -1,5 +1,7 @@
 package com.rctereza.robotbx.models;
 
+import java.io.Serializable;
+
 public record ReceitaBx(  
 	  String SCREEN
 	, Certificate CERTIFICADO
@@ -19,8 +21,9 @@ public record ReceitaBx(
 	, Boolean BUSCAR_TODOS_ESTABLECIMENTOS
 	, String INSCRICAO_ESTADUAL
 	, Boolean ULTIMO_ARQUIVO_TRANSMITIDO
-) {
+) implements Serializable {
+	private static final long serialVersionUID = 1L;
 	public ReceitaBx() {
-		this(null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
+		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
 	}
 }

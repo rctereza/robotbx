@@ -99,7 +99,7 @@ public class ProcessExternalProgram implements Runnable {
 
 			// Sleep to avoid flooding output
 			try {
-				Thread.sleep(5000); // pause for five seconds
+				Thread.sleep(3000); // pause for three seconds
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
