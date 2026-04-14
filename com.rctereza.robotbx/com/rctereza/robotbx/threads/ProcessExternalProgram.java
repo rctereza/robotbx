@@ -4,15 +4,21 @@ import java.awt.AWTException;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.PointerInfo;
+import java.awt.Rectangle;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
+import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
 import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
 import com.rctereza.robotbx.models.RobotCommand;
 import com.rctereza.robotbx.models.RobotTexts;
 import com.rctereza.robotbx.tools.Actions;
+import com.rctereza.robotbx.tools.WindowDimensions;
+import com.rctereza.robotocr.Ocr;
 
 public class ProcessExternalProgram implements Runnable {
 
@@ -90,10 +96,22 @@ public class ProcessExternalProgram implements Runnable {
 	private void secondCode() {
 
 		System.out.println("Running............: " + robotTexts.NAME());
+		
+		WindowDimensions wd = new WindowDimensions();
+		
+		Ocr ocr = new Ocr();
 
 		for (Integer i : robotTexts.TEXTS().keySet()) {
-			System.out.println("key: " + i + " value: " + robotTexts.TEXTS().get(i));
-			//chamar method que vai tirar print screen e localizar a posição do texto 
+			String message = robotTexts.TEXTS().get(i);
+			System.out.println("key: " + i + " value: " + message);
+			try {
+				wd.calculate(Constants.PROGRAM_NAME);
+				Map<String, Rectangle> result = ocr.extractTextFromImage(message, wd.getRectangle());
+				System.out.println("result: " + result);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 

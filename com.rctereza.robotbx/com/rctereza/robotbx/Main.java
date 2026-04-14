@@ -3,14 +3,19 @@ package com.rctereza.robotbx;
 import java.awt.AWTException;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
-import com.rctereza.robotbx.controllers.Controller;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.tools.Scheme;
@@ -20,8 +25,6 @@ public class Main {
 
 	private static final Main instance = new Main();
 
-	private Controller controller;
-	
 	private MainForm mainForm;
 
 	private Main() {
@@ -34,14 +37,13 @@ public class Main {
 	private void showApp() {
 		mainForm.setVisible(true);
 	}
-	
-	private void init() throws AWTException, InterruptedException, ParseException {
-		
-		controller = new Controller();
-//		controller.startThreads();
-		
-		mainForm = new MainForm(controller);
-		
+
+	private void init() throws AWTException, InterruptedException, ParseException, InvalidKeyException,
+			ClassNotFoundException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
+			NoSuchPaddingException, InvalidKeySpecException, IOException {
+
+		mainForm = new MainForm();
+
 		mainForm.addObjectListener(new Listenable() {
 			@Override
 			public void value(Object... objs) {
@@ -50,30 +52,32 @@ public class Main {
 					if (action.equals(Menu.CLOSE.getValue())) {
 //						if (JOptionPane.showConfirmDialog(null, "Close the application?", "Confirm",
 //								JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
-							mainForm.dispose();
-							System.gc();
-							System.exit(0);
+						mainForm.dispose();
+						System.gc();
+						System.exit(0);
 //						}
 					}
 				}
 			}
 		});
-		
+
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				showApp();
 			}
 		});
-		
+
 	}
 
-	public static void main(String[] args) throws AWTException, InterruptedException, ParseException {
+	public static void main(String[] args) throws AWTException, InterruptedException, ParseException,
+			InvalidKeyException, ClassNotFoundException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
+			NoSuchPaddingException, InvalidKeySpecException, IOException {
+		
 		FlatRobotoFont.install();
 		UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 12));
 		if (Scheme.isLafDark()) {
 			FlatDarculaLaf.setup();
-		}
-		else {
+		} else {
 			FlatIntelliJLaf.setup();
 		}
 		Main.getInstance().init();

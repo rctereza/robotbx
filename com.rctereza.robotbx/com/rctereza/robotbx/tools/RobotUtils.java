@@ -24,7 +24,7 @@ public class RobotUtils {
 	
 	public static Map<Integer, String> getListOfTexts(ReceitaBx params) {
 		Map<Integer, String> texts = new HashMap<>();
-		texts.put(1, "Buscar Certificado");
+		texts.put(1, "Buscar certificado");
 		return texts;
 	}
 	

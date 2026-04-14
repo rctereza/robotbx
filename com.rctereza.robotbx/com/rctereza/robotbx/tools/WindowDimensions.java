@@ -1,5 +1,7 @@
 package com.rctereza.robotbx.tools;
 
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,8 +11,8 @@ import com.sun.jna.win32.StdCallLibrary;
 
 public class WindowDimensions {
 
-	private int width;
-	private int height;
+	private Dimension dimension;
+	private Rectangle rectangle;
 
 	public interface User32 extends StdCallLibrary {
 		User32 INSTANCE = (User32) Native.load("user32", User32.class);
@@ -32,14 +34,40 @@ public class WindowDimensions {
 			return Arrays.asList("left", "top", "right", "bottom");
 		}
 	}
-	
+
+	public WindowDimensions() {
+	}
+
 	public WindowDimensions(String windowTitle) {
+		findDimensions(windowTitle);
+	}
+
+	public void calculate(String windowTitle) {
+		findDimensions(windowTitle);
+	}
+	
+	public Dimension getDimension() {
+		return dimension;
+	}
+
+	public Rectangle getRectangle() {
+		return rectangle;
+	}
+
+	@Override
+	public String toString() {
+		return "WindowDimensions [dimension=" + dimension + ", rectangle=" + rectangle + "]";
+	}
+
+	private void findDimensions(String windowTitle) {
 		int hwnd = User32.INSTANCE.FindWindowA(null, windowTitle);
 		if (hwnd != 0) {
 			RECT rect = new RECT();
 			if (User32.INSTANCE.GetWindowRect(hwnd, rect)) {
-				width = rect.right - rect.left;
-				height = rect.bottom - rect.top;
+				int width = rect.right - rect.left;
+				int height = rect.bottom - rect.top;
+				dimension = new Dimension(width, height);
+				rectangle = new Rectangle(rect.left, rect.top, width, height);
 			} else {
 				System.out.println("Failed to get window dimensions. [" + windowTitle + "]");
 			}
@@ -47,13 +75,4 @@ public class WindowDimensions {
 			System.out.println("Window not found. [" + windowTitle + "]");
 		}
 	}
-
-	public int getWidth() {
-		return width;
-	}
-
-	public int getHeight() {
-		return height;
-	}
-
 }

@@ -12,6 +12,7 @@ module com.rctereza.robotbx {
 	
 	requires transitive com.sun.jna.platform;
 	requires transitive com.sun.jna;
+	requires com.rctereza.robotocr;
 	
 	exports com.rctereza.robotbx.enums;
 	exports com.rctereza.robotbx.models;

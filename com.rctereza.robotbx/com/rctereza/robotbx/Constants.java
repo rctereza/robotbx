@@ -14,6 +14,9 @@ public class Constants {
 
 	public static final String SOFTWARE_NAME = "Receitanet BX Robô";
 	public static final String SOFTWARE_VERSION = "1.00";
+	
+	public static final String SOFTWARE_SECRET = "Z*mon5xuR3c3i7aBx";
+	public static final String SOFTWARE_SECURE_FILE = "data.sec";
 
 	public static final String PROGRAM_NAME = "Receitanet BX";
 	public static final String PROGRAM_PATH = "C:\\Program Files (x86)\\Programas RFB\\Receitanet BX";

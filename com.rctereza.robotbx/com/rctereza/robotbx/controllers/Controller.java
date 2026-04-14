@@ -20,8 +20,6 @@ public class Controller {
 
 	private Listenable listener;
 	
-	//private CountDownLatch doneLatch = new CountDownLatch(2);
-	
 	public void addObjectListener(Listenable listener) {
 		this.listener = listener;
 	}
@@ -69,7 +67,7 @@ public class Controller {
 		System.out.println("Processing record..: #" + params.CERTIFICADO().ID());
 		System.out.println("Screen resolution..: Width:" + ScreenResolution.getWidth() + "px, Height:"
 				+ ScreenResolution.getHeight() + "px");
-		System.out.println("Window dimensions..: Width:" + wd.getWidth() + "px, Height:" + wd.getHeight() + "px");
+		System.out.println("Window dimensions..: Width:" + wd.getDimension().getWidth() + "px, Height:" + wd.getDimension().getHeight() + "px");
 		System.out.println("Processing cutomer.: " + params.CERTIFICADO().CUSTOMER());
 		System.out.println("Parameters.........: " + params);
 
@@ -80,7 +78,6 @@ public class Controller {
 		    try {
 		        doneLatch.await();
 		        listener.value(Menu.DONE.getValue());
-		        //System.out.println("Both threads finished!");
 		    } catch (InterruptedException e) {
 		        e.printStackTrace();
 		    }

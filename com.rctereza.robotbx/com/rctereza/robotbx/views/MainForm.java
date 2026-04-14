@@ -10,6 +10,11 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -17,6 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
@@ -51,6 +57,7 @@ import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.ReceitaBx;
+import com.rctereza.robotbx.tools.CryptoUtils;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
@@ -64,8 +71,6 @@ public class MainForm extends JFrame {
 	private static final long serialVersionUID = 8829044892271317875L;
 
 	private static final String softwareNameAndVersion = Constants.SOFTWARE_NAME + " " + Constants.SOFTWARE_VERSION;
-
-	private static Controller controller;
 
 	private MaskFormatter cnpjMask;
 	private MaskFormatter cpfMask;
@@ -109,14 +114,20 @@ public class MainForm extends JFrame {
 
 	private ReceitaBx receitaBx = FileUtils.loadReceitaBx();
 
+	private Controller controller;
+
 	private Listenable listener;
 
-	public MainForm(Controller controller) throws ParseException {
+	public MainForm()
+			throws ParseException, InvalidKeyException, ClassNotFoundException, InvalidAlgorithmParameterException,
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
 		super(softwareNameAndVersion);
 
-		MainForm.controller = controller;
-		
-		MainForm.controller.addObjectListener(new Listenable() {
+		receitaBx = (ReceitaBx) CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+
+		controller = new Controller();
+
+		controller.addObjectListener(new Listenable() {
 			@Override
 			public void value(Object... objs) {
 				if (objs != null && objs.length > 0) {
@@ -318,11 +329,10 @@ public class MainForm extends JFrame {
 						panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
 						panelMain.revalidate();
 						panelMain.repaint();
-					}
-					else {
+					} else {
 						try {
-							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.SISTEMA()), receitaBx.TIPO_ARQUIVO(),
-									receitaBx.TIPO_PESQUISA(), receitaBx);
+							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.SISTEMA()),
+									receitaBx.TIPO_ARQUIVO(), receitaBx.TIPO_PESQUISA(), receitaBx);
 						} catch (ParseException e1) {
 							e1.printStackTrace();
 						}
@@ -350,10 +360,10 @@ public class MainForm extends JFrame {
 				if (result.equals("")) {
 					try {
 						searchButton.setEnabled(false);
-						MainForm.controller.startThreads(receitaBx);
+						controller.startThreads(receitaBx);
 					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
-//						e1.printStackTrace();
 						JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+						searchButton.setEnabled(true);
 					}
 				} else {
 					JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
@@ -545,7 +555,14 @@ public class MainForm extends JFrame {
 					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
 					ULTIMO_ARQUIVO_TRANSMITIDO);
 
-			FileUtils.saveReceitaBx(receitaBx);
+			//FileUtils.saveReceitaBx(receitaBx);
+			
+			try {
+				CryptoUtils.saveEncryptedGCM(receitaBx, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+			} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
+					| NoSuchPaddingException | InvalidKeySpecException | IOException e) {
+				result.append("Error: " + e.getMessage());
+			}
 		}
 
 		return result.toString();
