@@ -115,6 +115,18 @@ public class MainForm extends JFrame {
 		super(softwareNameAndVersion);
 
 		MainForm.controller = controller;
+		
+		MainForm.controller.addObjectListener(new Listenable() {
+			@Override
+			public void value(Object... objs) {
+				if (objs != null && objs.length > 0) {
+					String action = (String) objs[0];
+					if (action.equals(Menu.DONE.getValue())) {
+						searchButton.setEnabled(true);
+					}
+				}
+			}
+		});
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -245,7 +257,7 @@ public class MainForm extends JFrame {
 		profileTypeValueTextField = new JFormattedTextField(cpfMask);
 		profileTypeValueTextField.setVisible(false);
 
-		if (receitaBx.PERFIL().equals(profileProcurador.getText())) {
+		if (receitaBx.PERFIL() != null && receitaBx.PERFIL().equals(profileProcurador.getText())) {
 			profileProcurador.setSelected(true);
 			profileTypeComboBox.setVisible(true);
 			profileTypeValueTextField.setVisible(true);
@@ -337,6 +349,7 @@ public class MainForm extends JFrame {
 				String result = validateFormFields();
 				if (result.equals("")) {
 					try {
+						searchButton.setEnabled(false);
 						MainForm.controller.startThreads(receitaBx);
 					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
 //						e1.printStackTrace();

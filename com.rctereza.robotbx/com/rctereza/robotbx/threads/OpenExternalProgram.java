@@ -2,21 +2,28 @@ package com.rctereza.robotbx.threads;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.CountDownLatch;
 
 import com.rctereza.robotbx.Constants;
 
-public class OpenExternalProgram implements Runnable  {
+public class OpenExternalProgram implements Runnable {
 
 	private static final String threadName = "[" + OpenExternalProgram.class.getName() + "] ";
 
+	private volatile boolean running = true;
+
+	private Process process;
+
 	private final CountDownLatch startLatch;
 	private final CountDownLatch finishLatch;
-	
-	public OpenExternalProgram(CountDownLatch startLatch, CountDownLatch finishLatch) {
+	private final CountDownLatch doneLatch;
+
+	public OpenExternalProgram(CountDownLatch startLatch, CountDownLatch finishLatch, CountDownLatch doneLatch) {
 		this.startLatch = startLatch;
 		this.finishLatch = finishLatch;
+		this.doneLatch = doneLatch;
 	}
 
 	@Override
@@ -24,38 +31,68 @@ public class OpenExternalProgram implements Runnable  {
 
 		System.out.println(threadName + "Starting...");
 
-		ProcessBuilder processBuilder = new ProcessBuilder(Constants.PROGRAM_COMMAND);
+		//ProcessBuilder processBuilder = new ProcessBuilder("java", "--add-exports","jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED", "-jar", Constants.PROGRAM_COMMAND);
+		// processBuilder.inheritIO();
+
+		ProcessBuilder processBuilder = new ProcessBuilder("java","-jar",Constants.PROGRAM_COMMAND);
 		processBuilder.directory(new java.io.File(Constants.PROGRAM_PATH)); // set the working directory
 
 		try {
-			Process process = processBuilder.start();
+			process = processBuilder.start();
 
-			// Read output from the command
-			BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			String s = "";
-			System.out.print(threadName + "Standard Output: ");
-			while ((s = stdInput.readLine()) != null) {
-				System.out.println(s);
-				startLatch.countDown();
-			}
+			readStream(process.getInputStream(), threadName + "OUT: ");
+			//readStream(process.getErrorStream(), threadName + "ERR: ");
 
-			// Read any errors from the command
-			BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-			System.out.print(threadName + "Standard Error (if any): ");
-			while ((s = stdError.readLine()) != null) {
-				System.out.println(threadName + s);
+			startLatch.countDown();
+
+			// ✅ THIS IS WHERE YOUR LOOP GOES
+			while (process.isAlive()) {
+				Thread.sleep(1000);
+
+				if (!running) {
+					System.out.println(threadName + "Stopping process...");
+					process.destroy();
+					break;
+				}
 			}
 
 			int exitCode = process.waitFor();
 
 			System.out.println(threadName + "Program exited with code: " + exitCode);
-			
+
 			finishLatch.countDown();
 
-		} catch (IOException | InterruptedException e) {
+		} catch (InterruptedException e) {
+			System.out.println(threadName + "Interrupted!");
+
+			if (process != null && process.isAlive()) {
+				process.destroy();
+			}
+
+			Thread.currentThread().interrupt(); // restore interrupt flag
+
+		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			doneLatch.countDown();
+			if (process != null && process.isAlive()) {
+				process.destroyForcibly();
+			}
 		}
 
+		System.out.println(threadName + "Terminated!");
 	}
 
+	public void stop() {
+		running = false;
+	}
+
+	private void readStream(InputStream stream, String prefix) {
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+			String line = reader.readLine();
+			System.out.println(prefix + line);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

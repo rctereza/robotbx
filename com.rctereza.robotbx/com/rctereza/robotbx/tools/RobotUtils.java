@@ -1,7 +1,9 @@
 package com.rctereza.robotbx.tools;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
@@ -10,16 +12,28 @@ import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
 import com.rctereza.robotbx.models.RobotCommand;
+import com.rctereza.robotbx.models.RobotTexts;
 
 public class RobotUtils {
 	
 	private static boolean robotCommandEnabled = true;
 
+	public static RobotTexts getRobotTexts(ReceitaBx params) {
+		return new RobotTexts(1,"Robot of Texts", true, getListOfTexts(params));
+	}
+	
+	public static Map<Integer, String> getListOfTexts(ReceitaBx params) {
+		Map<Integer, String> texts = new HashMap<>();
+		texts.put(1, "Buscar Certificado");
+		return texts;
+	}
+	
 	public static Robot getRobotBasedOnScreenResolution(ReceitaBx params) {
 		Robot result = new Robot();
 		
 		if (Constants.DEBUG) {
 			robotCommandEnabled = false;
+			System.out.println("*** DEBUG IS ON *** ");
 		}
 		
 		List<Robot> list = getListOfPreConfigfuredRobots(params);

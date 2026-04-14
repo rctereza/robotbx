@@ -2,6 +2,7 @@ package com.rctereza.robotbx.enums;
 
 public enum Menu {
 	CLOSE("Close"),
+	DONE("Done"),
 	MINIMIZE("Minimize");
 
     private String value;
