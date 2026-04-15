@@ -1,9 +1,7 @@
 package com.rctereza.robotbx.tools;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
@@ -12,20 +10,40 @@ import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
 import com.rctereza.robotbx.models.RobotCommand;
-import com.rctereza.robotbx.models.RobotTexts;
+import com.rctereza.robotbx.models.RobotText;
+import com.rctereza.robotbx.models.RobotTextAction;
+import com.rctereza.robotbx.models.RobotTextCommand;
 
 public class RobotUtils {
 	
 	private static boolean robotCommandEnabled = true;
 
-	public static RobotTexts getRobotTexts(ReceitaBx params) {
-		return new RobotTexts(1,"Robot of Texts", true, getListOfTexts(params));
+	public static RobotText getRobotTexts(ReceitaBx params) {
+		return new RobotText(1,"Robot of Texts", true, getListOfTexts(params));
 	}
 	
-	public static Map<Integer, String> getListOfTexts(ReceitaBx params) {
-		Map<Integer, String> texts = new HashMap<>();
-		texts.put(1, "Buscar certificado");
-		return texts;
+	public static List<RobotTextAction> getListOfTexts(ReceitaBx params) {
+		int counter = 0;
+		
+		List<RobotTextAction> actions = new ArrayList<>();
+		List<RobotTextCommand> commands = new ArrayList<>();
+		
+		commands.clear();
+		commands.add(new RobotTextCommand(1, Command.MOVE, null, robotCommandEnabled));
+		commands.add(new RobotTextCommand(2, Command.CLICK, null, robotCommandEnabled));
+		actions.add(new RobotTextAction(counter += 10, "Buscar certificado", 2.0, true, new ArrayList<>(commands)));
+
+		/*
+		commands.clear();
+		commands.add(new RobotTextCommand(1, Command.PASTE, params.CERTIFICADO().FILE_PATH() + "\\" + params.CERTIFICADO().FILE_NAME(), robotCommandEnabled));
+		actions.add(new RobotTextAction(counter += 10, "Nome", 1.5, true, new ArrayList<>(commands)));
+		
+		commands.clear();
+		commands.add(new RobotTextCommand(1, Command.MOVE, null, robotCommandEnabled));
+		commands.add(new RobotTextCommand(2, Command.CLICK, null, robotCommandEnabled));
+		actions.add(new RobotTextAction(counter += 10, "Escolha", 1.5, true, new ArrayList<>(commands)));
+*/
+		return actions;
 	}
 	
 	public static Robot getRobotBasedOnScreenResolution(ReceitaBx params) {
@@ -60,14 +78,14 @@ public class RobotUtils {
 	}
 	
 	private static List<RobotAction> getRobot01Actions(ReceitaBx params) {
-		int counter = 10;
+		int counter = 0;
 		
 		ArrayList<RobotAction> actions = new ArrayList<>();
 		ArrayList<RobotCommand> commands = new ArrayList<>();
 		
-		commands.clear();
-		commands.add(new RobotCommand(1, Command.WAIT, null, null, null, robotCommandEnabled));
-		actions.add(new RobotAction(counter, "Esperar o programa abrir", true, new ArrayList<>(commands)));
+//		commands.clear();
+//		commands.add(new RobotCommand(1, Command.WAIT, null, null, null, robotCommandEnabled));
+//		actions.add(new RobotAction(counter, "Esperar o programa abrir", true, new ArrayList<>(commands)));
 
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 451, 565, null, robotCommandEnabled));
@@ -88,7 +106,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 617, 386, null, robotCommandEnabled));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(3, Command.PASTE, null, null, params.CERTIFICADO().FILE_PASS(), robotCommandEnabled));
+		commands.add(new RobotCommand(3, Command.PASTE, null, null, params.SENHA(), robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Colar o password do certificado", true, new ArrayList<>(commands)));
 
 		commands.clear();
@@ -233,14 +251,14 @@ public class RobotUtils {
 	}
 	
 	private static List<RobotAction> getRobot02Actions(ReceitaBx params) {
-		int counter = 10;
+		int counter = 0;
 		
 		ArrayList<RobotAction> actions = new ArrayList<>();
 		ArrayList<RobotCommand> commands = new ArrayList<>();
 		
-		commands.clear();
-		commands.add(new RobotCommand(1, Command.WAIT, null, null, null, robotCommandEnabled));
-		actions.add(new RobotAction(counter, "Esperar o programa abrir", true, new ArrayList<>(commands)));
+//		commands.clear();
+//		commands.add(new RobotCommand(1, Command.WAIT, null, null, null, robotCommandEnabled));
+//		actions.add(new RobotAction(counter, "Esperar o programa abrir", true, new ArrayList<>(commands)));
 		
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 744, 722, null, robotCommandEnabled));
@@ -261,7 +279,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 881, 543, null, robotCommandEnabled));
 		commands.add(new RobotCommand(2, Command.CLICK, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(3, Command.PASTE, null, null, params.CERTIFICADO().FILE_PASS(), robotCommandEnabled));
+		commands.add(new RobotCommand(3, Command.PASTE, null, null, params.SENHA(), robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Colar o password do certificado", true, new ArrayList<>(commands)));
 
 		commands.clear();

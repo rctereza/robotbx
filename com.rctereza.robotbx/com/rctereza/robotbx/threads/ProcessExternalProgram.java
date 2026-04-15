@@ -6,16 +6,14 @@ import java.awt.Point;
 import java.awt.PointerInfo;
 import java.awt.Rectangle;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
-import com.rctereza.robotbx.models.Robot;
-import com.rctereza.robotbx.models.RobotAction;
-import com.rctereza.robotbx.models.RobotCommand;
-import com.rctereza.robotbx.models.RobotTexts;
+import com.rctereza.robotbx.models.RobotText;
+import com.rctereza.robotbx.models.RobotTextAction;
+import com.rctereza.robotbx.models.RobotTextCommand;
 import com.rctereza.robotbx.tools.Actions;
 import com.rctereza.robotbx.tools.WindowDimensions;
 import com.rctereza.robotocr.Ocr;
@@ -29,26 +27,26 @@ public class ProcessExternalProgram implements Runnable {
 	private final CountDownLatch finishLatch;
 	private final CountDownLatch doneLatch;
 	private final Actions actions;
-	private final RobotTexts robotTexts;
-	private final Robot robot;
+	private final RobotText robotTexts;
+	// private final Robot robot;
 
-	public ProcessExternalProgram(CountDownLatch finishLatch, CountDownLatch doneLatch, RobotTexts robotTexts)
+	public ProcessExternalProgram(CountDownLatch finishLatch, CountDownLatch doneLatch, RobotText robotTexts)
 			throws AWTException {
 		this.finishLatch = finishLatch;
 		this.doneLatch = doneLatch;
 		this.robotTexts = robotTexts;
 		actions = new Actions();
-		this.robot = new Robot();
+		// this.robot = new Robot();
 	}
 
-	public ProcessExternalProgram(CountDownLatch finishLatch, CountDownLatch doneLatch, Robot robot)
-			throws AWTException {
-		this.finishLatch = finishLatch;
-		this.doneLatch = doneLatch;
-		this.robot = robot;
-		actions = new Actions();
-		this.robotTexts = new RobotTexts();
-	}
+//	public ProcessExternalProgram(CountDownLatch finishLatch, CountDownLatch doneLatch, Robot robot)
+//			throws AWTException {
+//		this.finishLatch = finishLatch;
+//		this.doneLatch = doneLatch;
+//		// this.robot = robot;
+//		actions = new Actions();
+//		this.robotTexts = new RobotText();
+//	}
 
 	@Override
 	public void run() {
@@ -57,7 +55,7 @@ public class ProcessExternalProgram implements Runnable {
 
 			Thread.sleep(1000); // pause for one second
 
-			//firstCode();
+			// firstCode();
 			secondCode();
 
 			while (running && !Thread.interrupted()) {
@@ -81,6 +79,10 @@ public class ProcessExternalProgram implements Runnable {
 
 		} catch (InterruptedException e) {
 			System.out.println(threadName + "Interrupted!");
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 		} finally {
 			doneLatch.countDown();
 		}
@@ -93,80 +95,116 @@ public class ProcessExternalProgram implements Runnable {
 		running = false;
 	}
 
-	private void secondCode() {
+	//Action Result......: {Escolha=java.awt.Rectangle[x=1082,y=726,width=70,height=32]}
+	
+	private void secondCode() throws Exception {
 
-		System.out.println("Running............: " + robotTexts.NAME());
-		
 		WindowDimensions wd = new WindowDimensions();
-		
+
 		Ocr ocr = new Ocr();
 
-		for (Integer i : robotTexts.TEXTS().keySet()) {
-			String message = robotTexts.TEXTS().get(i);
-			System.out.println("key: " + i + " value: " + message);
-			try {
+		System.out.println("Running............: " + robotTexts.NAME());
+
+		for (RobotTextAction rta : robotTexts.ACTIONS()) {
+
+			System.out.println("Action.............: " + rta.ID().toString() + " - " + rta.TEXT() + " [Enabled: "
+					+ rta.ENABLED() + "]");
+
+			if (rta.ENABLED()) {
+
 				wd.calculate(Constants.PROGRAM_NAME);
-				Map<String, Rectangle> result = ocr.extractTextFromImage(message, wd.getRectangle());
-				System.out.println("result: " + result);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
+				Map<String, Rectangle> result = ocr.extractTextFromImage(rta.SCALE(), rta.TEXT(), wd.getRectangle(), true);
+				System.out.println("Action Result......: " + result);
 
-	private void firstCode() {
+				for (RobotTextCommand rtc : rta.COMMANDS()) {
 
-		System.out.println("Running............: " + robot.NAME());
+					System.out.println("Command............: " + rtc.ID().toString() + " - " + rtc.COMMAND().toString()
+							+ " [Enabled: " + rtc.ENABLED() + "]");
 
-		List<RobotAction> listOfRobotActions = robot.ROBOT_ACTIONS();
+					if (rtc.ENABLED()) {
 
-		for (RobotAction ra : listOfRobotActions) {
+						switch (rtc.COMMAND()) {
 
-			System.out.println("Action.............: " + ra.ID().toString() + " - " + ra.DESCRIPTION());
+						case Command.WAIT:
+							actions.Wait();
+							break;
 
-			List<RobotCommand> listOfRobotCommands = ra.ROBOT_COMMANDS();
+						case Command.MOVE:
+							Map.Entry<String, Rectangle> entry = result.entrySet().iterator().next();
+							Rectangle rec = entry.getValue();
+							actions.Move((int) rec.getY(), (int) (rec.getY() - rec.getWidth()) + 10);
+							break;
 
-			for (RobotCommand rc : listOfRobotCommands) {
+						case Command.CLICK:
+							actions.Click();
+							break;
 
-				if (rc.ENABLED()) {
+						case Command.PASTE:
+							actions.Paste(rtc.TEXT());
+							break;
 
-					System.out.println("Command............: " + rc.toString());
+						case Command.TYPE:
+							actions.Type(rtc.TEXT());
+							break;
 
-					switch (rc.COMMAND()) {
+						case Command.TAB:
+							actions.Tab();
+							break;
 
-					case Command.WAIT:
-						actions.Wait();
-						break;
-
-					case Command.MOVE:
-						actions.Move(rc.VALUEX(), rc.VALUEY());
-						break;
-
-					case Command.CLICK:
-						actions.Click();
-						break;
-
-					case Command.PASTE:
-						actions.Paste(rc.TEXT());
-						break;
-
-					case Command.TYPE:
-						actions.Type(rc.TEXT());
-						break;
-
-					case Command.TAB:
-						actions.Tab();
-						break;
-
-					default:
-						break;
+						default:
+							break;
+						}
 					}
 				}
 			}
-
 		}
-
-		System.out.println("Stopping...........: " + robot.NAME());
 	}
+	
+//	private void getCursorCurrentLocation() {
+//		Point point = MouseInfo.getPointerInfo().getLocation();
+//        int x = point.x;
+//        int y = point.y;
+//        System.out.println("Mouse position: (" + x + ", " + y + ")");
+//	}
+
+	/*
+	 * private void firstCode() {
+	 * 
+	 * System.out.println("Running............: " + robot.NAME());
+	 * 
+	 * List<RobotAction> listOfRobotActions = robot.ROBOT_ACTIONS();
+	 * 
+	 * for (RobotAction ra : listOfRobotActions) {
+	 * 
+	 * System.out.println("Action.............: " + ra.ID().toString() + " - " +
+	 * ra.DESCRIPTION());
+	 * 
+	 * List<RobotCommand> listOfRobotCommands = ra.ROBOT_COMMANDS();
+	 * 
+	 * for (RobotCommand rc : listOfRobotCommands) {
+	 * 
+	 * if (rc.ENABLED()) {
+	 * 
+	 * System.out.println("Command............: " + rc.toString());
+	 * 
+	 * switch (rc.COMMAND()) {
+	 * 
+	 * case Command.WAIT: actions.Wait(); break;
+	 * 
+	 * case Command.MOVE: actions.Move(rc.VALUEX(), rc.VALUEY()); break;
+	 * 
+	 * case Command.CLICK: actions.Click(); break;
+	 * 
+	 * case Command.PASTE: actions.Paste(rc.TEXT()); break;
+	 * 
+	 * case Command.TYPE: actions.Type(rc.TEXT()); break;
+	 * 
+	 * case Command.TAB: actions.Tab(); break;
+	 * 
+	 * default: break; } } }
+	 * 
+	 * }
+	 * 
+	 * System.out.println("Stopping...........: " + robot.NAME()); }
+	 */
 }

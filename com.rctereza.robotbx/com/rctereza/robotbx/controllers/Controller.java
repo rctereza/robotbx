@@ -8,8 +8,7 @@ import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.ReceitaBx;
-import com.rctereza.robotbx.models.Robot;
-import com.rctereza.robotbx.models.RobotTexts;
+import com.rctereza.robotbx.models.RobotText;
 import com.rctereza.robotbx.threads.OpenExternalProgram;
 import com.rctereza.robotbx.threads.ProcessExternalProgram;
 import com.rctereza.robotbx.tools.RobotUtils;
@@ -28,13 +27,13 @@ public class Controller {
 
 		System.out.println("Starting...");
 
-		Robot robot = RobotUtils.getRobotBasedOnScreenResolution(params);
-		RobotTexts robotTexts = RobotUtils.getRobotTexts(params);
+//		Robot robot = RobotUtils.getRobotBasedOnScreenResolution(params);
+		RobotText robotTexts = RobotUtils.getRobotTexts(params);
 
-		if (robot.NAME() == null) {
-			throw new InvalidScreenResolution("ERROR!!! There's no robot configured for the Screen resolution ["
-					+ ScreenResolution.getResolution() + "].");
-		}
+//		if (robot.NAME() == null) {
+//			throw new InvalidScreenResolution("ERROR!!! There's no robot configured for the Screen resolution ["
+//					+ ScreenResolution.getResolution() + "].");
+//		}
 
 		CountDownLatch startLatch = new CountDownLatch(1);
 		CountDownLatch finishLatch = new CountDownLatch(1);
@@ -82,6 +81,5 @@ public class Controller {
 		        e.printStackTrace();
 		    }
 		}).start();
-		
 	}
 }

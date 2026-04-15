@@ -1,20 +1,20 @@
 package com.rctereza.robotbx.models;
 
 import java.io.Serializable;
-import java.util.Map;
 
-public record RobotTexts(  
-      Integer ID
-	, String  NAME
+import com.rctereza.robotbx.enums.Command;
+
+public record RobotTextCommand(
+	  Integer ID
+	, Command COMMAND
+	, String TEXT
 	, Boolean ENABLED
-	, Map<Integer, String> TEXTS
 ) 
 implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
-	public RobotTexts() {
+	public RobotTextCommand() {
 		this(null,null,null,null);
 	}
-	
 }
