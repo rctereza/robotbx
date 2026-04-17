@@ -7,6 +7,7 @@ public record RobotCommand(
 	, Command COMMAND
 	, Integer VALUEX
 	, Integer VALUEY
+	, Integer WAITMS
 	, String TEXT
 	, Boolean ENABLED
 ) {}

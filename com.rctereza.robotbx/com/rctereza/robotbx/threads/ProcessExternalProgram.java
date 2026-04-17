@@ -4,19 +4,14 @@ import java.awt.AWTException;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.PointerInfo;
-import java.awt.Rectangle;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
-import com.rctereza.robotbx.models.RobotText;
-import com.rctereza.robotbx.models.RobotTextAction;
-import com.rctereza.robotbx.models.RobotTextCommand;
+import com.rctereza.robotbx.models.Robot;
+import com.rctereza.robotbx.models.RobotAction;
+import com.rctereza.robotbx.models.RobotCommand;
 import com.rctereza.robotbx.tools.Actions;
-import com.rctereza.robotbx.tools.WindowDimensions;
-import com.rctereza.robotocr.Ocr;
 
 public class ProcessExternalProgram implements Runnable {
 
@@ -27,26 +22,15 @@ public class ProcessExternalProgram implements Runnable {
 	private final CountDownLatch finishLatch;
 	private final CountDownLatch doneLatch;
 	private final Actions actions;
-	private final RobotText robotTexts;
-	// private final Robot robot;
+    private final Robot robot;
 
-	public ProcessExternalProgram(CountDownLatch finishLatch, CountDownLatch doneLatch, RobotText robotTexts)
+	public ProcessExternalProgram(CountDownLatch finishLatch, CountDownLatch doneLatch, Robot robot)
 			throws AWTException {
 		this.finishLatch = finishLatch;
 		this.doneLatch = doneLatch;
-		this.robotTexts = robotTexts;
+		this.robot = robot;
 		actions = new Actions();
-		// this.robot = new Robot();
 	}
-
-//	public ProcessExternalProgram(CountDownLatch finishLatch, CountDownLatch doneLatch, Robot robot)
-//			throws AWTException {
-//		this.finishLatch = finishLatch;
-//		this.doneLatch = doneLatch;
-//		// this.robot = robot;
-//		actions = new Actions();
-//		this.robotTexts = new RobotText();
-//	}
 
 	@Override
 	public void run() {
@@ -99,24 +83,19 @@ public class ProcessExternalProgram implements Runnable {
 	
 	private void secondCode() throws Exception {
 
-		WindowDimensions wd = new WindowDimensions();
+		System.out.println("Running............: " + robot.NAME());
 
-		Ocr ocr = new Ocr();
+		for (RobotAction rta : robot.ROBOT_ACTIONS()) {
 
-		System.out.println("Running............: " + robotTexts.NAME());
-
-		for (RobotTextAction rta : robotTexts.ACTIONS()) {
-
-			System.out.println("Action.............: " + rta.ID().toString() + " - " + rta.TEXT() + " [Enabled: "
-					+ rta.ENABLED() + "]");
+			System.out.println("Action.............: " + rta);
 
 			if (rta.ENABLED()) {
 
-				wd.calculate(Constants.PROGRAM_NAME);
-				Map<String, Rectangle> result = ocr.extractTextFromImage(rta.SCALE(), rta.TEXT(), wd.getRectangle(), true);
-				System.out.println("Action Result......: " + result);
+				//wd.calculate(Constants.PROGRAM_NAME);
+				//Map<String, Rectangle> result = ocr.extractTextFromImage(rta.SCALE(), rta.TEXT(), wd.getRectangle(), true);
+				//System.out.println("Action Result......: " + result);
 
-				for (RobotTextCommand rtc : rta.COMMANDS()) {
+				for (RobotCommand rtc : rta.ROBOT_COMMANDS()) {
 
 					System.out.println("Command............: " + rtc.ID().toString() + " - " + rtc.COMMAND().toString()
 							+ " [Enabled: " + rtc.ENABLED() + "]");
@@ -126,13 +105,13 @@ public class ProcessExternalProgram implements Runnable {
 						switch (rtc.COMMAND()) {
 
 						case Command.WAIT:
-							actions.Wait();
+							actions.Wait(1000);
 							break;
 
 						case Command.MOVE:
-							Map.Entry<String, Rectangle> entry = result.entrySet().iterator().next();
-							Rectangle rec = entry.getValue();
-							actions.Move((int) rec.getY(), (int) (rec.getY() - rec.getWidth()) + 10);
+//							Map.Entry<String, Rectangle> entry = result.entrySet().iterator().next();
+//							Rectangle rec = entry.getValue();
+//							actions.Move((int) rec.getY(), (int) (rec.getY() - rec.getWidth()) + 10);
 							break;
 
 						case Command.CLICK:

@@ -485,6 +485,7 @@ public class MainForm extends JFrame {
 		Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
 		String INSCRICAO_ESTADUAL = "";
 		Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
+		String ULTIMO_PEDIDO_SOLICITADO = "";
 
 		if (certificateComboBox.getSelectedIndex() == -1)
 			result.append("Favor selecionar um certificado.\n");
@@ -553,7 +554,7 @@ public class MainForm extends JFrame {
 			receitaBx = new ReceitaBx(SCREEN, CERTIFICADO, SENHA, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
 					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
 					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
-					ULTIMO_ARQUIVO_TRANSMITIDO);
+					ULTIMO_ARQUIVO_TRANSMITIDO,ULTIMO_PEDIDO_SOLICITADO);
 
 			//FileUtils.saveReceitaBx(receitaBx);
 			

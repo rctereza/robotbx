@@ -7,7 +7,7 @@ import java.awt.event.KeyEvent;
 
 public class Actions {
 
-	private static final int delay = 1000; 
+	private static final int defaultDelay = 1000; 
 
 	private final Robot robot;
 
@@ -15,27 +15,28 @@ public class Actions {
 		robot = new Robot();
 	}
 
-	public void Wait() {
-		robot.delay(delay * 2);
+	public void Wait(Integer milliSeconds) {
+		robot.delay(milliSeconds);
 	}
 
 	public void Move(int x, int y) {
 		robot.mouseMove(x, y);
-		robot.delay(delay);
+		robot.delay(defaultDelay);
 	}
 
 	public void Click() {
 		robot.mousePress(InputEvent.BUTTON1_DOWN_MASK); // Left-click
 		robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-		robot.delay(delay);
+		robot.delay(defaultDelay);
 	}
 
 	public void Type(String text) {
 		for (char c : text.toCharArray()) {
 			robot.keyPress(KeyEvent.getExtendedKeyCodeForChar(c));
 			robot.keyRelease(KeyEvent.getExtendedKeyCodeForChar(c));
-			robot.delay(delay / 2);
+			robot.delay(300);
 		}
+		robot.delay(defaultDelay);
 	}
 
 	public void Paste(String text) {
@@ -45,13 +46,44 @@ public class Actions {
 		robot.keyPress(KeyEvent.VK_V);
 		robot.keyRelease(KeyEvent.VK_V);
 		robot.keyRelease(KeyEvent.VK_CONTROL);
-		robot.delay(delay);
+		robot.delay(defaultDelay);
 	}
 	
 	public void Tab() {
         robot.keyPress(KeyEvent.VK_TAB);
         robot.keyRelease(KeyEvent.VK_TAB);
-		robot.delay(delay);
+        robot.delay(defaultDelay);
 	}
 
+	public void Enter() {
+        robot.keyPress(KeyEvent.VK_ENTER);
+        robot.keyRelease(KeyEvent.VK_ENTER);
+        robot.delay(defaultDelay);
+	}
+	
+	public void SpaceBar() {
+        robot.keyPress(KeyEvent.VK_SPACE);
+        robot.keyRelease(KeyEvent.VK_SPACE);
+        robot.delay(defaultDelay);
+	}
+	
+	public void AltArrowDown() {
+        robot.keyPress(KeyEvent.VK_ALT);
+        robot.keyPress(KeyEvent.VK_DOWN);
+        robot.keyRelease(KeyEvent.VK_DOWN);
+        robot.keyRelease(KeyEvent.VK_ALT);
+        robot.delay(defaultDelay);
+	}
+
+	public void ArrowDown() {
+        robot.keyPress(KeyEvent.VK_DOWN);
+        robot.keyRelease(KeyEvent.VK_DOWN);
+        robot.delay(defaultDelay);
+	}
+	
+	public void ArrowUp() {
+        robot.keyPress(KeyEvent.VK_UP);
+        robot.keyRelease(KeyEvent.VK_UP);
+        robot.delay(defaultDelay);
+	}
 }

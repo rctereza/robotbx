@@ -8,7 +8,7 @@ import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.ReceitaBx;
-import com.rctereza.robotbx.models.RobotText;
+import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.threads.OpenExternalProgram;
 import com.rctereza.robotbx.threads.ProcessExternalProgram;
 import com.rctereza.robotbx.tools.RobotUtils;
@@ -27,8 +27,7 @@ public class Controller {
 
 		System.out.println("Starting...");
 
-//		Robot robot = RobotUtils.getRobotBasedOnScreenResolution(params);
-		RobotText robotTexts = RobotUtils.getRobotTexts(params);
+		Robot robot = RobotUtils.getRobotBasedOnScreenResolution(params);
 
 //		if (robot.NAME() == null) {
 //			throw new InvalidScreenResolution("ERROR!!! There's no robot configured for the Screen resolution ["
@@ -40,8 +39,7 @@ public class Controller {
 		CountDownLatch doneLatch = new CountDownLatch(2);
 
 		OpenExternalProgram t1Runnable = new OpenExternalProgram(startLatch, finishLatch, doneLatch);
-		//ProcessExternalProgram t2Runnable = new ProcessExternalProgram(finishLatch, doneLatch, robot);
-		ProcessExternalProgram t2Runnable = new ProcessExternalProgram(finishLatch, doneLatch, robotTexts);
+		ProcessExternalProgram t2Runnable = new ProcessExternalProgram(finishLatch, doneLatch, robot);
 
 		Thread t1 = new Thread(t1Runnable, "T1-ProgramLauncher");
 		Thread t2 = new Thread(t2Runnable, "T2-RobotLauncher");

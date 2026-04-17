@@ -29,7 +29,7 @@ public class ProcessExternalProgram2 implements Runnable {
 	public void run() {
 
 		// Espera o programa abrir
-		actions.Wait();
+		actions.Wait(1000);
 
 		// Clica no botão "Buscar Certificado"
 		actions.Move(451, 565);
@@ -133,7 +133,7 @@ public class ProcessExternalProgram2 implements Runnable {
 //		actions.Click();
 
 		// Clica no botao "Sair"
-		actions.Wait();
+		actions.Wait(1000);
 		actions.Move(485, 147);
 		actions.Click();
 
