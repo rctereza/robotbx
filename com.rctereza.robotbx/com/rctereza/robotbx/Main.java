@@ -1,16 +1,8 @@
 package com.rctereza.robotbx;
 
-import java.awt.AWTException;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.text.ParseException;
 
-import javax.crypto.NoSuchPaddingException;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
@@ -38,9 +30,7 @@ public class Main {
 		mainForm.setVisible(true);
 	}
 
-	private void init() throws AWTException, InterruptedException, ParseException, InvalidKeyException,
-			ClassNotFoundException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
-			NoSuchPaddingException, InvalidKeySpecException, IOException {
+	private void init() throws Exception {
 
 		mainForm = new MainForm();
 
@@ -69,9 +59,7 @@ public class Main {
 
 	}
 
-	public static void main(String[] args) throws AWTException, InterruptedException, ParseException,
-			InvalidKeyException, ClassNotFoundException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
-			NoSuchPaddingException, InvalidKeySpecException, IOException {
+	public static void main(String[] args) throws Exception {
 		
 		FlatRobotoFont.install();
 		UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 12));

@@ -1,11 +1,12 @@
 package com.rctereza.robotbx.enums;
 
 public enum Message {
-	ERROR(0),
-	WARNING(1),
-	WAITING(2),
-	VALIDATION(3),
-    CONFIRMATION(4);
+	NONE(0),
+	ERROR(1),
+	WARNING(2),
+	WAITING(3),
+	VALIDATION(4),
+    CONFIRMATION(5);
 
     private int type;
 

@@ -1,16 +1,19 @@
 package com.rctereza.robotbx.tools;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.util.function.Supplier;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -18,13 +21,12 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.rctereza.robotbx.models.ReceitaBx;
-
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
+import com.rctereza.robotbx.Ref;
 
 public class CryptoUtils {
 
@@ -110,23 +112,33 @@ public class CryptoUtils {
 		GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH, iv);
 
 		cipher.init(Cipher.ENCRYPT_MODE, key, spec);
+		
+		byte[] versionBytes = VERSION.getBytes(StandardCharsets.UTF_8);
+		
+		  // 🔒 Authenticate header
+	    cipher.updateAAD(versionBytes);
+
+	    File file = new File(filePath);
+	    if (file.getParentFile() != null) {
+	        file.getParentFile().mkdirs();
+	    }
 
 		try (FileOutputStream fos = new FileOutputStream(filePath)) {
 
-			// Write header: version + salt + IV
-			fos.write(VERSION.getBytes());
+			// Write header
+			fos.write(versionBytes);
 			fos.write(salt);
 			fos.write(iv);
 
-			CipherOutputStream cos = new CipherOutputStream(fos, cipher);
-
-			try (ObjectOutputStream oos = new ObjectOutputStream(cos)) {
+			try (CipherOutputStream cos = new CipherOutputStream(fos, cipher);
+					ObjectOutputStream oos = new ObjectOutputStream(cos)) {
 				oos.writeObject(obj);
+				oos.flush();
 			}
 		}
 	}
 
-	public static Object loadEncryptedGCM(String password, String filePath)
+	public static <T> T loadEncryptedGCM(String password, String filePath, Class<T> clazz, Supplier<T> defaultSupplier)
 			throws ClassNotFoundException, IOException, InvalidKeyException, InvalidAlgorithmParameterException,
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException {
 
@@ -138,16 +150,14 @@ public class CryptoUtils {
 		 * without breaking old files.
 		 */
 
-		Object result = new ReceitaBx();
-
 		try (FileInputStream fis = new FileInputStream(filePath)) {
 
 			byte[] header = fis.readNBytes(VERSION.length());
-
-			String version = new String(header);
+			String version = new String(header, StandardCharsets.UTF_8);
+			
 
 			if (!version.equals(VERSION)) {
-				throw new RuntimeException("Unsupported file version");
+				throw new IllegalStateException("Unsupported file version");
 			}
 
 			byte[] salt = fis.readNBytes(16);
@@ -159,18 +169,33 @@ public class CryptoUtils {
 			GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH, iv);
 
 			cipher.init(Cipher.DECRYPT_MODE, key, spec);
+			
+			cipher.updateAAD(header);
 
-			CipherInputStream cis = new CipherInputStream(fis, cipher);
+			try (CipherInputStream cis = new CipherInputStream(fis, cipher);
+					ObjectInputStream ois = new ObjectInputStream(cis)) {
 
-			try (ObjectInputStream ois = new ObjectInputStream(cis)) {
-				result = ois.readObject(); // throws if tampered or wrong password
+				Object obj = ois.readObject(); // throws if tampered or wrong password
+
+				if (!clazz.isInstance(obj)) {
+					throw new IllegalStateException(
+							"Invalid type. Expected: " + clazz.getName() + ", Found: " + obj.getClass().getName());
+				}
+
+				return clazz.cast(obj);
 			}
-		} catch (IOException e) {
-			if (!(e instanceof FileNotFoundException)) {
-				e.printStackTrace();
-			}
+
+		} catch (FileNotFoundException e) {
+			return defaultSupplier.get();
 		}
-		
-		return result;
+	}
+	
+	public static <T> Ref<T> loadRef(
+	        String password,
+	        String file,
+	        Class<T> clazz,
+	        Supplier<T> supplier) throws Exception {
+
+	    return new Ref<>(CryptoUtils.loadEncryptedGCM(password, file, clazz, supplier));
 	}
 }

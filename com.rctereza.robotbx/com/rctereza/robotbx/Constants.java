@@ -21,7 +21,8 @@ public class Constants {
 	public static final String PROGRAM_NAME = "Receitanet BX";
 	public static final String PROGRAM_PATH = "C:\\Program Files (x86)\\Programas RFB\\Receitanet BX";
 	public static final String PROGRAM_COMMAND = "\"C:\\Program Files (x86)\\Programas RFB\\Receitanet BX\\receitanetbx-gui-1.9.24.jar\"";
-	public static final String PROGRAM_CERTIFICATES = "C:\\Temp\\java\\certificates";
+	public static final String PROGRAM_COMMAND2 = "\"C:\\Program Files (x86)\\Programas RFB\\Receitanet BX\\ReceitanetBX.exe\"";
+	public static final String PROGRAM_CERTIFICATES = "C:\\Temp\\Certificados";
 	public static final String PROGRAM_PERIOD_START = "01/01/2020";
 	public static final String PROGRAM_PERIOD_END = getCurrentDate();
 	

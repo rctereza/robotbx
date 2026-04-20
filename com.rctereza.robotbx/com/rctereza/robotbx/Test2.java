@@ -1,8 +1,5 @@
 package com.rctereza.robotbx;
 
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.PointerInfo;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,17 +30,13 @@ import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.RobotUtils;
 import com.rctereza.robotocr.MessageBox2;
 
-public class Test {
-
-	private static boolean DEBUG_ON = false;
+public class Test2 {
 
 	private static boolean RUNNING = true;
 
 	private static int START_ACTIONS_AT = 0;
 
 	private static int NUMBER_OF_ATTEMPTS = 0;
-
-	// private static boolean PROCESS_FULLY_CONCLUDED = false;
 
 	public static void main(String[] args) throws Exception {
 
@@ -64,122 +57,34 @@ public class Test {
 			System.out.println("Paramenters reseted: " + receitaBx);
 		}
 
-		if (!DEBUG_ON) {
+		while (true) {
 
-			while (true) {
+			if ((receitaBx.get().ULTIMO_PEDIDO_SOLICITADO().equals(""))
+					|| (!receitaBx.get().ULTIMO_PEDIDO_SOLICITADO().equals("")
+							&& receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO().equals(""))) {
 
-				if ((receitaBx.get().ULTIMO_PEDIDO_SOLICITADO().equals(""))
-						|| (!receitaBx.get().ULTIMO_PEDIDO_SOLICITADO().equals("")
-								&& receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO().equals(""))) {
+				RUNNING = true;
 
-					RUNNING = true;
-					
-					System.out.println("Starting Step1.....: ");
-					startProcessStep1(receitaBx);
-					System.out.println("Stopping Step1.....: [" + receitaBx.get().ULTIMO_PEDIDO_SOLICITADO() + "]");
-					
-					Thread.sleep(5000); // pause for five seconds
+			} else if (!receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO().equals("")) {
 
-				} else if (!receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO().equals("")) {
-
-					System.out.println(
-							"Starting Step2.....: [" + receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO() + "]");
-					startProcessStep2(receitaBx);
-					System.out.println("Stopping Step2.....: ");
-					break;
-				}
+				System.out.println("Process Concluded... ");
+				break;
 			}
+			
+			System.out.println("Starting Step1.....: ");
+			startProcessStep1(receitaBx);
+			System.out.println("Stopping Step1.....: [" + receitaBx.get().ULTIMO_PEDIDO_SOLICITADO() + "]");
 
-		} else {
-
-			while (true) {
-				// Get pointer info
-				PointerInfo pointerInfo = MouseInfo.getPointerInfo();
-				Point point = pointerInfo.getLocation();
-
-				int x = (int) point.getX();
-				int y = (int) point.getY();
-
-				System.out.println("Mouse position: X=" + x + " Y=" + y);
-
-				Thread.sleep(3000); // pause for three seconds
-			}
-
+			Thread.sleep(5000); // pause for five seconds
 		}
-	}
-
-	private static void startProcessStep2(Ref<ReceitaBx> receitaBx) throws Exception {
-
-		// *******************************************************************************************
-		// OPEN RECEITANETBX EXE
-		// *******************************************************************************************
-		ProcessBuilder processBuilder = new ProcessBuilder(Constants.PROGRAM_COMMAND2);
-		processBuilder.directory(new java.io.File(Constants.PROGRAM_PATH));
-		Process process = processBuilder.start();
-		readStream(process.getInputStream(), "OUT: ");
-
-		// *******************************************************************************************
-		// LOAD ROBOT PARAMENTERS
-		// *******************************************************************************************
-		Robot robot = RobotUtils.getRobotBasedOnScreenResolution2(receitaBx.get());
-		System.out.println("Starting robot.....: " + robot.NAME());
-
-		// *******************************************************************************************
-		// EXECUTE THE ACTIONS
-		// *******************************************************************************************
-		performAction(robot, receitaBx);
-
-		System.out.println("Stopping robot.....: " + robot.NAME());
-
-		process.destroy();
-
-		Thread.sleep(5000); // pause for three seconds
-		
-		if (process != null && process.isAlive()) {
-			System.out.println("destroyForcibly");
-			process.destroyForcibly();
-		}
-		
-		// ******************************************************************************************
-//		while (true) {
-//			MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME);
-//			String text = mb.getText();
-//			System.out.println("Message box text found..: [" + text + "]");
-//
-//			if (text.contains(receitaBx.get().ULTIMO_PEDIDO_SOLICITADO())) {
-//				// It means the downloading has not concluded yet!
-//				Thread.sleep(5000); // pause for five seconds
-//			} else if (text.contains("Não ha arquivos na fila de download")) {
-//				AutoCloseMessageDialog.show("A extração automática dos arquivos foi concluída com sucesso!",
-//						"Informação", 3000);
-//				Actions actions = new Actions();
-//				actions.Move(1147, 297); // Botão Sair
-//				actions.Click();
-//			}
-//		}
-		// ******************************************************************************************
-
-//		while (true) {
-//			// Get pointer info
-//			PointerInfo pointerInfo = MouseInfo.getPointerInfo();
-//			Point point = pointerInfo.getLocation();
-//
-//			int x = (int) point.getX();
-//			int y = (int) point.getY();
-//
-//			System.out.println("Mouse position: X=" + x + " Y=" + y);
-//
-//			Thread.sleep(3000); // pause for three seconds
-//		}
-		
 	}
 
 	private static void startProcessStep1(Ref<ReceitaBx> receitaBx) throws Exception {
 
 		// *******************************************************************************************
-		// OPEN RECEITANETBX JAR
+		// OPEN RECEITANETBX EXE
 		// *******************************************************************************************
-		ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", Constants.PROGRAM_COMMAND);
+		ProcessBuilder processBuilder = new ProcessBuilder(Constants.PROGRAM_COMMAND2);
 		processBuilder.directory(new java.io.File(Constants.PROGRAM_PATH));
 		Process process = processBuilder.start();
 		readStream(process.getInputStream(), "OUT: ");
@@ -198,7 +103,7 @@ public class Test {
 		System.out.println("Stopping robot.....: " + robot.NAME());
 
 		process.destroy();
-		
+
 	}
 
 	private static void performAction(Robot robot, Ref<ReceitaBx> receitaBx) throws Exception {
@@ -350,7 +255,7 @@ public class Test {
 										continue;
 
 									} else {
-										
+
 										AutoCloseMessageDialog.show(rmg.RESPONSE(), "Atenção", 5000);
 
 										if (rmg.ABORT()) {
@@ -468,10 +373,10 @@ public class Test {
 				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), "", ""));
 
 		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
-		
+
 		clean();
 	}
-	
+
 	private static void clean() throws IOException {
 		Path folderPath = Paths.get("C:\\Temp\\ReceitanetBX"); // Change to your folder path
 		FileUtils.clearDirectory(folderPath);

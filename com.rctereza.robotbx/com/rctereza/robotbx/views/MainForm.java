@@ -49,6 +49,7 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.rctereza.robotbx.Constants;
+import com.rctereza.robotbx.Ref;
 import com.rctereza.robotbx.components.DarkLightSwitchIcon;
 import com.rctereza.robotbx.controllers.Controller;
 import com.rctereza.robotbx.enums.Menu;
@@ -112,18 +113,17 @@ public class MainForm extends JFrame {
 	private JButton searchButton;
 	private JButton closeButton;
 
-	private ReceitaBx receitaBx = FileUtils.loadReceitaBx();
+	private Ref<ReceitaBx> receitaBx;
 
 	private Controller controller;
 
 	private Listenable listener;
 
-	public MainForm()
-			throws ParseException, InvalidKeyException, ClassNotFoundException, InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
+	public MainForm() throws Exception {
 		super(softwareNameAndVersion);
 
-		receitaBx = (ReceitaBx) CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+		receitaBx = CryptoUtils.loadRef(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, ReceitaBx.class,
+				ReceitaBx::new);
 
 		controller = new Controller();
 
@@ -219,12 +219,12 @@ public class MainForm extends JFrame {
 		});
 
 		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
-		certificateComboBox.setSelectedItem(receitaBx.CERTIFICADO());
+		certificateComboBox.setSelectedItem(receitaBx.get().CERTIFICADO());
 
 		// LINE 3
 		passwordLabel = new JLabel("Senha do certificado");
 		passwordTextField = new JTextField();
-		passwordTextField.setText(receitaBx.SENHA());
+		passwordTextField.setText(receitaBx.get().SENHA());
 
 		// LINE 4
 		profileLabel = new JLabel("Selecione um perfil");
@@ -268,12 +268,12 @@ public class MainForm extends JFrame {
 		profileTypeValueTextField = new JFormattedTextField(cpfMask);
 		profileTypeValueTextField.setVisible(false);
 
-		if (receitaBx.PERFIL() != null && receitaBx.PERFIL().equals(profileProcurador.getText())) {
+		if (receitaBx.get().PERFIL() != null && receitaBx.get().PERFIL().equals(profileProcurador.getText())) {
 			profileProcurador.setSelected(true);
 			profileTypeComboBox.setVisible(true);
 			profileTypeValueTextField.setVisible(true);
-			profileTypeComboBox.setSelectedItem(receitaBx.PERFIL_TYPE());
-			profileTypeValueTextField.setValue(receitaBx.PERFIL_VALUE());
+			profileTypeComboBox.setSelectedItem(receitaBx.get().PERFIL_TYPE());
+			profileTypeValueTextField.setValue(receitaBx.get().PERFIL_VALUE());
 		}
 
 		// LINE 5
@@ -322,7 +322,7 @@ public class MainForm extends JFrame {
 						panelMain.remove(systemSearchFieldsPanel);
 						try {
 							systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType,
-									e.getItem().toString(), receitaBx);
+									e.getItem().toString(), receitaBx.get());
 						} catch (ParseException e1) {
 							e1.printStackTrace();
 						}
@@ -331,8 +331,8 @@ public class MainForm extends JFrame {
 						panelMain.repaint();
 					} else {
 						try {
-							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.SISTEMA()),
-									receitaBx.TIPO_ARQUIVO(), receitaBx.TIPO_PESQUISA(), receitaBx);
+							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.get().SISTEMA()),
+									receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(), receitaBx.get());
 						} catch (ParseException e1) {
 							e1.printStackTrace();
 						}
@@ -345,11 +345,11 @@ public class MainForm extends JFrame {
 		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
 
 		// LINE 9
-		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx);
+		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx.get());
 
-		systemComboBox.setSelectedItem(receitaBx.SISTEMA());
-		systemFileTypeComboBox.setSelectedItem(receitaBx.TIPO_ARQUIVO());
-		systemSearchTypeComboBox.setSelectedItem(receitaBx.TIPO_PESQUISA());
+		systemComboBox.setSelectedItem(receitaBx.get().SISTEMA());
+		systemFileTypeComboBox.setSelectedItem(receitaBx.get().TIPO_ARQUIVO());
+		systemSearchTypeComboBox.setSelectedItem(receitaBx.get().TIPO_PESQUISA());
 
 		// LINE 10
 		searchButton = new JButton("Pesquisar");
@@ -360,7 +360,7 @@ public class MainForm extends JFrame {
 				if (result.equals("")) {
 					try {
 						searchButton.setEnabled(false);
-						controller.startThreads(receitaBx);
+						controller.startThreads(receitaBx.get());
 					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
 						JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 						searchButton.setEnabled(true);
@@ -486,6 +486,7 @@ public class MainForm extends JFrame {
 		String INSCRICAO_ESTADUAL = "";
 		Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
 		String ULTIMO_PEDIDO_SOLICITADO = "";
+		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
 
 		if (certificateComboBox.getSelectedIndex() == -1)
 			result.append("Favor selecionar um certificado.\n");
@@ -551,15 +552,14 @@ public class MainForm extends JFrame {
 		}
 
 		if (result.isEmpty()) {
-			receitaBx = new ReceitaBx(SCREEN, CERTIFICADO, SENHA, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO, SENHA, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
 					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
 					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
-					ULTIMO_ARQUIVO_TRANSMITIDO,ULTIMO_PEDIDO_SOLICITADO);
+					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO));
 
-			//FileUtils.saveReceitaBx(receitaBx);
-			
 			try {
-				CryptoUtils.saveEncryptedGCM(receitaBx, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+				CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET,
+						Constants.SOFTWARE_SECURE_FILE);
 			} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
 					| NoSuchPaddingException | InvalidKeySpecException | IOException e) {
 				result.append("Error: " + e.getMessage());

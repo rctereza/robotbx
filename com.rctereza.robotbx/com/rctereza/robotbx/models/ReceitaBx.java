@@ -22,9 +22,10 @@ public record ReceitaBx(
 	, String INSCRICAO_ESTADUAL
 	, Boolean ULTIMO_ARQUIVO_TRANSMITIDO
 	, String ULTIMO_PEDIDO_SOLICITADO
+	, String DATA_HORA_CONCLUSAO_PROCESSAMENTO
 ) implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public ReceitaBx() {
-		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
+		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
 	}
 }

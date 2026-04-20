@@ -1,5 +1,7 @@
 package com.rctereza.robotbx.models;
 
+import java.util.List;
+
 import com.rctereza.robotbx.enums.Message;
 
 public record RobotMessageBox(
@@ -8,4 +10,5 @@ public record RobotMessageBox(
 	, String  RESPONSE
 	, Boolean ABORT
 	, Message TYPE
+	, List<RobotCommand> COMMANDS
 ) {}

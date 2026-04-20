@@ -10,6 +10,8 @@ public record RobotAction(
 	, Boolean WAIT
 	, Integer WAIT_MILLISECONDS
 	, Integer NUMBER_OF_ATTEMPTS
+	, Boolean CONFIRMATON
+	, Boolean LAST_ACTION
 	, Boolean ENABLED
 	, List<RobotCommand> ROBOT_COMMANDS
 ) {}
