@@ -11,13 +11,13 @@ import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.tools.Scheme;
-import com.rctereza.robotbx.views.MainForm;
+import com.rctereza.robotbx.views.MainForm2;
 
 public class Main {
 
 	private static final Main instance = new Main();
 
-	private MainForm mainForm;
+	private MainForm2 mainForm;
 
 	private Main() {
 	}
@@ -32,7 +32,7 @@ public class Main {
 
 	private void init() throws Exception {
 
-		mainForm = new MainForm();
+		mainForm = new MainForm2();
 
 		mainForm.addObjectListener(new Listenable() {
 			@Override

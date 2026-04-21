@@ -1,0 +1,807 @@
+package com.rctereza.robotbx.views;
+
+import java.awt.AWTException;
+import java.awt.Component;
+import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import javax.crypto.NoSuchPaddingException;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.text.DefaultFormatterFactory;
+import javax.swing.text.MaskFormatter;
+
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+import com.rctereza.robotbx.Constants;
+import com.rctereza.robotbx.Ref;
+import com.rctereza.robotbx.components.DarkLightSwitchIcon;
+import com.rctereza.robotbx.controllers.Controller;
+import com.rctereza.robotbx.enums.Menu;
+import com.rctereza.robotbx.enums.Sped;
+import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
+import com.rctereza.robotbx.interfaces.Listenable;
+import com.rctereza.robotbx.models.Certificate;
+import com.rctereza.robotbx.models.ReceitaBx;
+import com.rctereza.robotbx.tools.CryptoUtils;
+import com.rctereza.robotbx.tools.FileUtils;
+import com.rctereza.robotbx.tools.Scheme;
+import com.rctereza.robotbx.tools.ScreenResolution;
+import com.rctereza.robotbx.tools.SpedUtils;
+import com.rctereza.robotbx.tools.ValidateCpfCnpj;
+
+import net.miginfocom.swing.MigLayout;
+
+public class MainForm2 extends JFrame {
+
+	private static final long serialVersionUID = 8829044892271317875L;
+
+	private static final String softwareNameAndVersion = Constants.SOFTWARE_NAME + " " + Constants.SOFTWARE_VERSION;
+
+	private MaskFormatter cnpjMask;
+	private MaskFormatter cpfMask;
+
+	private DarkLightSwitchIcon darkLightSwitchIcon;
+
+	private JPanel panelMain;
+
+	private JLabel themeLabel;
+	private JToggleButton themeButton;
+
+	private JLabel screenResolutionLabel;
+	private JTextField screenResolutionTextField;
+
+	private JLabel certificateLabel;
+	private JComboBox<Certificate> certificateComboBox;
+	private JButton certificateLoadButton;
+
+	private JLabel passwordLabel;
+	private JTextField passwordTextField;
+
+	private JLabel profileLabel;
+	private JRadioButton profileContribuinte;
+	private JRadioButton profileProcurador;
+	private JComboBox<String> profileTypeComboBox;
+	private JFormattedTextField profileTypeValueTextField;
+
+	private JLabel systemLabel;
+	private JComboBox<String> systemComboBox;
+
+	private JLabel systemFileTypeLabel;
+	private JComboBox<String> systemFileTypeComboBox;
+
+	private JLabel systemSearchTypeLabel;
+	private JComboBox<String> systemSearchTypeComboBox;
+
+	private JPanel systemSearchFieldsPanel;
+
+	private JButton searchButton;
+	private JButton closeButton;
+
+	// Grid fields
+	private JButton addButton;
+	private JTable itemsTable;
+	private DefaultTableModel tableModel;
+	private JScrollPane tableScrollPane;
+	private RemoverButtonEditor removerEditor;
+	private static final String[] FIXED_COLUMNS = { "Sistema", "Tipo Arquivo", "Tipo Pesquisa" };
+	// Stores the map of dynamic field names -> values for each row
+	private final List<Map<String, String>> rowDynamicData = new ArrayList<>();
+
+	private Ref<ReceitaBx> receitaBx;
+
+	private Controller controller;
+
+	private Listenable listener;
+
+	public MainForm2() throws Exception {
+		super(softwareNameAndVersion);
+
+		receitaBx = CryptoUtils.loadRef(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, ReceitaBx.class,
+				ReceitaBx::new);
+
+		controller = new Controller();
+
+		controller.addObjectListener(new Listenable() {
+			@Override
+			public void value(Object... objs) {
+				if (objs != null && objs.length > 0) {
+					String action = (String) objs[0];
+					if (action.equals(Menu.DONE.getValue())) {
+						searchButton.setEnabled(true);
+					}
+				}
+			}
+		});
+
+		addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				listener.value(Menu.CLOSE.getValue());
+			}
+
+			public void windowIconified(WindowEvent e) {
+				listener.value(Menu.MINIMIZE.getValue());
+			}
+		});
+
+		// FileUtils.removeCertificatePathChosen();
+
+		cnpjMask = new MaskFormatter("##.###.###/####-##");
+		cnpjMask.setPlaceholderCharacter('_');
+
+		cpfMask = new MaskFormatter("###.###.###-##");
+		cpfMask.setPlaceholderCharacter('_');
+
+		// LINE 0
+		darkLightSwitchIcon = new DarkLightSwitchIcon();
+		darkLightSwitchIcon.setCenterSpace(20);
+
+		themeLabel = new JLabel("Switch Themes");
+		themeButton = new JToggleButton();
+		themeButton.setIcon(darkLightSwitchIcon);
+		themeButton.putClientProperty(FlatClientProperties.STYLE,
+				"" + "arc:999;" + "borderWidth:0;" + "focusWidth:0;" + "innerFocusWidth:0");
+		themeButton.addActionListener(new ActionListener() {
+			private final ScheduledExecutorService scheduled = Executors.newScheduledThreadPool(1);
+			private ScheduledFuture<?> scheduledFuture;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (scheduledFuture != null) {
+					scheduledFuture.cancel(true);
+				}
+				scheduledFuture = scheduled.schedule(() -> {
+					changeThemes(themeButton.isSelected());
+				}, 500, TimeUnit.MILLISECONDS);
+			}
+		});
+
+		if (Scheme.isLafDark()) {
+			themeButton.setSelected(true);
+		}
+
+		// LINE 1
+		screenResolutionLabel = new JLabel("Monitor Resolução");
+		screenResolutionTextField = new JTextField();
+		screenResolutionTextField.setText(ScreenResolution.getResolution());
+		screenResolutionTextField.setEditable(false);
+
+		// LINE 2
+		certificateLabel = new JLabel("Selecione um certificado");
+		certificateComboBox = new JComboBox<>();
+		certificateComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				/*
+				 * if (e.getStateChange() == ItemEvent.SELECTED) { Certificate certificate =
+				 * (Certificate) e.getItem();
+				 * passwordTextField.setText(certificate.FILE_PASS()); }
+				 */
+			}
+		});
+
+		certificateLoadButton = new JButton("Carregar");
+		certificateLoadButton.addActionListener(e -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle("Selecione a pasta do(s) certificado(s)");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+
+			int result = chooser.showOpenDialog(this);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				File selectedFolder = chooser.getSelectedFile();
+				loadCertificateComboBox(selectedFolder.getAbsolutePath());
+			}
+		});
+
+		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
+		certificateComboBox.setSelectedItem(receitaBx.get().CERTIFICADO());
+
+		// LINE 3
+		passwordLabel = new JLabel("Senha do certificado");
+		passwordTextField = new JTextField();
+		passwordTextField.setText(receitaBx.get().SENHA());
+
+		// LINE 4
+		profileLabel = new JLabel("Selecione um perfil");
+		profileContribuinte = new JRadioButton("Contribuinte", true);
+		profileContribuinte.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				profileTypeComboBox.setVisible(false);
+				profileTypeValueTextField.setVisible(false);
+			}
+		});
+
+		profileProcurador = new JRadioButton("Procurador");
+		profileProcurador.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				profileTypeComboBox.setVisible(true);
+				profileTypeValueTextField.setVisible(true);
+			}
+		});
+
+		ButtonGroup profileGroup = new ButtonGroup();
+		profileGroup.add(profileContribuinte);
+		profileGroup.add(profileProcurador);
+
+		String[] profileTypes = { "CPF", "CNPJ" };
+		profileTypeComboBox = new JComboBox<String>(profileTypes);
+		profileTypeComboBox.setVisible(false);
+		profileTypeComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					profileTypeValueTextField.setValue(null);
+					if (profileTypeComboBox.getSelectedItem().toString().equals("CNPJ"))
+						profileTypeValueTextField.setFormatterFactory(new DefaultFormatterFactory(cnpjMask));
+					else
+						profileTypeValueTextField.setFormatterFactory(new DefaultFormatterFactory(cpfMask));
+				}
+			}
+		});
+
+		profileTypeValueTextField = new JFormattedTextField(cpfMask);
+		profileTypeValueTextField.setVisible(false);
+
+		if (receitaBx.get().PERFIL() != null && receitaBx.get().PERFIL().equals(profileProcurador.getText())) {
+			profileProcurador.setSelected(true);
+			profileTypeComboBox.setVisible(true);
+			profileTypeValueTextField.setVisible(true);
+			profileTypeComboBox.setSelectedItem(receitaBx.get().PERFIL_TYPE());
+			profileTypeValueTextField.setValue(receitaBx.get().PERFIL_VALUE());
+		}
+
+		// LINE 5
+		systemLabel = new JLabel("Selecione um sistema");
+		systemComboBox = new JComboBox<String>(SpedUtils.getSystemList());
+		systemComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Sped value = Sped.getSped(e.getItem().toString());
+
+					DefaultComboBoxModel<String> modelForSystemFileType = new DefaultComboBoxModel<>();
+					modelForSystemFileType.addAll(SpedUtils.getSystemFileTypeList(value));
+					systemFileTypeComboBox.removeAllItems();
+					systemFileTypeComboBox.setModel(modelForSystemFileType);
+					systemFileTypeComboBox.setSelectedIndex(0);
+				}
+			}
+		});
+
+		// LINE 6
+		systemFileTypeLabel = new JLabel("Selecione um tipo de arquivo");
+		systemFileTypeComboBox = new JComboBox<String>(SpedUtils.getSystemFileType(Sped.CONTRIBUICOES));
+		systemFileTypeComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Sped value = Sped.getSped(systemComboBox.getSelectedItem().toString());
+
+					DefaultComboBoxModel<String> modelForSystemSearchType = new DefaultComboBoxModel<>();
+					modelForSystemSearchType.addAll(SpedUtils.getSystemSearchTypeList(value, e.getItem().toString()));
+					systemSearchTypeComboBox.removeAllItems();
+					systemSearchTypeComboBox.setModel(modelForSystemSearchType);
+					systemSearchTypeComboBox.setSelectedIndex(0);
+				}
+			}
+		});
+
+		// LINE 7
+		systemSearchTypeLabel = new JLabel("Selecione um tipo de pesquisa");
+		systemSearchTypeComboBox = new JComboBox<String>(SpedUtils.getSystemSearchType(Sped.CONTRIBUICOES, ""));
+		systemSearchTypeComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Sped system = Sped.getSped(systemComboBox.getSelectedItem().toString());
+					String systemFileType = systemFileTypeComboBox.getSelectedItem().toString();
+					if (systemSearchFieldsPanel != null && systemSearchFieldsPanel.isShowing()) {
+						panelMain.remove(systemSearchFieldsPanel);
+						try {
+							systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType,
+									e.getItem().toString(), receitaBx.get());
+						} catch (ParseException e1) {
+							e1.printStackTrace();
+						}
+						panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
+						panelMain.revalidate();
+						panelMain.repaint();
+					} else {
+						try {
+							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.get().SISTEMA()),
+									receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(), receitaBx.get());
+						} catch (ParseException e1) {
+							e1.printStackTrace();
+						}
+					}
+				}
+			}
+		});
+
+		// LINE 8
+		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
+
+		// LINE 9
+		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx.get());
+
+		systemComboBox.setSelectedItem(receitaBx.get().SISTEMA());
+		systemFileTypeComboBox.setSelectedItem(receitaBx.get().TIPO_ARQUIVO());
+		systemSearchTypeComboBox.setSelectedItem(receitaBx.get().TIPO_PESQUISA());
+
+		// LINE 10 - Adicionar button
+		addButton = new JButton("Adicionar");
+		addButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				addRowToGrid();
+			}
+		});
+
+		// LINE 11 - Grid (table) to hold the queued searches
+		removerEditor = new RemoverButtonEditor();
+		tableModel = new DefaultTableModel(FIXED_COLUMNS, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				// column here is the MODEL index — check if this model column is the Remover
+				// one
+				return getColumnName(column).equals("");
+			}
+		};
+		itemsTable = new JTable(tableModel) {
+			@Override
+			public javax.swing.table.TableCellRenderer getCellRenderer(int row, int viewCol) {
+				int modelCol = convertColumnIndexToModel(viewCol);
+				if (tableModel.getColumnName(modelCol).equals("")) {
+					return (table, value, isSelected, hasFocus, r, c) -> {
+						JButton btn = new JButton("Remover");
+						btn.setOpaque(true);
+						return btn;
+					};
+				}
+				return super.getCellRenderer(row, viewCol);
+			}
+
+			@Override
+			public javax.swing.table.TableCellEditor getCellEditor(int row, int viewCol) {
+				int modelCol = convertColumnIndexToModel(viewCol);
+				if (tableModel.getColumnName(modelCol).equals("")) {
+					return removerEditor;
+				}
+				return super.getCellEditor(row, viewCol);
+			}
+		};
+		itemsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		itemsTable.getTableHeader().setReorderingAllowed(false);
+		// Activate the button editor on a single click instead of double-click
+		itemsTable.putClientProperty("JTable.autoStartsEdit", false);
+		itemsTable.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				int viewCol = itemsTable.columnAtPoint(e.getPoint());
+				int row = itemsTable.rowAtPoint(e.getPoint());
+				if (row >= 0 && viewCol >= 0) {
+					int modelCol = itemsTable.convertColumnIndexToModel(viewCol);
+					if (tableModel.getColumnName(modelCol).equals("")) {
+						itemsTable.editCellAt(row, viewCol);
+					}
+				}
+			}
+		});
+		tableScrollPane = new JScrollPane(itemsTable);
+		tableScrollPane.setPreferredSize(new java.awt.Dimension(0, 150));
+
+		// LINE 12
+		searchButton = new JButton("Pesquisar");
+		searchButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (tableModel.getRowCount() == 0) {
+					JOptionPane.showMessageDialog(null, "Adicione pelo menos um item à lista antes de pesquisar.",
+							"Atenção", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				String result = validateFormFields();
+				if (result.equals("")) {
+					try {
+						searchButton.setEnabled(false);
+						controller.startThreads(receitaBx.get());
+					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
+						JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+						searchButton.setEnabled(true);
+					}
+				} else {
+					JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
+				}
+			}
+		});
+
+		closeButton = new JButton("Sair");
+		closeButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				listener.value(Menu.CLOSE.getValue());
+			}
+		});
+
+//				JPanel panel = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]", "[]10[]10[]"));
+		panelMain = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
+
+		panelMain.add(themeLabel, "split, span3, right");
+		panelMain.add(themeButton, "wrap");
+		panelMain.add(screenResolutionLabel, "left, sg 1");
+		panelMain.add(screenResolutionTextField, "pushx, growx, wrap");
+		panelMain.add(certificateLabel, "left, sg 1");
+//		panelMain.add(certificateComboBox, "growx, w ::600");
+		panelMain.add(certificateComboBox, "pushx, growx");
+		panelMain.add(certificateLoadButton, "left, wrap");
+		panelMain.add(passwordLabel, "left, sg 1");
+		panelMain.add(passwordTextField, "pushx, growx, wrap");
+		panelMain.add(profileLabel, "left, sg 1");
+		panelMain.add(profileContribuinte, "split");
+		panelMain.add(profileProcurador);
+		panelMain.add(profileTypeComboBox);
+		panelMain.add(profileTypeValueTextField, "pushx, growx, wrap");
+		panelMain.add(systemLabel, "left, sg 1");
+		panelMain.add(systemComboBox, "wrap");
+		panelMain.add(systemFileTypeLabel, "left, sg 1");
+		panelMain.add(systemFileTypeComboBox, "wrap");
+		panelMain.add(systemSearchTypeLabel, "left, sg 1");
+		panelMain.add(systemSearchTypeComboBox, "wrap");
+		panelMain.add(horizontalLine, "span, grow, wrap");
+		panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
+		panelMain.add(addButton, "cell 0 10, wrap");
+		panelMain.add(tableScrollPane, "cell 0 11, span, grow, wrap");
+		panelMain.add(searchButton, "cell 0 12");
+		panelMain.add(closeButton, "cell 2 12, left, wrap");
+
+		TitledBorder title;
+		title = BorderFactory.createTitledBorder("Pesquisa de Arquivos");
+		panelMain.setBorder(title);
+
+		this.add(panelMain);
+
+		setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		setLocationRelativeTo(null);
+		setResizable(false);
+	}
+
+	public void addObjectListener(Listenable listener) {
+		this.listener = listener;
+	}
+
+	private void changeThemes(boolean dark) {
+		if (FlatLaf.isLafDark() != dark) {
+			if (!dark) {
+				Scheme.removeLafDark();
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						FlatAnimatedLafChange.showSnapshot();
+						FlatIntelliJLaf.setup();
+						FlatLaf.updateUI();
+						FlatAnimatedLafChange.hideSnapshotWithAnimation();
+					}
+				});
+			} else {
+				Scheme.setLafDark();
+				EventQueue.invokeLater(new Runnable() {
+
+					public void run() {
+						FlatAnimatedLafChange.showSnapshot();
+						FlatDarculaLaf.setup();
+						FlatLaf.updateUI();
+						FlatAnimatedLafChange.hideSnapshotWithAnimation();
+					}
+
+				});
+			}
+		}
+	}
+
+	private void loadCertificateComboBox(String path) {
+		if (path != null && !path.trim().isEmpty()) {
+			List<Certificate> list = FileUtils.getListOfCertificates(path);
+			if (list.size() > 0) {
+				FileUtils.saveCertificatePathChosen(path);
+				DefaultComboBoxModel<Certificate> model = new DefaultComboBoxModel<>();
+				model.addAll(list);
+				certificateComboBox.removeAllItems();
+				certificateComboBox.setModel(model);
+			}
+		}
+	}
+
+	private String validateFormFields() {
+		StringBuilder result = new StringBuilder("");
+
+		String SCREEN = screenResolutionTextField.getText();
+		Certificate CERTIFICADO = null;
+		String SENHA = "";
+		String PERFIL = "";
+		String PERFIL_TYPE = "";
+		String PERFIL_VALUE = "";
+		String SISTEMA = systemComboBox.getSelectedItem().toString();
+		String TIPO_ARQUIVO = systemFileTypeComboBox.getSelectedItem().toString();
+		String TIPO_PESQUISA = systemSearchTypeComboBox.getSelectedItem().toString();
+		String DATA_INICIO = "";
+		String DATA_FIM = "";
+		String CNPJ_INCORPORADORA = "";
+		String TIPO_EVENTO = "";
+		String BAIXAR_ARQUIVO_ASSINADO = "";
+		String CNPJ_ESTABELECIMENTO = "";
+		Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
+		String INSCRICAO_ESTADUAL = "";
+		Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
+		String ULTIMO_PEDIDO_SOLICITADO = "";
+		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
+
+		if (certificateComboBox.getSelectedIndex() == -1)
+			result.append("Favor selecionar um certificado.\n");
+		else
+			CERTIFICADO = (Certificate) certificateComboBox.getSelectedItem();
+
+		if (passwordTextField.getText().isBlank())
+			result.append("Favor informar a senha do certificado.\n");
+		else
+			SENHA = passwordTextField.getText();
+
+		if (profileProcurador.isSelected()) {
+
+			PERFIL = profileProcurador.getText();
+			PERFIL_TYPE = profileTypeComboBox.getSelectedItem().toString();
+			PERFIL_VALUE = profileTypeValueTextField.getText();
+
+			if (PERFIL_TYPE.equals("CPF")) {
+				if (!ValidateCpfCnpj.isCpfValid(PERFIL_VALUE)) {
+					result.append("Favor informar um CPF válido.\n");
+				}
+			} else {
+				if (!ValidateCpfCnpj.isCnpjValid(PERFIL_VALUE)) {
+					result.append("Favor informar um CNPJ válido.\n");
+				}
+			}
+		} else {
+			PERFIL = profileContribuinte.getText();
+		}
+
+		for (Component c : systemSearchFieldsPanel.getComponents()) {
+			if (c instanceof JTextField) {
+				JTextField textField = (JTextField) c;
+//						System.out.println("JTextField : " + textField.getText());
+				if (textField.getName().equals("DATA_INICIO")) {
+					DATA_INICIO = textField.getText();
+				} else if (textField.getName().equals("DATA_FIM")) {
+					DATA_FIM = textField.getText();
+				} else if (textField.getName().equals("CNPJ_INCORPORADORA")) {
+					CNPJ_INCORPORADORA = textField.getText();
+				} else if (textField.getName().equals("CNPJ_ESTABELECIMENTO")) {
+					CNPJ_ESTABELECIMENTO = textField.getText();
+				} else if (textField.getName().equals("INSCRICAO_ESTADUAL")) {
+					INSCRICAO_ESTADUAL = textField.getText();
+				}
+			} else if (c instanceof JComboBox) {
+				JComboBox<?> comboBox = (JComboBox<?>) c;
+//						System.out.println("JComboBox : " + comboBox.getSelectedItem().toString());
+				if (comboBox.getName().equals("TIPO_EVENTO")) {
+					TIPO_EVENTO = comboBox.getSelectedItem().toString();
+				} else if (comboBox.getName().equals("BAIXAR_ARQUIVO_ASSINADO")) {
+					BAIXAR_ARQUIVO_ASSINADO = comboBox.getSelectedItem().toString();
+				}
+			} else if (c instanceof JCheckBox) {
+				JCheckBox checkBox = (JCheckBox) c;
+//						System.out.println("JCheckBox : " + checkBox.getText());
+				if (checkBox.getName().equals("BUSCAR_TODOS_ESTABLECIMENTOS")) {
+					BUSCAR_TODOS_ESTABLECIMENTOS = checkBox.isSelected();
+				} else if (checkBox.getName().equals("ULTIMO_ARQUIVO_TRANSMITIDO")) {
+					ULTIMO_ARQUIVO_TRANSMITIDO = checkBox.isSelected();
+				}
+			}
+		}
+
+		if (result.isEmpty()) {
+			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO, SENHA, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
+					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
+					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO));
+
+			try {
+				CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET,
+						Constants.SOFTWARE_SECURE_FILE);
+			} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
+					| NoSuchPaddingException | InvalidKeySpecException | IOException e) {
+				result.append("Error: " + e.getMessage());
+			}
+		}
+
+		return result.toString();
+	}
+
+	/**
+	 * Reads the current form selections and appends a new row to the grid. Columns:
+	 * Sistema | Tipo Arquivo | Tipo Pesquisa | <dynamic fields...> | Remover
+	 */
+	private void addRowToGrid() {
+		String sistema = systemComboBox.getSelectedItem() != null ? systemComboBox.getSelectedItem().toString() : "";
+		String tipoArquivo = systemFileTypeComboBox.getSelectedItem() != null
+				? systemFileTypeComboBox.getSelectedItem().toString()
+				: "";
+		String tipoPesquisa = systemSearchTypeComboBox.getSelectedItem() != null
+				? systemSearchTypeComboBox.getSelectedItem().toString()
+				: "";
+
+		Map<String, String> dynamicFields = collectDynamicFields();
+
+		// Find current Remover column position (-1 = not yet added)
+		int removerModelIndex = -1;
+		for (int c = 0; c < tableModel.getColumnCount(); c++) {
+			if (tableModel.getColumnName(c).equals("")) {
+				removerModelIndex = c;
+				break;
+			}
+		}
+
+		// Add any new dynamic columns that don't exist yet
+		boolean newColumnsAdded = false;
+		for (String fieldName : dynamicFields.keySet()) {
+			boolean found = false;
+			for (int c = 0; c < tableModel.getColumnCount(); c++) {
+				if (tableModel.getColumnName(c).equals(fieldName)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				tableModel.addColumn(fieldName);
+				newColumnsAdded = true;
+			}
+		}
+
+		// Add Remover column for the first time
+		if (removerModelIndex == -1) {
+			tableModel.addColumn("");
+			wireRemoverColumn();
+		} else if (newColumnsAdded) {
+			// New dynamic columns were appended AFTER the Remover column in the model —
+			// move the Remover view-column to the rightmost position so it stays last.
+			int removerViewIndex = itemsTable.convertColumnIndexToView(removerModelIndex);
+			int lastViewIndex = itemsTable.getColumnCount() - 1;
+			if (removerViewIndex != lastViewIndex) {
+				itemsTable.getColumnModel().moveColumn(removerViewIndex, lastViewIndex);
+			}
+		}
+
+		// Build the row data aligned to model column order
+		int colCount = tableModel.getColumnCount();
+		Object[] rowData = new Object[colCount];
+		for (int c = 0; c < colCount; c++) {
+			String colName = tableModel.getColumnName(c);
+			if (colName.equals("Sistema"))
+				rowData[c] = sistema;
+			else if (colName.equals("Tipo Arquivo"))
+				rowData[c] = tipoArquivo;
+			else if (colName.equals("Tipo Pesquisa"))
+				rowData[c] = tipoPesquisa;
+			else if (colName.equals(""))
+				rowData[c] = "Remover";
+			else
+				rowData[c] = dynamicFields.getOrDefault(colName, "");
+		}
+
+		tableModel.addRow(rowData);
+		rowDynamicData.add(dynamicFields);
+	}
+
+	/**
+	 * Configures the Remover button renderer and editor on the last (unnamed)
+	 * column.
+	 */
+	private class RemoverButtonEditor extends javax.swing.AbstractCellEditor
+			implements javax.swing.table.TableCellEditor {
+
+		private static final long serialVersionUID = 1L;
+		private final JButton btn = new JButton("Remover");
+		private int currentRow = -1;
+
+		public RemoverButtonEditor() {
+			btn.addActionListener(ev -> {
+				fireEditingStopped();
+				if (currentRow >= 0 && currentRow < tableModel.getRowCount()) {
+					tableModel.removeRow(currentRow);
+					if (currentRow < rowDynamicData.size()) {
+						rowDynamicData.remove(currentRow);
+					}
+				}
+			});
+		}
+
+		@Override
+		public java.awt.Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row,
+				int column) {
+			currentRow = row;
+			return btn;
+		}
+
+		@Override
+		public Object getCellEditorValue() {
+			return "Remover";
+		}
+	}
+
+	private void wireRemoverColumn() {
+		javax.swing.table.TableColumn removerCol = itemsTable.getColumn("");
+		removerCol.setPreferredWidth(85);
+		removerCol.setMaxWidth(85);
+	}
+
+	/**
+	 * Iterates over systemSearchFieldsPanel and collects all named field values
+	 * into a LinkedHashMap preserving insertion order.
+	 */
+	private Map<String, String> collectDynamicFields() {
+		Map<String, String> fields = new LinkedHashMap<>();
+		for (Component c : systemSearchFieldsPanel.getComponents()) {
+			if (c instanceof JFormattedTextField) {
+				JFormattedTextField ftf = (JFormattedTextField) c;
+				if (ftf.getName() != null && !ftf.getName().isBlank()) {
+					Object val = ftf.getValue();
+					fields.put(ftf.getName(), val != null ? val.toString() : "");
+				}
+			} else if (c instanceof JTextField) {
+				JTextField tf = (JTextField) c;
+				if (tf.getName() != null && !tf.getName().isBlank()) {
+					fields.put(tf.getName(), tf.getText());
+				}
+			} else if (c instanceof JComboBox) {
+				JComboBox<?> cb = (JComboBox<?>) c;
+				if (cb.getName() != null && !cb.getName().isBlank() && cb.getSelectedItem() != null) {
+					fields.put(cb.getName(), cb.getSelectedItem().toString());
+				}
+			} else if (c instanceof JCheckBox) {
+				JCheckBox chk = (JCheckBox) c;
+				if (chk.getName() != null && !chk.getName().isBlank()) {
+					fields.put(chk.getName(), String.valueOf(chk.isSelected()));
+				}
+			}
+		}
+		return fields;
+	}
+}

@@ -1,9 +1,6 @@
 package com.rctereza.robotbx;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
@@ -70,7 +67,7 @@ public class Test2 {
 				System.out.println("Process Concluded... ");
 				break;
 			}
-			
+
 			System.out.println("Starting Step1.....: ");
 			startProcessStep1(receitaBx);
 			System.out.println("Stopping Step1.....: [" + receitaBx.get().ULTIMO_PEDIDO_SOLICITADO() + "]");
@@ -82,12 +79,18 @@ public class Test2 {
 	private static void startProcessStep1(Ref<ReceitaBx> receitaBx) throws Exception {
 
 		// *******************************************************************************************
-		// OPEN RECEITANETBX EXE
+		// OPEN RECEITANETBX EXE/JAR
 		// *******************************************************************************************
-		ProcessBuilder processBuilder = new ProcessBuilder(Constants.PROGRAM_COMMAND2);
+//		ProcessBuilder processBuilder = new ProcessBuilder(Constants.PROGRAM_COMMAND2);
+//		ProcessBuilder processBuilder = new ProcessBuilder("java","-jar",Constants.PROGRAM_COMMAND);
+		ProcessBuilder processBuilder = new ProcessBuilder("java", "--add-exports",
+				"jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED", "-jar", Constants.PROGRAM_COMMAND);
 		processBuilder.directory(new java.io.File(Constants.PROGRAM_PATH));
+
+		processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+		processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+
 		Process process = processBuilder.start();
-		readStream(process.getInputStream(), "OUT: ");
 
 		// *******************************************************************************************
 		// LOAD ROBOT PARAMENTERS
@@ -102,11 +105,46 @@ public class Test2 {
 
 		System.out.println("Stopping robot.....: " + robot.NAME());
 
-		process.destroy();
+//		while (true) {
+//			// Get pointer info
+//			PointerInfo pointerInfo = MouseInfo.getPointerInfo();
+//			Point point = pointerInfo.getLocation();
+//
+//			int x = (int) point.getX();
+//			int y = (int) point.getY();
+//
+//			System.out.println("Mouse position: X=" + x + " Y=" + y);
+//
+//			Thread.sleep(3000); // pause for three seconds
+//		}
 
+		// ******************************************************************************************
+		while (true) {
+			MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME);
+			String text = mb.getText();
+			System.out.println("Message box text found..: [" + text + "]");
+
+			if (text.contains(receitaBx.get().ULTIMO_PEDIDO_SOLICITADO())) {
+				// It means the downloading has not concluded yet!
+				Thread.sleep(5000); // pause for five seconds
+			} else if (text.contains("Não ha arquivos na fila de download")) {
+				AutoCloseMessageDialog.show("A extração automática dos arquivos foi concluída com sucesso!",
+						"Informação", 3000);
+				Actions actions = new Actions();
+				actions.Move(1147, 297); // Botão Sair
+				actions.Click();
+				break;
+			}
+		}
+		// ******************************************************************************************
+
+		process.descendants().forEach(p -> p.destroy());
+		process.destroy();
 	}
 
 	private static void performAction(Robot robot, Ref<ReceitaBx> receitaBx) throws Exception {
+
+		Thread.sleep(6000); // pause for six seconds
 
 		Actions actions = new Actions();
 
@@ -313,16 +351,8 @@ public class Test2 {
 			}
 
 			if (ra.LAST_ACTION()) {
-				// PROCESS_FULLY_CONCLUDED = true;
 				saveDateTimeOfConclusion(receitaBx);
 			}
-		}
-	}
-
-	private static void readStream(InputStream stream, String prefix) throws IOException {
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-			String line = reader.readLine();
-			System.out.println(prefix + line);
 		}
 	}
 
