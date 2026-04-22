@@ -49,7 +49,6 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.rctereza.robotbx.Constants;
-import com.rctereza.robotbx.Ref;
 import com.rctereza.robotbx.components.DarkLightSwitchIcon;
 import com.rctereza.robotbx.controllers.Controller;
 import com.rctereza.robotbx.enums.Menu;
@@ -58,6 +57,7 @@ import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.ReceitaBx;
+import com.rctereza.robotbx.mutables.Ref;
 import com.rctereza.robotbx.tools.CryptoUtils;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
@@ -224,7 +224,7 @@ public class MainForm extends JFrame {
 		// LINE 3
 		passwordLabel = new JLabel("Senha do certificado");
 		passwordTextField = new JTextField();
-		passwordTextField.setText(receitaBx.get().SENHA());
+		passwordTextField.setText(receitaBx.get().CERTIFICADO().PASS());
 
 		// LINE 4
 		profileLabel = new JLabel("Selecione um perfil");
@@ -552,7 +552,7 @@ public class MainForm extends JFrame {
 		}
 
 		if (result.isEmpty()) {
-			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO, SENHA, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
 					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
 					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
 					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO));

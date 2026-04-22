@@ -65,7 +65,6 @@ public class Controller {
 		System.out.println("Screen resolution..: Width:" + ScreenResolution.getWidth() + "px, Height:"
 				+ ScreenResolution.getHeight() + "px");
 		System.out.println("Window dimensions..: Width:" + wd.getDimension().getWidth() + "px, Height:" + wd.getDimension().getHeight() + "px");
-		System.out.println("Processing cutomer.: " + params.CERTIFICADO().CUSTOMER());
 		System.out.println("Parameters.........: " + params);
 
 		// t2.setDaemon(true);

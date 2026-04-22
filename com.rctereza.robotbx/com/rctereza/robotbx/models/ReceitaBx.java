@@ -5,7 +5,6 @@ import java.io.Serializable;
 public record ReceitaBx(  
 	  String SCREEN
 	, Certificate CERTIFICADO
-	, String SENHA
 	, String PERFIL
 	, String PERFIL_TYPE
 	, String PERFIL_VALUE
@@ -26,6 +25,6 @@ public record ReceitaBx(
 ) implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public ReceitaBx() {
-		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
+		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
 	}
 }

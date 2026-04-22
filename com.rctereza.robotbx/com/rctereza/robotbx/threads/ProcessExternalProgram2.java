@@ -38,7 +38,7 @@ public class ProcessExternalProgram2 implements Runnable {
 		// Colar o caminho do certificado
 		actions.Move(598, 542);
 		actions.Click();
-		actions.Paste(certificate.FILE_PATH() + "\\" + certificate.FILE_NAME());
+		actions.Paste(certificate.toString());
 
 		// Clica no botão "Escolha"
 		actions.Move(923, 541);
@@ -47,7 +47,7 @@ public class ProcessExternalProgram2 implements Runnable {
 		// Colar o password do certificado
 		actions.Move(617, 386);
 		actions.Click();
-		actions.Paste(certificate.FILE_PASS());
+		actions.Paste(certificate.PASS());
 
 		// Clica no botão "OK"
 		actions.Move(640, 414);

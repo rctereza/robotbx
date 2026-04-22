@@ -26,6 +26,7 @@ import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
 import com.rctereza.robotbx.models.RobotCommand;
 import com.rctereza.robotbx.models.RobotMessageBox;
+import com.rctereza.robotbx.mutables.Ref;
 import com.rctereza.robotbx.tools.Actions;
 import com.rctereza.robotbx.tools.AutoCloseMessageDialog;
 import com.rctereza.robotbx.tools.CryptoUtils;
@@ -425,7 +426,7 @@ public class Test {
 			throws InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
 			NoSuchPaddingException, InvalidKeySpecException, IOException {
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), receitaBx.get().SENHA(),
+		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
 				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
 				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
 				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
@@ -444,7 +445,7 @@ public class Test {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = currentDateTime.format(formatter);
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), receitaBx.get().SENHA(),
+		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
 				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
 				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
 				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
@@ -459,7 +460,7 @@ public class Test {
 	private static void reset(Ref<ReceitaBx> receitaBx) throws InvalidKeyException, InvalidAlgorithmParameterException,
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), receitaBx.get().SENHA(),
+		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
 				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
 				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
 				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),

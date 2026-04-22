@@ -272,14 +272,14 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.PASTE, null, null, null,
-				params.CERTIFICADO().FILE_PATH() + "\\" + params.CERTIFICADO().FILE_NAME(), robotCommandEnabled));
+				params.CERTIFICADO().toString(), robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Informar o caminho do certificado", false, null, false, 0, 0, false,
 				false, true, new ArrayList<>(commands)));
 
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.PASTE, null, null, null, params.SENHA(), robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.PASTE, null, null, null, params.CERTIFICADO().PASS(), robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 		// ----------------------------------
 		messages.clear();
@@ -361,14 +361,14 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.PASTE, null, null, null,
-				params.CERTIFICADO().FILE_PATH() + "\\" + params.CERTIFICADO().FILE_NAME(), robotCommandEnabled));
+				params.CERTIFICADO().toString(), robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Informar o caminho do certificado", false, null, false, 0, 0, false,
 				false, true, new ArrayList<>(commands)));
 
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.PASTE, null, null, null, params.SENHA(), robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.PASTE, null, null, null, params.CERTIFICADO().PASS(), robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 		// ----------------------------------
 		messages.clear();

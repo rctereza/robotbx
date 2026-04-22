@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -26,7 +27,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.NoSuchPaddingException;
-import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -36,6 +36,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -44,7 +47,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.border.TitledBorder;
+import javax.swing.KeyStroke;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.MaskFormatter;
@@ -55,7 +58,6 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.rctereza.robotbx.Constants;
-import com.rctereza.robotbx.Ref;
 import com.rctereza.robotbx.components.DarkLightSwitchIcon;
 import com.rctereza.robotbx.controllers.Controller;
 import com.rctereza.robotbx.enums.Menu;
@@ -64,12 +66,14 @@ import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.ReceitaBx;
+import com.rctereza.robotbx.mutables.Ref;
 import com.rctereza.robotbx.tools.CryptoUtils;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
 import com.rctereza.robotbx.tools.SpedUtils;
 import com.rctereza.robotbx.tools.ValidateCpfCnpj;
+import com.rctereza.robotbx.tools.ValidatePfx;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -116,7 +120,7 @@ public class MainForm2 extends JFrame {
 
 	private JPanel systemSearchFieldsPanel;
 
-	private JButton searchButton;
+	private JButton startButton;
 	private JButton closeButton;
 
 	// Grid fields
@@ -129,6 +133,11 @@ public class MainForm2 extends JFrame {
 	// Stores the map of dynamic field names -> values for each row
 	private final List<Map<String, String>> rowDynamicData = new ArrayList<>();
 
+//	private JMenuItem filesAllItem, filesFciItem, filesRedispatchItem, filesErrorItem, shipmentsItem, shipmentsFciItem,
+//	shipmentsRedisptachItem, historyItem, queueItem, emailsItem, watchersItem, restartItem, exitItem;
+
+	private List<Ref<ReceitaBx>> receitaBxList;
+	
 	private Ref<ReceitaBx> receitaBx;
 
 	private Controller controller;
@@ -142,6 +151,10 @@ public class MainForm2 extends JFrame {
 				ReceitaBx::new);
 
 		controller = new Controller();
+		
+		//setIconImage(Resources.getImage(Constants.SOFTWARE_ICON, null));
+
+		setJMenuBar(createMenuBar());
 
 		controller.addObjectListener(new Listenable() {
 			@Override
@@ -149,7 +162,7 @@ public class MainForm2 extends JFrame {
 				if (objs != null && objs.length > 0) {
 					String action = (String) objs[0];
 					if (action.equals(Menu.DONE.getValue())) {
-						searchButton.setEnabled(true);
+						startButton.setEnabled(true);
 					}
 				}
 			}
@@ -177,7 +190,7 @@ public class MainForm2 extends JFrame {
 		darkLightSwitchIcon = new DarkLightSwitchIcon();
 		darkLightSwitchIcon.setCenterSpace(20);
 
-		themeLabel = new JLabel("Switch Themes");
+		themeLabel = new JLabel("Trocar Tema");
 		themeButton = new JToggleButton();
 		themeButton.setIcon(darkLightSwitchIcon);
 		themeButton.putClientProperty(FlatClientProperties.STYLE,
@@ -240,7 +253,7 @@ public class MainForm2 extends JFrame {
 		// LINE 3
 		passwordLabel = new JLabel("Senha do certificado");
 		passwordTextField = new JTextField();
-		passwordTextField.setText(receitaBx.get().SENHA());
+		passwordTextField.setText(receitaBx.get().CERTIFICADO().PASS());
 
 		// LINE 4
 		profileLabel = new JLabel("Selecione um perfil");
@@ -430,8 +443,8 @@ public class MainForm2 extends JFrame {
 		tableScrollPane.setPreferredSize(new java.awt.Dimension(0, 150));
 
 		// LINE 12
-		searchButton = new JButton("Pesquisar");
-		searchButton.addActionListener(new ActionListener() {
+		startButton = new JButton("Iniciar");
+		startButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (tableModel.getRowCount() == 0) {
@@ -442,11 +455,11 @@ public class MainForm2 extends JFrame {
 				String result = validateFormFields();
 				if (result.equals("")) {
 					try {
-						searchButton.setEnabled(false);
-						controller.startThreads(receitaBx.get());
+						startButton.setEnabled(false);
+						controller.startThreads(receitaBx.get()); //PASSAR A LISTA EM VEZ DE UM UNICO ITEM!!!!!!!!!!
 					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
 						JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-						searchButton.setEnabled(true);
+						startButton.setEnabled(true);
 					}
 				} else {
 					JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
@@ -462,7 +475,7 @@ public class MainForm2 extends JFrame {
 			}
 		});
 
-//				JPanel panel = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]", "[]10[]10[]"));
+//		JPanel panel = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]", "[]10[]10[]"));
 		panelMain = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
 
 		panelMain.add(themeLabel, "split, span3, right");
@@ -490,12 +503,12 @@ public class MainForm2 extends JFrame {
 		panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
 		panelMain.add(addButton, "cell 0 10, wrap");
 		panelMain.add(tableScrollPane, "cell 0 11, span, grow, wrap");
-		panelMain.add(searchButton, "cell 0 12");
+		panelMain.add(startButton, "cell 0 12");
 		panelMain.add(closeButton, "cell 2 12, left, wrap");
 
-		TitledBorder title;
-		title = BorderFactory.createTitledBorder("Pesquisa de Arquivos");
-		panelMain.setBorder(title);
+//		TitledBorder title;
+//		title = BorderFactory.createTitledBorder("Pesquisa de Arquivos");
+//		panelMain.setBorder(title);
 
 		this.add(panelMain);
 
@@ -554,7 +567,7 @@ public class MainForm2 extends JFrame {
 		StringBuilder result = new StringBuilder("");
 
 		String SCREEN = screenResolutionTextField.getText();
-		Certificate CERTIFICADO = null;
+		Ref<Certificate> CERTIFICADO = null;
 		String SENHA = "";
 		String PERFIL = "";
 		String PERFIL_TYPE = "";
@@ -577,13 +590,16 @@ public class MainForm2 extends JFrame {
 		if (certificateComboBox.getSelectedIndex() == -1)
 			result.append("Favor selecionar um certificado.\n");
 		else
-			CERTIFICADO = (Certificate) certificateComboBox.getSelectedItem();
+			CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
 
 		if (passwordTextField.getText().isBlank())
 			result.append("Favor informar a senha do certificado.\n");
 		else
 			SENHA = passwordTextField.getText();
-
+		
+		ValidatePfx vpfx = new ValidatePfx(CERTIFICADO, SENHA);
+		result.append(vpfx.check());
+		
 		if (profileProcurador.isSelected()) {
 
 			PERFIL = profileProcurador.getText();
@@ -638,7 +654,7 @@ public class MainForm2 extends JFrame {
 		}
 
 		if (result.isEmpty()) {
-			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO, SENHA, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO.get(), PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
 					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
 					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
 					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO));
@@ -654,7 +670,64 @@ public class MainForm2 extends JFrame {
 
 		return result.toString();
 	}
+	
+	private JMenuBar createMenuBar() {
+		
+		JMenuItem historic = new JMenuItem(Menu.HISTORIC.getValue());
+		historic.setMnemonic(KeyEvent.VK_H);
+		historic.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK));
+		historic.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				HistoricForm form = new HistoricForm(MainForm2.this, Menu.HISTORIC);
+				form.addObjectListener(new Listenable() {
+					@Override
+					public void value(Object... objs) {
+						//performActions(form, objs);
+					}
+				});
+				form.load();
+			}
+		});
+		
+		JMenuItem setting = new JMenuItem(Menu.SETTING.getValue());
+		setting.setMnemonic(KeyEvent.VK_C);
+		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+		setting.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SettingForm form = new SettingForm(MainForm2.this, Menu.SETTING);
+				form.addObjectListener(new Listenable() {
+					@Override
+					public void value(Object... objs) {
+						//performActions(form, objs);
+					}
+				});
+				form.load();
+			}
+		});
 
+		JMenuItem exit = new JMenuItem("Sair");
+		exit.setMnemonic(KeyEvent.VK_S);
+		exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+		exit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				listener.value(Menu.CLOSE.getValue());
+			}
+		});
+
+		JMenu fileMenu = new JMenu("Menu");
+		fileMenu.setMnemonic(KeyEvent.VK_M);
+		fileMenu.add(historic);
+		fileMenu.addSeparator();
+		fileMenu.add(setting);
+		fileMenu.addSeparator();
+		fileMenu.add(exit);
+		
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.add(fileMenu);
+		
+		return menuBar;
+	}
+	
 	/**
 	 * Reads the current form selections and appends a new row to the grid. Columns:
 	 * Sistema | Tipo Arquivo | Tipo Pesquisa | <dynamic fields...> | Remover
@@ -804,4 +877,5 @@ public class MainForm2 extends JFrame {
 		}
 		return fields;
 	}
+
 }

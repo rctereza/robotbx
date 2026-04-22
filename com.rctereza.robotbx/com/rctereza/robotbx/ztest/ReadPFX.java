@@ -1,4 +1,4 @@
-package com.rctereza.robotbx;
+package com.rctereza.robotbx.ztest;
 
 import java.io.FileInputStream;
 import java.security.KeyStore;

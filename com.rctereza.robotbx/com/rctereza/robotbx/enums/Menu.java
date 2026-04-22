@@ -1,9 +1,12 @@
 package com.rctereza.robotbx.enums;
 
 public enum Menu {
-	CLOSE("Close"),
-	DONE("Done"),
-	MINIMIZE("Minimize");
+	HISTORIC("Histórico"),
+	SETTING("Configuração"),
+	ABOUT("Sobre"),
+	CLOSE("Fechar"),
+	DONE("Feito"),
+	MINIMIZE("Minimizar");
 
     private String value;
 
