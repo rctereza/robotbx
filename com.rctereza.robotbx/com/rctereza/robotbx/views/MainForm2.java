@@ -1,6 +1,5 @@
 package com.rctereza.robotbx.views;
 
-import java.awt.AWTException;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -62,18 +61,21 @@ import com.rctereza.robotbx.components.DarkLightSwitchIcon;
 import com.rctereza.robotbx.controllers.Controller;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.enums.Sped;
-import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
+import com.rctereza.robotbx.enums.SpedSearchField;
+import com.rctereza.robotbx.exceptions.InvalidCertificate;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.ReceitaBx;
-import com.rctereza.robotbx.mutables.Ref;
 import com.rctereza.robotbx.tools.CryptoUtils;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
 import com.rctereza.robotbx.tools.SpedUtils;
 import com.rctereza.robotbx.tools.ValidateCpfCnpj;
+import com.rctereza.robotbx.tools.ValidateDate;
 import com.rctereza.robotbx.tools.ValidatePfx;
+import com.rctereza.robotbx.wrappers.AppData;
+import com.rctereza.robotbx.wrappers.Ref;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -129,30 +131,36 @@ public class MainForm2 extends JFrame {
 	private DefaultTableModel tableModel;
 	private JScrollPane tableScrollPane;
 	private RemoverButtonEditor removerEditor;
-	private static final String[] FIXED_COLUMNS = { "Sistema", "Tipo Arquivo", "Tipo Pesquisa" };
+	private static final String[] FIXED_COLUMNS = { "Sistema", "Tipo de Arquivo", "Tipo de Pesquisa" };
 	// Stores the map of dynamic field names -> values for each row
 	private final List<Map<String, String>> rowDynamicData = new ArrayList<>();
 
-//	private JMenuItem filesAllItem, filesFciItem, filesRedispatchItem, filesErrorItem, shipmentsItem, shipmentsFciItem,
-//	shipmentsRedisptachItem, historyItem, queueItem, emailsItem, watchersItem, restartItem, exitItem;
+	private AppData appData = null;
 
-	private List<Ref<ReceitaBx>> receitaBxList;
-	
-	private Ref<ReceitaBx> receitaBx;
+	private List<ReceitaBx> receitaBxList = null;
 
-	private Controller controller;
+	private ReceitaBx receitaBx = new ReceitaBx();
 
-	private Listenable listener;
+	private Controller controller = null;
+
+	private Listenable listener = null;
 
 	public MainForm2() throws Exception {
 		super(softwareNameAndVersion);
 
-		receitaBx = CryptoUtils.loadRef(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, ReceitaBx.class,
-				ReceitaBx::new);
+//		appData = CryptoUtils.loadRef(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,	AppData::new);
+		appData = CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,
+				AppData::new);
+
+		receitaBxList = appData.getLastListAdded();
+
+		if (receitaBxList.size() > 0) {
+			receitaBx = receitaBxList.get(0);
+		}
 
 		controller = new Controller();
-		
-		//setIconImage(Resources.getImage(Constants.SOFTWARE_ICON, null));
+
+		// setIconImage(Resources.getImage(Constants.SOFTWARE_ICON, null));
 
 		setJMenuBar(createMenuBar());
 
@@ -215,13 +223,13 @@ public class MainForm2 extends JFrame {
 		}
 
 		// LINE 1
-		screenResolutionLabel = new JLabel("Monitor Resolução");
+		screenResolutionLabel = new JLabel("Resolução do Monitor");
 		screenResolutionTextField = new JTextField();
 		screenResolutionTextField.setText(ScreenResolution.getResolution());
 		screenResolutionTextField.setEditable(false);
 
 		// LINE 2
-		certificateLabel = new JLabel("Selecione um certificado");
+		certificateLabel = new JLabel("Selecione um Certificado");
 		certificateComboBox = new JComboBox<>();
 		certificateComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
@@ -248,15 +256,16 @@ public class MainForm2 extends JFrame {
 		});
 
 		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
-		certificateComboBox.setSelectedItem(receitaBx.get().CERTIFICADO());
+		// System.out.println(receitaBx.get().CERTIFICADO());
+		certificateComboBox.setSelectedItem(receitaBx.CERTIFICADO());
 
 		// LINE 3
-		passwordLabel = new JLabel("Senha do certificado");
+		passwordLabel = new JLabel("Senha do Certificado");
 		passwordTextField = new JTextField();
-		passwordTextField.setText(receitaBx.get().CERTIFICADO().PASS());
+		passwordTextField.setText(receitaBx.CERTIFICADO().PASS());
 
 		// LINE 4
-		profileLabel = new JLabel("Selecione um perfil");
+		profileLabel = new JLabel("Selecione um Perfil");
 		profileContribuinte = new JRadioButton("Contribuinte", true);
 		profileContribuinte.addActionListener(new ActionListener() {
 			@Override
@@ -297,16 +306,16 @@ public class MainForm2 extends JFrame {
 		profileTypeValueTextField = new JFormattedTextField(cpfMask);
 		profileTypeValueTextField.setVisible(false);
 
-		if (receitaBx.get().PERFIL() != null && receitaBx.get().PERFIL().equals(profileProcurador.getText())) {
+		if (receitaBx.PERFIL() != null && receitaBx.PERFIL().equals(profileProcurador.getText())) {
 			profileProcurador.setSelected(true);
 			profileTypeComboBox.setVisible(true);
 			profileTypeValueTextField.setVisible(true);
-			profileTypeComboBox.setSelectedItem(receitaBx.get().PERFIL_TYPE());
-			profileTypeValueTextField.setValue(receitaBx.get().PERFIL_VALUE());
+			profileTypeComboBox.setSelectedItem(receitaBx.PERFIL_TYPE());
+			profileTypeValueTextField.setValue(receitaBx.PERFIL_VALUE());
 		}
 
 		// LINE 5
-		systemLabel = new JLabel("Selecione um sistema");
+		systemLabel = new JLabel("Selecione um Sistema");
 		systemComboBox = new JComboBox<String>(SpedUtils.getSystemList());
 		systemComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
@@ -323,7 +332,7 @@ public class MainForm2 extends JFrame {
 		});
 
 		// LINE 6
-		systemFileTypeLabel = new JLabel("Selecione um tipo de arquivo");
+		systemFileTypeLabel = new JLabel("Selecione um Tipo de Arquivo");
 		systemFileTypeComboBox = new JComboBox<String>(SpedUtils.getSystemFileType(Sped.CONTRIBUICOES));
 		systemFileTypeComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
@@ -340,7 +349,7 @@ public class MainForm2 extends JFrame {
 		});
 
 		// LINE 7
-		systemSearchTypeLabel = new JLabel("Selecione um tipo de pesquisa");
+		systemSearchTypeLabel = new JLabel("Selecione um Tipo de Pesquisa");
 		systemSearchTypeComboBox = new JComboBox<String>(SpedUtils.getSystemSearchType(Sped.CONTRIBUICOES, ""));
 		systemSearchTypeComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
@@ -351,7 +360,7 @@ public class MainForm2 extends JFrame {
 						panelMain.remove(systemSearchFieldsPanel);
 						try {
 							systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType,
-									e.getItem().toString(), receitaBx.get());
+									e.getItem().toString(), receitaBx);
 						} catch (ParseException e1) {
 							e1.printStackTrace();
 						}
@@ -360,8 +369,8 @@ public class MainForm2 extends JFrame {
 						panelMain.repaint();
 					} else {
 						try {
-							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.get().SISTEMA()),
-									receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(), receitaBx.get());
+							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.SISTEMA()),
+									receitaBx.TIPO_ARQUIVO(), receitaBx.TIPO_PESQUISA(), receitaBx);
 						} catch (ParseException e1) {
 							e1.printStackTrace();
 						}
@@ -374,18 +383,23 @@ public class MainForm2 extends JFrame {
 		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
 
 		// LINE 9
-		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx.get());
+		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx);
 
-		systemComboBox.setSelectedItem(receitaBx.get().SISTEMA());
-		systemFileTypeComboBox.setSelectedItem(receitaBx.get().TIPO_ARQUIVO());
-		systemSearchTypeComboBox.setSelectedItem(receitaBx.get().TIPO_PESQUISA());
+		systemComboBox.setSelectedItem(receitaBx.SISTEMA());
+		systemFileTypeComboBox.setSelectedItem(receitaBx.TIPO_ARQUIVO());
+		systemSearchTypeComboBox.setSelectedItem(receitaBx.TIPO_PESQUISA());
 
 		// LINE 10 - Adicionar button
 		addButton = new JButton("Adicionar");
 		addButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				addRowToGrid();
+				String result = validateFormFields();
+				if (result.equals("")) {
+					addRowToGrid();
+				} else {
+					JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
+				}
 			}
 		});
 
@@ -448,22 +462,24 @@ public class MainForm2 extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (tableModel.getRowCount() == 0) {
-					JOptionPane.showMessageDialog(null, "Adicione pelo menos um item à lista antes de pesquisar.",
+					JOptionPane.showMessageDialog(null,
+							"Adicione pelo menos um item à lista antes de iniciar o processamento dos arquivos.",
 							"Atenção", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
-				String result = validateFormFields();
-				if (result.equals("")) {
-					try {
-						startButton.setEnabled(false);
-						controller.startThreads(receitaBx.get()); //PASSAR A LISTA EM VEZ DE UM UNICO ITEM!!!!!!!!!!
-					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
-						JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-						startButton.setEnabled(true);
-					}
-				} else {
-					JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
+
+				try {
+					Ref<List<ReceitaBx>> list = new Ref<>(getListOfFiles());
+					startButton.setEnabled(false);
+					controller.startRobot(list);
+
+				} catch (InvalidCertificate | InvalidKeyException | InvalidAlgorithmParameterException
+						| NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException
+						| IOException e1) {
+					JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+					startButton.setEnabled(true);
 				}
+
 			}
 		});
 
@@ -518,74 +534,13 @@ public class MainForm2 extends JFrame {
 		setResizable(false);
 	}
 
-	public void addObjectListener(Listenable listener) {
-		this.listener = listener;
-	}
-
-	private void changeThemes(boolean dark) {
-		if (FlatLaf.isLafDark() != dark) {
-			if (!dark) {
-				Scheme.removeLafDark();
-				EventQueue.invokeLater(new Runnable() {
-					public void run() {
-						FlatAnimatedLafChange.showSnapshot();
-						FlatIntelliJLaf.setup();
-						FlatLaf.updateUI();
-						FlatAnimatedLafChange.hideSnapshotWithAnimation();
-					}
-				});
-			} else {
-				Scheme.setLafDark();
-				EventQueue.invokeLater(new Runnable() {
-
-					public void run() {
-						FlatAnimatedLafChange.showSnapshot();
-						FlatDarculaLaf.setup();
-						FlatLaf.updateUI();
-						FlatAnimatedLafChange.hideSnapshotWithAnimation();
-					}
-
-				});
-			}
-		}
-	}
-
-	private void loadCertificateComboBox(String path) {
-		if (path != null && !path.trim().isEmpty()) {
-			List<Certificate> list = FileUtils.getListOfCertificates(path);
-			if (list.size() > 0) {
-				FileUtils.saveCertificatePathChosen(path);
-				DefaultComboBoxModel<Certificate> model = new DefaultComboBoxModel<>();
-				model.addAll(list);
-				certificateComboBox.removeAllItems();
-				certificateComboBox.setModel(model);
-			}
-		}
-	}
-
 	private String validateFormFields() {
 		StringBuilder result = new StringBuilder("");
 
-		String SCREEN = screenResolutionTextField.getText();
 		Ref<Certificate> CERTIFICADO = null;
 		String SENHA = "";
-		String PERFIL = "";
-		String PERFIL_TYPE = "";
-		String PERFIL_VALUE = "";
-		String SISTEMA = systemComboBox.getSelectedItem().toString();
-		String TIPO_ARQUIVO = systemFileTypeComboBox.getSelectedItem().toString();
-		String TIPO_PESQUISA = systemSearchTypeComboBox.getSelectedItem().toString();
 		String DATA_INICIO = "";
 		String DATA_FIM = "";
-		String CNPJ_INCORPORADORA = "";
-		String TIPO_EVENTO = "";
-		String BAIXAR_ARQUIVO_ASSINADO = "";
-		String CNPJ_ESTABELECIMENTO = "";
-		Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
-		String INSCRICAO_ESTADUAL = "";
-		Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
-		String ULTIMO_PEDIDO_SOLICITADO = "";
-		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
 
 		if (certificateComboBox.getSelectedIndex() == -1)
 			result.append("Favor selecionar um certificado.\n");
@@ -596,138 +551,195 @@ public class MainForm2 extends JFrame {
 			result.append("Favor informar a senha do certificado.\n");
 		else
 			SENHA = passwordTextField.getText();
-		
-		ValidatePfx vpfx = new ValidatePfx(CERTIFICADO, SENHA);
-		result.append(vpfx.check());
-		
+
+		result.append(ValidatePfx.check(CERTIFICADO, SENHA));
+
 		if (profileProcurador.isSelected()) {
 
-			PERFIL = profileProcurador.getText();
-			PERFIL_TYPE = profileTypeComboBox.getSelectedItem().toString();
-			PERFIL_VALUE = profileTypeValueTextField.getText();
-
-			if (PERFIL_TYPE.equals("CPF")) {
-				if (!ValidateCpfCnpj.isCpfValid(PERFIL_VALUE)) {
+			if (profileTypeComboBox.getSelectedItem().toString().equals("CPF")) {
+				if (!ValidateCpfCnpj.isCpfValid(profileTypeValueTextField.getText())) {
 					result.append("Favor informar um CPF válido.\n");
 				}
 			} else {
-				if (!ValidateCpfCnpj.isCnpjValid(PERFIL_VALUE)) {
+				if (!ValidateCpfCnpj.isCnpjValid(profileTypeValueTextField.getText())) {
 					result.append("Favor informar um CNPJ válido.\n");
 				}
 			}
-		} else {
-			PERFIL = profileContribuinte.getText();
 		}
+
+		if (systemComboBox.getSelectedIndex() == -1)
+			result.append("Favor selecionar um sistema.\n");
+
+		if (systemFileTypeComboBox.getSelectedIndex() == -1)
+			result.append("Favor selecionar um tipo de arquivo.\n");
+
+		if (systemSearchTypeComboBox.getSelectedIndex() == -1)
+			result.append("Favor selecionar um tipo de pesquisa.\n");
 
 		for (Component c : systemSearchFieldsPanel.getComponents()) {
 			if (c instanceof JTextField) {
 				JTextField textField = (JTextField) c;
-//						System.out.println("JTextField : " + textField.getText());
-				if (textField.getName().equals("DATA_INICIO")) {
+//				System.out.println("JTextField : " + textField.getText());
+				if (textField.getName().equals(SpedSearchField.DATA_INICIO.getValue())) {
 					DATA_INICIO = textField.getText();
-				} else if (textField.getName().equals("DATA_FIM")) {
+					if (!ValidateDate.isValidDate(DATA_INICIO)) {
+						result.append("Favor informar uma data inicial válida.\n");
+					}
+				} else if (textField.getName().equals(SpedSearchField.DATA_FIM.getValue())) {
 					DATA_FIM = textField.getText();
-				} else if (textField.getName().equals("CNPJ_INCORPORADORA")) {
-					CNPJ_INCORPORADORA = textField.getText();
-				} else if (textField.getName().equals("CNPJ_ESTABELECIMENTO")) {
-					CNPJ_ESTABELECIMENTO = textField.getText();
-				} else if (textField.getName().equals("INSCRICAO_ESTADUAL")) {
-					INSCRICAO_ESTADUAL = textField.getText();
+					if (!ValidateDate.isValidDate(DATA_FIM)) {
+						result.append("Favor informar uma data final válida.\n");
+					} else {
+						if (!ValidateDate.isValidRange(DATA_INICIO, DATA_FIM)) {
+							result.append("Favor informar uma data inicial que seja anterior a data final.\n");
+						}
+					}
+				} else if (textField.getName().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
+					if (!ValidateCpfCnpj.isCnpjValid(textField.getText())) {
+						result.append("Favor informar um cnpj válido para a Incorporadora.\n");
+					}
+				} else if (textField.getName().equals(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue())) {
+					if (!ValidateCpfCnpj.isCnpjValid(textField.getText())) {
+						result.append("Favor informar um cnpj válido para o Estabelecimento.\n");
+					}
+//				} else if (textField.getName().equals(SpedSearchField.INSCRICAO_ESTADUAL.getValue())) {
+//					INSCRICAO_ESTADUAL = textField.getText();
 				}
 			} else if (c instanceof JComboBox) {
 				JComboBox<?> comboBox = (JComboBox<?>) c;
-//						System.out.println("JComboBox : " + comboBox.getSelectedItem().toString());
-				if (comboBox.getName().equals("TIPO_EVENTO")) {
-					TIPO_EVENTO = comboBox.getSelectedItem().toString();
-				} else if (comboBox.getName().equals("BAIXAR_ARQUIVO_ASSINADO")) {
-					BAIXAR_ARQUIVO_ASSINADO = comboBox.getSelectedItem().toString();
+//				System.out.println("JComboBox : " + comboBox.getSelectedItem().toString());
+				if (comboBox.getName().equals(SpedSearchField.TIPO_EVENTO.getValue())) {
+					if (comboBox.getSelectedIndex() == -1) {
+						result.append("Favor selecionar um tipo de evento.\n");
+					}
+				} else if (comboBox.getName().equals(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue())) {
+					if (comboBox.getSelectedIndex() == -1) {
+						result.append(
+								"Favor selecionar se o arquivo deve ser baixado com assinatura digital ou não.\n");
+					}
 				}
-			} else if (c instanceof JCheckBox) {
-				JCheckBox checkBox = (JCheckBox) c;
-//						System.out.println("JCheckBox : " + checkBox.getText());
-				if (checkBox.getName().equals("BUSCAR_TODOS_ESTABLECIMENTOS")) {
-					BUSCAR_TODOS_ESTABLECIMENTOS = checkBox.isSelected();
-				} else if (checkBox.getName().equals("ULTIMO_ARQUIVO_TRANSMITIDO")) {
-					ULTIMO_ARQUIVO_TRANSMITIDO = checkBox.isSelected();
-				}
-			}
-		}
-
-		if (result.isEmpty()) {
-			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO.get(), PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
-					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
-					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
-					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO));
-
-			try {
-				CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET,
-						Constants.SOFTWARE_SECURE_FILE);
-			} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
-					| NoSuchPaddingException | InvalidKeySpecException | IOException e) {
-				result.append("Error: " + e.getMessage());
+//			} else if (c instanceof JCheckBox) {
+//				JCheckBox checkBox = (JCheckBox) c;
+//				System.out.println("JCheckBox : " + checkBox.getText());
+//				if (checkBox.getName().equals(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue())) {
+//					BUSCAR_TODOS_ESTABLECIMENTOS = checkBox.isSelected();
+//				} else if (checkBox.getName().equals(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue())) {
+//					ULTIMO_ARQUIVO_TRANSMITIDO = checkBox.isSelected();
+//				}
 			}
 		}
 
 		return result.toString();
 	}
-	
-	private JMenuBar createMenuBar() {
-		
-		JMenuItem historic = new JMenuItem(Menu.HISTORIC.getValue());
-		historic.setMnemonic(KeyEvent.VK_H);
-		historic.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK));
-		historic.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				HistoricForm form = new HistoricForm(MainForm2.this, Menu.HISTORIC);
-				form.addObjectListener(new Listenable() {
-					@Override
-					public void value(Object... objs) {
-						//performActions(form, objs);
-					}
-				});
-				form.load();
-			}
-		});
-		
-		JMenuItem setting = new JMenuItem(Menu.SETTING.getValue());
-		setting.setMnemonic(KeyEvent.VK_C);
-		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
-		setting.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				SettingForm form = new SettingForm(MainForm2.this, Menu.SETTING);
-				form.addObjectListener(new Listenable() {
-					@Override
-					public void value(Object... objs) {
-						//performActions(form, objs);
-					}
-				});
-				form.load();
-			}
-		});
 
-		JMenuItem exit = new JMenuItem("Sair");
-		exit.setMnemonic(KeyEvent.VK_S);
-		exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
-		exit.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				listener.value(Menu.CLOSE.getValue());
-			}
-		});
+//	private String validateFormFields() {
+//		StringBuilder result = new StringBuilder("");
+//
+//		String SCREEN = screenResolutionTextField.getText();
+//		Ref<Certificate> CERTIFICADO = null;
+//		String SENHA = "";
+//		String PERFIL = "";
+//		String PERFIL_TYPE = "";
+//		String PERFIL_VALUE = "";
+//		String SISTEMA = systemComboBox.getSelectedItem().toString();
+//		String TIPO_ARQUIVO = systemFileTypeComboBox.getSelectedItem().toString();
+//		String TIPO_PESQUISA = systemSearchTypeComboBox.getSelectedItem().toString();
+//		String DATA_INICIO = "";
+//		String DATA_FIM = "";
+//		String CNPJ_INCORPORADORA = "";
+//		String TIPO_EVENTO = "";
+//		String BAIXAR_ARQUIVO_ASSINADO = "";
+//		String CNPJ_ESTABELECIMENTO = "";
+//		Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
+//		String INSCRICAO_ESTADUAL = "";
+//		Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
+//		String ULTIMO_PEDIDO_SOLICITADO = "";
+//		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
+//
+//		if (certificateComboBox.getSelectedIndex() == -1) 
+//			result.append("Favor selecionar um certificado.\n");
+//		else 
+//			CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
+//
+//		if (passwordTextField.getText().isBlank())
+//			result.append("Favor informar a senha do certificado.\n");
+//		else
+//			SENHA = passwordTextField.getText();
+//		
+//		ValidatePfx vpfx = new ValidatePfx(CERTIFICADO, SENHA);
+//		result.append(vpfx.check());
+//		
+//		if (profileProcurador.isSelected()) {
+//
+//			PERFIL = profileProcurador.getText();
+//			PERFIL_TYPE = profileTypeComboBox.getSelectedItem().toString();
+//			PERFIL_VALUE = profileTypeValueTextField.getText();
+//
+//			if (PERFIL_TYPE.equals("CPF")) {
+//				if (!ValidateCpfCnpj.isCpfValid(PERFIL_VALUE)) {
+//					result.append("Favor informar um CPF válido.\n");
+//				}
+//			} else {
+//				if (!ValidateCpfCnpj.isCnpjValid(PERFIL_VALUE)) {
+//					result.append("Favor informar um CNPJ válido.\n");
+//				}
+//			}
+//		} else {
+//			PERFIL = profileContribuinte.getText();
+//		}
+//
+//		for (Component c : systemSearchFieldsPanel.getComponents()) {
+//			if (c instanceof JTextField) {
+//				JTextField textField = (JTextField) c;
+////				System.out.println("JTextField : " + textField.getText());
+//				if (textField.getName().equals(SpedSearchField.DATA_INICIO.getValue())) {
+//					DATA_INICIO = textField.getText();
+//				} else if (textField.getName().equals(SpedSearchField.DATA_FIM.getValue())) {
+//					DATA_FIM = textField.getText();
+//				} else if (textField.getName().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
+//					CNPJ_INCORPORADORA = textField.getText();
+//				} else if (textField.getName().equals(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue())) {
+//					CNPJ_ESTABELECIMENTO = textField.getText();
+//				} else if (textField.getName().equals(SpedSearchField.INSCRICAO_ESTADUAL.getValue())) {
+//					INSCRICAO_ESTADUAL = textField.getText();
+//				}
+//			} else if (c instanceof JComboBox) {
+//				JComboBox<?> comboBox = (JComboBox<?>) c;
+////				System.out.println("JComboBox : " + comboBox.getSelectedItem().toString());
+//				if (comboBox.getName().equals(SpedSearchField.TIPO_EVENTO.getValue())) {
+//					TIPO_EVENTO = comboBox.getSelectedItem().toString();
+//				} else if (comboBox.getName().equals(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue())) {
+//					BAIXAR_ARQUIVO_ASSINADO = comboBox.getSelectedItem().toString();
+//				}
+//			} else if (c instanceof JCheckBox) {
+//				JCheckBox checkBox = (JCheckBox) c;
+////				System.out.println("JCheckBox : " + checkBox.getText());
+//				if (checkBox.getName().equals(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue())) {
+//					BUSCAR_TODOS_ESTABLECIMENTOS = checkBox.isSelected();
+//				} else if (checkBox.getName().equals(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue())) {
+//					ULTIMO_ARQUIVO_TRANSMITIDO = checkBox.isSelected();
+//				}
+//			}
+//		}
+//
+//		if (result.isEmpty()) {
+//			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO.get(), PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+//					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
+//					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
+//					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO));
+//
+//			try {
+//				CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET,
+//						Constants.SOFTWARE_SECURE_FILE);
+//			} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
+//					| NoSuchPaddingException | InvalidKeySpecException | IOException e) {
+//				result.append("Error: " + e.getMessage());
+//			}
+//		}
+//
+//		return result.toString();
+//	}
 
-		JMenu fileMenu = new JMenu("Menu");
-		fileMenu.setMnemonic(KeyEvent.VK_M);
-		fileMenu.add(historic);
-		fileMenu.addSeparator();
-		fileMenu.add(setting);
-		fileMenu.addSeparator();
-		fileMenu.add(exit);
-		
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.add(fileMenu);
-		
-		return menuBar;
-	}
-	
 	/**
 	 * Reads the current form selections and appends a new row to the grid. Columns:
 	 * Sistema | Tipo Arquivo | Tipo Pesquisa | <dynamic fields...> | Remover
@@ -789,9 +801,9 @@ public class MainForm2 extends JFrame {
 			String colName = tableModel.getColumnName(c);
 			if (colName.equals("Sistema"))
 				rowData[c] = sistema;
-			else if (colName.equals("Tipo Arquivo"))
+			else if (colName.equals("Tipo de Arquivo"))
 				rowData[c] = tipoArquivo;
-			else if (colName.equals("Tipo Pesquisa"))
+			else if (colName.equals("Tipo de Pesquisa"))
 				rowData[c] = tipoPesquisa;
 			else if (colName.equals(""))
 				rowData[c] = "Remover";
@@ -801,6 +813,33 @@ public class MainForm2 extends JFrame {
 
 		tableModel.addRow(rowData);
 		rowDynamicData.add(dynamicFields);
+	}
+
+	/**
+	 * Iterates over systemSearchFieldsPanel and collects all named field values
+	 * into a LinkedHashMap preserving insertion order.
+	 */
+	private Map<String, String> collectDynamicFields() {
+		Map<String, String> fields = new LinkedHashMap<>();
+		for (Component c : systemSearchFieldsPanel.getComponents()) {
+			if (c instanceof JTextField) {
+				JTextField tf = (JTextField) c;
+				if (tf.getName() != null && !tf.getName().isBlank()) {
+					fields.put(tf.getName(), tf.getText());
+				}
+			} else if (c instanceof JComboBox) {
+				JComboBox<?> cb = (JComboBox<?>) c;
+				if (cb.getName() != null && !cb.getName().isBlank() && cb.getSelectedItem() != null) {
+					fields.put(cb.getName(), cb.getSelectedItem().toString());
+				}
+			} else if (c instanceof JCheckBox) {
+				JCheckBox chk = (JCheckBox) c;
+				if (chk.getName() != null && !chk.getName().isBlank()) {
+					fields.put(chk.getName(), String.valueOf(chk.isSelected()));
+				}
+			}
+		}
+		return fields;
 	}
 
 	/**
@@ -845,37 +884,203 @@ public class MainForm2 extends JFrame {
 		removerCol.setMaxWidth(85);
 	}
 
-	/**
-	 * Iterates over systemSearchFieldsPanel and collects all named field values
-	 * into a LinkedHashMap preserving insertion order.
-	 */
-	private Map<String, String> collectDynamicFields() {
-		Map<String, String> fields = new LinkedHashMap<>();
-		for (Component c : systemSearchFieldsPanel.getComponents()) {
-			if (c instanceof JFormattedTextField) {
-				JFormattedTextField ftf = (JFormattedTextField) c;
-				if (ftf.getName() != null && !ftf.getName().isBlank()) {
-					Object val = ftf.getValue();
-					fields.put(ftf.getName(), val != null ? val.toString() : "");
+	private List<ReceitaBx> getListOfFiles()
+			throws InvalidCertificate, InvalidKeyException, InvalidAlgorithmParameterException,
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
+
+		List<ReceitaBx> result = new ArrayList<>();
+
+		String SCREEN = screenResolutionTextField.getText();
+
+		Ref<Certificate> CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
+		String SENHA = passwordTextField.getText();
+
+		ValidatePfx.load(CERTIFICADO, SENHA);
+
+		String PERFIL = profileContribuinte.getText();
+		String PERFIL_TYPE = "";
+		String PERFIL_VALUE = "";
+
+		if (profileProcurador.isSelected()) {
+			PERFIL = profileProcurador.getText();
+			PERFIL_TYPE = profileTypeComboBox.getSelectedItem().toString();
+			PERFIL_VALUE = profileTypeValueTextField.getText();
+		}
+
+		String ULTIMO_PEDIDO_SOLICITADO = "";
+		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
+
+		for (int row = 0; row < tableModel.getRowCount(); row++) {
+
+			String SISTEMA = (String) tableModel.getValueAt(row, getModelColumnIndex("Sistema"));
+			String TIPO_ARQUIVO = (String) tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo"));
+			String TIPO_PESQUISA = (String) tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa"));
+			String DATA_INICIO = "";
+			String DATA_FIM = "";
+			String CNPJ_INCORPORADORA = "";
+			String TIPO_EVENTO = "";
+			String BAIXAR_ARQUIVO_ASSINADO = "";
+			String CNPJ_ESTABELECIMENTO = "";
+			Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
+			String INSCRICAO_ESTADUAL = "";
+			Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
+
+			// Dynamic fields — read from the stored map for this row
+			Map<String, String> dynamic = rowDynamicData.get(row);
+			for (Map.Entry<String, String> entry : dynamic.entrySet()) {
+				// System.out.println(" " + entry.getKey() + ": " + entry.getValue());
+
+				if (entry.getKey().equals(SpedSearchField.DATA_INICIO.getValue())) {
+					DATA_INICIO = entry.getValue();
+				} else if (entry.getKey().equals(SpedSearchField.DATA_FIM.getValue())) {
+					DATA_FIM = entry.getValue();
+				} else if (entry.getKey().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
+					CNPJ_INCORPORADORA = entry.getValue();
+				} else if (entry.getKey().equals(SpedSearchField.TIPO_EVENTO.getValue())) {
+					TIPO_EVENTO = entry.getValue();
+				} else if (entry.getKey().equals(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue())) {
+					BAIXAR_ARQUIVO_ASSINADO = entry.getValue();
+				} else if (entry.getKey().equals(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue())) {
+					CNPJ_ESTABELECIMENTO = entry.getValue();
+				} else if (entry.getKey().equals(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue())) {
+					BUSCAR_TODOS_ESTABLECIMENTOS = Boolean.parseBoolean(entry.getValue());
+				} else if (entry.getKey().equals(SpedSearchField.INSCRICAO_ESTADUAL.getValue())) {
+					INSCRICAO_ESTADUAL = entry.getValue();
+				} else if (entry.getKey().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
+					ULTIMO_ARQUIVO_TRANSMITIDO = Boolean.parseBoolean(entry.getValue());
 				}
-			} else if (c instanceof JTextField) {
-				JTextField tf = (JTextField) c;
-				if (tf.getName() != null && !tf.getName().isBlank()) {
-					fields.put(tf.getName(), tf.getText());
-				}
-			} else if (c instanceof JComboBox) {
-				JComboBox<?> cb = (JComboBox<?>) c;
-				if (cb.getName() != null && !cb.getName().isBlank() && cb.getSelectedItem() != null) {
-					fields.put(cb.getName(), cb.getSelectedItem().toString());
-				}
-			} else if (c instanceof JCheckBox) {
-				JCheckBox chk = (JCheckBox) c;
-				if (chk.getName() != null && !chk.getName().isBlank()) {
-					fields.put(chk.getName(), String.valueOf(chk.isSelected()));
-				}
+
+			}
+
+			ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
+					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
+					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO);
+
+			result.add(receitaBx);
+		}
+
+		if (appData.getLastListAdded().size() == 0) {
+			appData.addList(result);
+		} else {
+			appData.updateList(appData.getLastIdAdded(), result);
+		}
+
+		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+
+		return result;
+	}
+
+	/** Helper: returns the model column index by name, or -1 if not found. */
+	private int getModelColumnIndex(String columnName) {
+		for (int c = 0; c < tableModel.getColumnCount(); c++) {
+			if (tableModel.getColumnName(c).equals(columnName)) {
+				return c;
 			}
 		}
-		return fields;
+		return -1;
+	}
+
+	private JMenuBar createMenuBar() {
+
+		JMenuItem historic = new JMenuItem(Menu.HISTORIC.getValue());
+		historic.setMnemonic(KeyEvent.VK_H);
+		historic.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK));
+		historic.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				HistoricForm form = new HistoricForm(MainForm2.this, Menu.HISTORIC);
+				form.addObjectListener(new Listenable() {
+					@Override
+					public void value(Object... objs) {
+						// performActions(form, objs);
+					}
+				});
+				form.load();
+			}
+		});
+
+		JMenuItem setting = new JMenuItem(Menu.SETTING.getValue());
+		setting.setMnemonic(KeyEvent.VK_C);
+		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+		setting.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SettingForm form = new SettingForm(MainForm2.this, Menu.SETTING);
+				form.addObjectListener(new Listenable() {
+					@Override
+					public void value(Object... objs) {
+						// performActions(form, objs);
+					}
+				});
+				form.load();
+			}
+		});
+
+		JMenuItem exit = new JMenuItem("Sair");
+		exit.setMnemonic(KeyEvent.VK_S);
+		exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+		exit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				listener.value(Menu.CLOSE.getValue());
+			}
+		});
+
+		JMenu fileMenu = new JMenu("Menu");
+		fileMenu.setMnemonic(KeyEvent.VK_M);
+		fileMenu.add(historic);
+		fileMenu.addSeparator();
+		fileMenu.add(setting);
+		fileMenu.addSeparator();
+		fileMenu.add(exit);
+
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.add(fileMenu);
+
+		return menuBar;
+	}
+
+	private void loadCertificateComboBox(String path) {
+		if (path != null && !path.trim().isEmpty()) {
+			List<Certificate> list = FileUtils.getListOfCertificates(path);
+			if (list.size() > 0) {
+				FileUtils.saveCertificatePathChosen(path);
+				DefaultComboBoxModel<Certificate> model = new DefaultComboBoxModel<>();
+				model.addAll(list);
+				certificateComboBox.removeAllItems();
+				certificateComboBox.setModel(model);
+			}
+		}
+	}
+
+	private void changeThemes(boolean dark) {
+		if (FlatLaf.isLafDark() != dark) {
+			if (!dark) {
+				Scheme.removeLafDark();
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						FlatAnimatedLafChange.showSnapshot();
+						FlatIntelliJLaf.setup();
+						FlatLaf.updateUI();
+						FlatAnimatedLafChange.hideSnapshotWithAnimation();
+					}
+				});
+			} else {
+				Scheme.setLafDark();
+				EventQueue.invokeLater(new Runnable() {
+
+					public void run() {
+						FlatAnimatedLafChange.showSnapshot();
+						FlatDarculaLaf.setup();
+						FlatLaf.updateUI();
+						FlatAnimatedLafChange.hideSnapshotWithAnimation();
+					}
+
+				});
+			}
+		}
+	}
+
+	public void addObjectListener(Listenable listener) {
+		this.listener = listener;
 	}
 
 }

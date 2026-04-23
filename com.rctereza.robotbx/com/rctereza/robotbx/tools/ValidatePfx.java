@@ -17,38 +17,52 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
-import com.rctereza.robotbx.mutables.Ref;
+import com.rctereza.robotbx.exceptions.InvalidCertificate;
+import com.rctereza.robotbx.wrappers.Ref;
 
 public class ValidatePfx {
 
-	private Ref<com.rctereza.robotbx.models.Certificate> cert;
+	private static Ref<com.rctereza.robotbx.models.Certificate> cert = null;
+	
+	private static KeyStore keystore = null;
+	private static PrivateKey privateKey = null;
+	private static Certificate certificate = null;
 
-	private KeyStore keystore;
-	private PrivateKey privateKey;
-	private Certificate certificate;
+	private static String pass = "";
+	private static String alias = "";
+	private static String subject = "";
+	private static String issuer = "";
+	private static Date validFrom = null;
+	private static Date validTo = null;
+	
+	private static Boolean okay = false;
 
-	private String filePath;
-	private String password;
-	private String alias;
-	private String subject;
-	private String issuer;
-	private Date validFrom;
-	private Date validTo;
+//	public ValidatePfx(Ref<com.rctereza.robotbx.models.Certificate> cert, String password) {
+//		this.cert = cert;
+//		this.filePath = cert.get().getAbsolutePath();
+//		this.password = password;
+//	}
 
-	public ValidatePfx(Ref<com.rctereza.robotbx.models.Certificate> cert, String password) {
-		this.cert = cert;
-		this.filePath = certificate.toString();
-		this.password = password;
+	public static void load(Ref<com.rctereza.robotbx.models.Certificate> certificate, String password) throws InvalidCertificate {
+		String result = check(certificate,password);
+		if (!result.equals("")) {
+			throw new InvalidCertificate(result);
+		}
 	}
-
-	public String check() {
+	
+	public static String check(Ref<com.rctereza.robotbx.models.Certificate> certificate, String password) {
 
 		String result = "";
+		
+		cert = certificate;
+		pass = password;
+		okay = false;
 
 		try {
 			checkPassword();
 			checkExpirationDate();
 			updateCertificate();
+			okay = true;
 
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
 				| UnrecoverableKeyException e) {
@@ -65,23 +79,17 @@ public class ValidatePfx {
 		return result;
 	}
 
-	private void updateCertificate() {
-		com.rctereza.robotbx.models.Certificate updCert = new com.rctereza.robotbx.models.Certificate(cert.get().ID(),
-				cert.get().NAME(), cert.get().PATH(), this.password, getAlias(), getSubject(), getIssuer(), getValidFrom(), getValidTo());
-		cert.set(updCert);		
-	}
-
-	private void checkPassword() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException,
+	private static void checkPassword() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException,
 			UnrecoverableKeyException {
 
 		keystore = KeyStore.getInstance("PKCS12");
 
-		try (FileInputStream fis = new FileInputStream(filePath)) {
-			keystore.load(fis, password.toCharArray());
+		try (FileInputStream fis = new FileInputStream(cert.get().getAbsolutePath())) {
+			keystore.load(fis, pass.toCharArray());
 
 			alias = keystore.aliases().nextElement();
 
-			privateKey = (PrivateKey) keystore.getKey(alias, password.toCharArray());
+			privateKey = (PrivateKey) keystore.getKey(alias, pass.toCharArray());
 
 			certificate = keystore.getCertificate(alias);
 
@@ -95,7 +103,7 @@ public class ValidatePfx {
 
 	}
 
-	private void checkExpirationDate() {
+	private static void checkExpirationDate() {
 
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -113,32 +121,43 @@ public class ValidatePfx {
 
 	}
 
-	public PrivateKey getPrivateKey() {
+	private static void updateCertificate() {
+		com.rctereza.robotbx.models.Certificate updCert = new com.rctereza.robotbx.models.Certificate(cert.get().ID(),
+				cert.get().NAME(), cert.get().PATH(), pass, getAlias(), getSubject(), getIssuer(), getValidFrom(), getValidTo());
+		cert.set(updCert);		
+	}
+
+	
+	public static PrivateKey getPrivateKey() {
 		return privateKey;
 	}
 
-	public Certificate getCertificate() {
+	public static Certificate getCertificate() {
 		return certificate;
 	}
 
-	public String getAlias() {
+	public static String getAlias() {
 		return alias;
 	}
 
-	public String getSubject() {
+	public static String getSubject() {
 		return subject;
 	}
 
-	public String getIssuer() {
+	public static String getIssuer() {
 		return issuer;
 	}
 
-	public Date getValidFrom() {
+	public static Date getValidFrom() {
 		return validFrom;
 	}
 
-	public Date getValidTo() {
+	public static Date getValidTo() {
 		return validTo;
+	}
+	
+	public static Boolean isValid() {
+		return okay;
 	}
 
 }

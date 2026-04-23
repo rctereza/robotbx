@@ -272,7 +272,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.PASTE, null, null, null,
-				params.CERTIFICADO().toString(), robotCommandEnabled));
+				params.CERTIFICADO().getAbsolutePath(), robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Informar o caminho do certificado", false, null, false, 0, 0, false,
 				false, true, new ArrayList<>(commands)));
@@ -361,7 +361,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.PASTE, null, null, null,
-				params.CERTIFICADO().toString(), robotCommandEnabled));
+				params.CERTIFICADO().getAbsolutePath(), robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Informar o caminho do certificado", false, null, false, 0, 0, false,
 				false, true, new ArrayList<>(commands)));

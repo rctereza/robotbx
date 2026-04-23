@@ -1,18 +1,18 @@
-package com.rctereza.robotbx;
+package com.rctereza.robotbx.threads;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CountDownLatch;
 
 import javax.crypto.NoSuchPaddingException;
 import javax.swing.JOptionPane;
 
+import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
 import com.rctereza.robotbx.enums.Message;
 import com.rctereza.robotbx.models.ReceitaBx;
@@ -22,13 +22,11 @@ import com.rctereza.robotbx.models.RobotCommand;
 import com.rctereza.robotbx.models.RobotMessageBox;
 import com.rctereza.robotbx.tools.Actions;
 import com.rctereza.robotbx.tools.AutoCloseMessageDialog;
-import com.rctereza.robotbx.tools.CryptoUtils;
-import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.RobotUtils;
 import com.rctereza.robotbx.wrappers.Ref;
 import com.rctereza.robotocr.MessageBox2;
 
-public class Test2 {
+public class ProcessRobot implements Runnable {
 
 	private static boolean RUNNING = true;
 
@@ -36,48 +34,55 @@ public class Test2 {
 
 	private static int NUMBER_OF_ATTEMPTS = 0;
 
-	public static void main(String[] args) throws Exception {
+	private CountDownLatch doneLatch;
+	private Ref<ReceitaBx> receitaBx;
+
+	public ProcessRobot(CountDownLatch doneLatch, Ref<ReceitaBx> receitaBx)  {
+		this.doneLatch = doneLatch;
+		this.receitaBx = receitaBx;
+	}
+
+	@Override
+	public void run() {
 
 		System.out.println("Starting...");
 
 		System.setProperty("sun.java2d.uiScale", "1.0");
 
-		// *******************************************************************************************
-		// LOAD RECEINATNETBX DATA TO BE PROCESS
-		// *******************************************************************************************
-		Ref<ReceitaBx> receitaBx = CryptoUtils.loadRef(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE,
-				ReceitaBx.class, ReceitaBx::new);
-		System.out.println("Paramenters........: " + receitaBx);
+		while (RUNNING && !Thread.interrupted()) {
 
-		if (!receitaBx.get().ULTIMO_PEDIDO_SOLICITADO().equals("")
-				&& !receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO().equals("")) {
-			reset(receitaBx);
-			System.out.println("Paramenters reseted: " + receitaBx);
-		}
-
-		while (true) {
-
-			if ((receitaBx.get().ULTIMO_PEDIDO_SOLICITADO().equals(""))
-					|| (!receitaBx.get().ULTIMO_PEDIDO_SOLICITADO().equals("")
-							&& receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO().equals(""))) {
-
-				RUNNING = true;
-
-			} else if (!receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO().equals("")) {
-
-				System.out.println("Process Concluded... ");
-				break;
+			try {
+				
+				startProcess();
+				
+			} catch (InterruptedException e) {
+				
+				System.out.println("Interrupted!");
+				
+			} catch (Exception e) {
+				
+				System.err.println("ERROR:" + e.getMessage());
+				
+			} finally {
+				
+				doneLatch.countDown();
+				
 			}
-
-			System.out.println("Starting Step1.....: ");
-			startProcessStep1(receitaBx);
-			System.out.println("Stopping Step1.....: [" + receitaBx.get().ULTIMO_PEDIDO_SOLICITADO() + "]");
-
-			Thread.sleep(5000); // pause for five seconds
 		}
+
+		System.out.println("Terminated!");
 	}
 
-	private static void startProcessStep1(Ref<ReceitaBx> receitaBx) throws Exception {
+	public void stop() {
+		RUNNING = false;
+	}
+
+	private void startProcess() throws Exception {
+		saveOrderNumber("123456");
+		stop();
+	}
+
+	private void startProcessStep1(Ref<ReceitaBx> receitaBx) throws Exception {
 
 		// *******************************************************************************************
 		// OPEN RECEITANETBX EXE/JAR
@@ -143,7 +148,7 @@ public class Test2 {
 		process.destroy();
 	}
 
-	private static void performAction(Robot robot, Ref<ReceitaBx> receitaBx) throws Exception {
+	private void performAction(Robot robot, Ref<ReceitaBx> receitaBx) throws Exception {
 
 		Thread.sleep(6000); // pause for six seconds
 
@@ -324,7 +329,7 @@ public class Test2 {
 
 								order = order.substring(0, order.indexOf(" "));
 
-								saveOrderNumber(receitaBx, order);
+								saveOrderNumber(order);
 
 								RobotAction robotAction = new RobotAction(ra.ID(),
 										ra.DESCRIPTION() + " - Confirmando pedido [" + order + "]", false, null, false,
@@ -357,22 +362,22 @@ public class Test2 {
 		}
 	}
 
-	private static void saveOrderNumber(Ref<ReceitaBx> receitaBx, String orderNumber)
+	private void saveOrderNumber(String orderNumber)
 			throws InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
 			NoSuchPaddingException, InvalidKeySpecException, IOException {
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
-				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
-				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
-				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
-				receitaBx.get().TIPO_EVENTO(), receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(),
-				receitaBx.get().CNPJ_ESTABELECIMENTO(), receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(),
-				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), orderNumber, null));
+		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), receitaBx.get().PERFIL(),
+				receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(), receitaBx.get().SISTEMA(),
+				receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(), receitaBx.get().DATA_INICIO(),
+				receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(), receitaBx.get().TIPO_EVENTO(),
+				receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(), receitaBx.get().CNPJ_ESTABELECIMENTO(),
+				receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(), receitaBx.get().INSCRICAO_ESTADUAL(),
+				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), orderNumber, null));
 
-		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+//		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 	}
 
-	private static void saveDateTimeOfConclusion(Ref<ReceitaBx> receitaBx)
+	private void saveDateTimeOfConclusion(Ref<ReceitaBx> receitaBx)
 			throws InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
 			NoSuchPaddingException, InvalidKeySpecException, IOException {
 
@@ -380,37 +385,21 @@ public class Test2 {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = currentDateTime.format(formatter);
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
-				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
-				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
-				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
-				receitaBx.get().TIPO_EVENTO(), receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(),
-				receitaBx.get().CNPJ_ESTABELECIMENTO(), receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(),
-				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(),
-				receitaBx.get().ULTIMO_PEDIDO_SOLICITADO(), DATA_HORA_CONCLUSAO_PROCESSAMENTO));
+		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), receitaBx.get().PERFIL(),
+				receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(), receitaBx.get().SISTEMA(),
+				receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(), receitaBx.get().DATA_INICIO(),
+				receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(), receitaBx.get().TIPO_EVENTO(),
+				receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(), receitaBx.get().CNPJ_ESTABELECIMENTO(),
+				receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(), receitaBx.get().INSCRICAO_ESTADUAL(),
+				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), receitaBx.get().ULTIMO_PEDIDO_SOLICITADO(),
+				DATA_HORA_CONCLUSAO_PROCESSAMENTO));
 
-		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+//		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 	}
 
-	private static void reset(Ref<ReceitaBx> receitaBx) throws InvalidKeyException, InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
-
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
-				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
-				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
-				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
-				receitaBx.get().TIPO_EVENTO(), receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(),
-				receitaBx.get().CNPJ_ESTABELECIMENTO(), receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(),
-				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), "", ""));
-
-		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
-
-		clean();
-	}
-
-	private static void clean() throws IOException {
-		Path folderPath = Paths.get("C:\\Temp\\ReceitanetBX"); // Change to your folder path
-		FileUtils.clearDirectory(folderPath);
-	}
+//	private static void clean() throws IOException {
+//		Path folderPath = Paths.get(Constants.PROGRAM_CERTIFICATES); // Change to your folder path
+//		FileUtils.clearDirectory(folderPath);
+//	}
 
 }

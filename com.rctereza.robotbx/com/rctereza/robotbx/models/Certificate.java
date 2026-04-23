@@ -22,9 +22,13 @@ implements Serializable {
 		this(null,null,null,null,null,null,null,null,null);
 	}
 
+	public String getAbsolutePath() {
+		return PATH + "\\" + NAME;
+	}
+
 	@Override
 	public String toString() {
-		return PATH + "\\" + NAME;
+		return NAME;
 	}
 	
 }

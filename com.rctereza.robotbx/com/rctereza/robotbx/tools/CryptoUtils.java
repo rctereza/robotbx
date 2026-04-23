@@ -26,7 +26,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.rctereza.robotbx.mutables.Ref;
+import com.rctereza.robotbx.wrappers.Ref;
 
 public class CryptoUtils {
 

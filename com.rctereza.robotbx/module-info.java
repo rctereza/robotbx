@@ -1,5 +1,6 @@
 module com.rctereza.robotbx {
 	requires transitive java.desktop;
+	requires java.base;
 	requires java.prefs;
 
 	requires com.miglayout.swing;
@@ -12,6 +13,7 @@ module com.rctereza.robotbx {
 	
 	requires transitive com.sun.jna.platform;
 	requires transitive com.sun.jna;
+	
 	requires com.rctereza.robotocr;
 	
 	exports com.rctereza.robotbx.enums;

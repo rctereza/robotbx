@@ -17,6 +17,7 @@ import javax.swing.text.MaskFormatter;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Sped;
+import com.rctereza.robotbx.enums.SpedSearchField;
 import com.rctereza.robotbx.models.ReceitaBx;
 
 import net.miginfocom.swing.MigLayout;
@@ -115,13 +116,13 @@ public class SpedUtils {
 
 			JLabel inicioDateLabel = new JLabel("Data de início *");
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
-			inicioDateTextField.setName("DATA_INICIO");
+			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
 			inicioDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
 
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
-			fimDateTextField.setName("DATA_FIM");
+			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
 			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
 			
@@ -138,19 +139,19 @@ public class SpedUtils {
 
 			JLabel inicioDateLabel = new JLabel("Data de início *");
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
-			inicioDateTextField.setName("DATA_INICIO");
+			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
 			inicioDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
 			
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
-			fimDateTextField.setName("DATA_FIM");
+			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
 			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
 			
 			JLabel incorporadoraCnpjLabel = new JLabel("CNPJ da Incorporada *");
 			JFormattedTextField incorporadoraCnpjTextField = new JFormattedTextField(cnpjMask);	
-			incorporadoraCnpjTextField.setName("CNPJ_INCORPORADORA");
+			incorporadoraCnpjTextField.setName(SpedSearchField.CNPJ_INCORPORADORA.getValue());
 			incorporadoraCnpjTextField.setColumns(12);
 			incorporadoraCnpjTextField.setValue(receitaBx.CNPJ_INCORPORADORA());
 			
@@ -167,13 +168,13 @@ public class SpedUtils {
 			JLabel eventoTypeLabel = new JLabel("Tipo de Evento *");
 			String[] eventoTypes = { "Evento R-1000 Informações do Contribuinte", "Evento R-1050 Tabela de Entidades Ligadas", "Evento R-1070 Tabela de Processos Administrativos/Judiciais"};
 			JComboBox<String> eventoTypeComboBox = new JComboBox<String>(eventoTypes);
-			eventoTypeComboBox.setName("TIPO_EVENTO");
+			eventoTypeComboBox.setName(SpedSearchField.TIPO_EVENTO.getValue());
 			eventoTypeComboBox.setSelectedItem(receitaBx.TIPO_EVENTO());
 			
 			JLabel baixarFileLabel = new JLabel("Baixar arquivo com Assinatura Digital *");
 			String[] baixarFileOptions = {"NÃO","SIM"};
 			JComboBox<String> baixarFileComboBox = new JComboBox<String>(baixarFileOptions);
-			baixarFileComboBox.setName("BAIXAR_ARQUIVO_ASSINADO");
+			baixarFileComboBox.setName(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue());
 			baixarFileComboBox.setSelectedItem(receitaBx.BAIXAR_ARQUIVO_ASSINADO());
 			
 			panel.add(eventoTypeLabel, "sg 1");
@@ -186,35 +187,35 @@ public class SpedUtils {
 			
 			JLabel cnpjEstabelecimentoLabel = new JLabel("CNPJ do Estabelecimento");
 			JFormattedTextField cnpjEstabelecimentoTextField = new JFormattedTextField(cnpjMask);
-			cnpjEstabelecimentoTextField.setName("CNPJ_ESTABELECIMENTO");
+			cnpjEstabelecimentoTextField.setName(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue());
 			cnpjEstabelecimentoTextField.setColumns(12);
 			cnpjEstabelecimentoTextField.setValue(receitaBx.CNPJ_ESTABELECIMENTO());
 			
 			JLabel buscarArquivosLabel = new JLabel("Buscar Arquivos de Todos os Estabelecimentos *");
 			JCheckBox buscarArquivosCheckBox = new JCheckBox("");
-			buscarArquivosCheckBox.setName("BUSCAR_TODOS_ESTABLECIMENTOS");
+			buscarArquivosCheckBox.setName(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue());
 			buscarArquivosCheckBox.setSelected(Objects.requireNonNullElse(receitaBx.BUSCAR_TODOS_ESTABLECIMENTOS(), false));
 			
 			JLabel incricaoEstadualLabel = new JLabel("Inscrição Estadual");
 			JTextField incricaoEstadualTextField = new JTextField(10);
-			incricaoEstadualTextField.setName("INSCRICAO_ESTADUAL");
+			incricaoEstadualTextField.setName(SpedSearchField.INSCRICAO_ESTADUAL.getValue());
 			incricaoEstadualTextField.setText(receitaBx.INSCRICAO_ESTADUAL());
 			
 			JLabel inicioDateLabel = new JLabel("Data de início *");
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
-			inicioDateTextField.setName("DATA_INICIO");
+			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
 			inicioDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
 			
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
-			fimDateTextField.setName("DATA_FIM");
+			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
 			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
 			
 			JLabel ultimoArquivoLabel = new JLabel("Ultimo arquivo transmitido *");
 			JCheckBox ultimoArquivoCheckBox = new JCheckBox("");
-			ultimoArquivoCheckBox.setName("ULTIMO_ARQUIVO_TRANSMITIDO");
+			ultimoArquivoCheckBox.setName(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue());
 			ultimoArquivoCheckBox.setSelected(Objects.requireNonNullElse(receitaBx.ULTIMO_ARQUIVO_TRANSMITIDO(), false));
 
 			panel.add(cnpjEstabelecimentoLabel, "sg 1");

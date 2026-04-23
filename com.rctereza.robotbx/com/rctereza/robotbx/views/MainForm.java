@@ -57,13 +57,13 @@ import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.ReceitaBx;
-import com.rctereza.robotbx.mutables.Ref;
 import com.rctereza.robotbx.tools.CryptoUtils;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
 import com.rctereza.robotbx.tools.SpedUtils;
 import com.rctereza.robotbx.tools.ValidateCpfCnpj;
+import com.rctereza.robotbx.wrappers.Ref;
 
 import net.miginfocom.swing.MigLayout;
 
