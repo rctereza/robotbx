@@ -13,19 +13,31 @@ public class AppData implements Serializable {
 
 	private static final long serialVersionUID = -16550397148575121L;
 
-	private TreeMap<Integer, List<ReceitaBx>> receitaBxList;
+	private TreeMap<Integer, List<ReceitaBx>> receitaBxList = initialize();
+
+	private TreeMap<Integer, List<ReceitaBx>> initialize() {
+		return Objects.requireNonNullElse(receitaBxList, new TreeMap<>());
+	}
 
 	public void setReceitaBxList(TreeMap<Integer, List<ReceitaBx>> receitaBxList) {
 		this.receitaBxList = receitaBxList;
 	}
 
 	public TreeMap<Integer, List<ReceitaBx>> getReceitaBxList() {
-		return Objects.requireNonNullElse(receitaBxList, new TreeMap<>());
+		return receitaBxList;
 	}
 	
+	public void updateList(Integer id, List<ReceitaBx> list) {
+		this.receitaBxList.put(id, list);
+	}
+	
+	public void addList(List<ReceitaBx> list) {
+		this.receitaBxList.put(getNextID(), list);
+	}
+
 	public Integer getLastIdAdded() {
 		Integer result = 0;
-		if (receitaBxList != null && receitaBxList.size() > 0) {
+		if (receitaBxList.size() > 0) {
 			Entry<Integer, List<ReceitaBx>> lastEntry = receitaBxList.lastEntry();
 			result = lastEntry.getKey();
 		}
@@ -34,24 +46,16 @@ public class AppData implements Serializable {
 
 	public List<ReceitaBx> getLastListAdded() {
 		List<ReceitaBx> result = new ArrayList<>();
-		if (receitaBxList != null && receitaBxList.size() > 0) {
+		if (receitaBxList.size() > 0) {
 			Entry<Integer, List<ReceitaBx>> lastEntry = receitaBxList.lastEntry();
 			result = lastEntry.getValue();
 		}
 		return result;
 	}
-	
-	public void updateList(Integer id, List<ReceitaBx> list) {
-		this.receitaBxList.put(id, list);
-	}
-
-	public void addList(List<ReceitaBx> list) {
-		this.receitaBxList.put(getNextID(), list);
-	}
 
 	private int getNextID() {
 		int id = 0;
-		if (receitaBxList != null && receitaBxList.size() > 0) {
+		if (receitaBxList.size() > 0) {
 			Entry<Integer, List<ReceitaBx>> lastEntry = receitaBxList.lastEntry();
 			id = lastEntry.getKey();
 		}

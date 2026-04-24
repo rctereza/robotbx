@@ -407,6 +407,7 @@ public class RobotUtils {
 		// Lista de sistemas e papéis atualizada com sucesso
 		// Pedidos e arquivos foram atualizados com sucesso.
 
+		//**********************************************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
@@ -456,34 +457,188 @@ public class RobotUtils {
 		actions.add(new RobotAction(counter += 10, "Clicar no campo 'Selecione Sistema'", false, null, false, 0, 0,
 				false, false, true, new ArrayList<>(commands)));
 
+		//**********************************************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ALTARROWDOWN, null, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+		
+		if (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue()) || params.SISTEMA().equals(Sped.ECF.getValue()) ) {
+			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+		}
+		else {
+			
+			if ( (params.SISTEMA().equals(Sped.CONTABIL.getValue()) && params.TIPO_ARQUIVO().equals("Escrituração Contábil Digital")) ||
+					(params.SISTEMA().equals(Sped.EFD.getValue()) && params.TIPO_ARQUIVO().equals("Eventos de Tabelas")) ||
+					(params.SISTEMA().equals(Sped.FISCAL.getValue()) && params.TIPO_ARQUIVO().equals("Escrituração Fiscal Digital"))) {
+				
+				commands.add(new RobotCommand(1, Command.ARROWDOWN, 899, 422, null, null, robotCommandEnabled));
+				
+			}
+			else if (params.SISTEMA().equals(Sped.CONTABIL.getValue()) && params.TIPO_ARQUIVO().equals("Dados Agregados de Escrituração Contábil Digital")) {
+				
+				commands.add(new RobotCommand(1, Command.MOVE, 899, 436, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+
+			}
+			else if (params.SISTEMA().equals(Sped.CONTABIL.getValue()) && params.TIPO_ARQUIVO().equals("Termos Emitidios pelas Juntas Comerciais")) {
+				
+				commands.add(new RobotCommand(1, Command.MOVE, 899, 450, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+				
+			}
+			
+		}
 		actions.add(new RobotAction(counter += 10, "Clicar no campo 'Selecione um tipo de arquivo'", false, null, false,
 				0, 0, false, false, true, new ArrayList<>(commands)));
 
+		//**********************************************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ALTARROWDOWN, null, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+
+		if ( (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue()) && params.TIPO_PESQUISA().equals("Período de Entrega")) || 
+				(params.SISTEMA().equals(Sped.ECF.getValue()) && params.TIPO_PESQUISA().equals("Período de Entrega"))) {
+			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+		}
+		else {
+			if ( (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue()) && params.TIPO_PESQUISA().equals("Período de Entrega da Incorporada")) ||
+					(params.SISTEMA().equals(Sped.ECF.getValue()) && params.TIPO_PESQUISA().equals("Período da Escrituração"))) {
+				
+				commands.add(new RobotCommand(1, Command.MOVE, 900, 465, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+			}
+			else if ( (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue()) && params.TIPO_PESQUISA().equals("Período da Escrituração")) ) {
+				
+				commands.add(new RobotCommand(1, Command.MOVE, 900, 476, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+			}
+			else if ( (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue()) && params.TIPO_PESQUISA().equals("Período da Escrituração da Incorporada")) ) {
+				
+				commands.add(new RobotCommand(1, Command.MOVE, 900, 490, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+			}
+		}
+		
 		actions.add(new RobotAction(counter += 10, "Clicar no campo 'Selecione um tipo de pesquisa'", false, null,
 				false, 0, 0, false, false, true, new ArrayList<>(commands)));
+		
+		if (!params.SISTEMA().equals(Sped.EFD.getValue()) && params.SISTEMA().equals(Sped.FISCAL.getValue())) { 
+			
+			//**********************************************************************************************************************************************
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data de Inicio'", false, null, false, 0, 0, false,
+					false, true, new ArrayList<>(commands)));
+	
+			//**********************************************************************************************************************************************
+			commands.clear();
+			commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_FIM(), robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+			actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data de Fim'", false, null, false, 0, 0, false,
+					false, true, new ArrayList<>(commands)));
 
-		commands.clear();
-		commands.add(new RobotCommand(3, Command.TYPE, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-		actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data de Inicio'", false, null, false, 0, 0, false,
-				false, true, new ArrayList<>(commands)));
+			if ( (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue()) && params.TIPO_PESQUISA().equals("Período de Entrega da Incorporada")) ||
+					(params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue()) && params.TIPO_PESQUISA().equals("Período da Escrituração da Incorporada"))) {
+				
+				//**********************************************************************************************************************************************
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.CNPJ_INCORPORADORA(), robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'CNPJ Incorporadora'", false, null, false, 0, 0, false,
+						false, true, new ArrayList<>(commands)));
+				
+			}
+		}
+		else {
+			
+			if (params.SISTEMA().equals(Sped.EFD.getValue())) {
+				
+				//**********************************************************************************************************************************************
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.MOVE, 890, 475, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+				
+				if (params.TIPO_EVENTO().equals("Evento R-1000 Informações do Contribuinte")) {
+					commands.add(new RobotCommand(1, Command.MOVE, 890, 495, null, null, robotCommandEnabled));
+				}
+				else if (params.TIPO_EVENTO().equals("Evento R-1050 Tabela de Entidades Ligadas")) {
+					commands.add(new RobotCommand(1, Command.MOVE, 890, 505, null, null, robotCommandEnabled));
+				}
+				else if (params.TIPO_EVENTO().equals("Evento R-1070 Tabela de Processos Administrativos/Judiciais")) {
+					commands.add(new RobotCommand(1, Command.MOVE, 890, 520, null, null, robotCommandEnabled));
+				}
+				
+				commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Tipo de Evento'", false, null, false, 0, 0, false,
+						false, true, new ArrayList<>(commands)));
+				
+				if (params.BAIXAR_ARQUIVO_ASSINADO().equals("SIM")) {
+					
+					//**********************************************************************************************************************************************
+					commands.clear();
+					commands.add(new RobotCommand(1, Command.MOVE, 890, 500, null, null, robotCommandEnabled));
+					commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+					commands.add(new RobotCommand(1, Command.MOVE, 890, 530, null, null, robotCommandEnabled));
+					commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+					actions.add(new RobotAction(counter += 10, "Clicar no campo 'Baixar arquivo com Assinatura Digital'", false, null, false, 0, 0, false,
+							false, true, new ArrayList<>(commands)));
+				}
+			}
+			
+			else if (params.SISTEMA().equals(Sped.FISCAL.getValue())) {
+				
+				//**********************************************************************************************************************************************
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.CNPJ_ESTABELECIMENTO(), robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'CNPJ do Estabelecimento'", false, null, false, 0, 0, false,
+						false, true, new ArrayList<>(commands)));
+				
+				commands.clear();
+				if (params.BUSCAR_TODOS_ESTABLECIMENTOS()) {
+					commands.add(new RobotCommand(1, Command.SPACEBAR, null, null, null, null, robotCommandEnabled));
+				}
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Buscar Arquivos de Todos os Estabelecimentos'", false, null, false, 0, 0, false,
+						false, true, new ArrayList<>(commands)));
+				
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.INSCRICAO_ESTADUAL(), robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Inscrição Estadual'", false, null, false, 0, 0, false,
+						false, true, new ArrayList<>(commands)));
 
-		commands.clear();
-		commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_FIM(), robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
-		actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data de Fim'", false, null, false, 0, 0, false,
-				false, true, new ArrayList<>(commands)));
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data Inicio'", false, null, false, 0, 0, false,
+						false, true, new ArrayList<>(commands)));
+				
+				commands.clear();
+				commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_FIM(), robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data Fim'", false, null, false, 0, 0, false,
+						false, true, new ArrayList<>(commands)));
+				
+				commands.clear();
+				if (params.ULTIMO_ARQUIVO_TRANSMITIDO()) {
+					commands.add(new RobotCommand(1, Command.SPACEBAR, null, null, null, null, robotCommandEnabled));
+				}
+				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Ultimo arquivo transmitido'", false, null, false, 0, 0, false,
+						false, true, new ArrayList<>(commands)));
+			}
+			
+		}
 
+		//**********************************************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.MOVE, 933, 753, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
@@ -495,6 +650,7 @@ public class RobotUtils {
 		actions.add(new RobotAction(counter += 10, "Clicar no botao 'Pesquisar'", true, new ArrayList<>(messages), true,
 				2000, 30, false, false, true, new ArrayList<>(commands)));
 
+		//**********************************************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.MOVE, 687, 611, null, null, robotCommandEnabled));

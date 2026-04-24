@@ -28,11 +28,11 @@ import com.rctereza.robotocr.MessageBox2;
 
 public class ProcessRobot implements Runnable {
 
-	private static boolean RUNNING = true;
+	private static boolean RUNNING;
 
-	private static int START_ACTIONS_AT = 0;
+	private static int START_ACTIONS_AT;
 
-	private static int NUMBER_OF_ATTEMPTS = 0;
+	private static int NUMBER_OF_ATTEMPTS;
 
 	private CountDownLatch doneLatch;
 	private Ref<ReceitaBx> receitaBx;
@@ -45,23 +45,26 @@ public class ProcessRobot implements Runnable {
 	@Override
 	public void run() {
 
-		System.out.println("Starting...");
+		RUNNING = true;
+		START_ACTIONS_AT = 0;
+		NUMBER_OF_ATTEMPTS = 0;
+		
+		System.out.println("Thread Starting...");
 
-		System.setProperty("sun.java2d.uiScale", "1.0");
-
-		while (RUNNING && !Thread.interrupted()) {
+		while (RUNNING) {
 
 			try {
 				
+				System.out.println("Thread Running...");
 				startProcess();
 				
 			} catch (InterruptedException e) {
 				
-				System.out.println("Interrupted!");
+				System.out.println("Thread Interrupted!");
 				
 			} catch (Exception e) {
 				
-				System.err.println("ERROR:" + e.getMessage());
+				System.err.println("Thread Error [" + e.getMessage() + "]");
 				
 			} finally {
 				
@@ -70,7 +73,7 @@ public class ProcessRobot implements Runnable {
 			}
 		}
 
-		System.out.println("Terminated!");
+		System.out.println("Thread Terminated!");
 	}
 
 	public void stop() {
@@ -101,7 +104,7 @@ public class ProcessRobot implements Runnable {
 		// *******************************************************************************************
 		// LOAD ROBOT PARAMENTERS
 		// *******************************************************************************************
-		Robot robot = RobotUtils.getRobotBasedOnScreenResolution(receitaBx.get());
+		Robot robot = RobotUtils.getRobotBasedOnScreenResolution2(receitaBx.get());
 		System.out.println("Starting robot.....: " + robot.NAME());
 
 		// *******************************************************************************************

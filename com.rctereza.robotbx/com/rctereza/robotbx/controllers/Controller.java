@@ -28,16 +28,16 @@ public class Controller {
 	
 	public void startRobot(Ref<List<ReceitaBx>> list) {
 		
+		String message = "";
+		
 		System.out.println("Starting...");
+		System.out.println("------------------------------------------------------------------------------------------------------------------------------------");
 		
 		for (int i = 0; i < list.get().size(); i++) {
 
 			Ref<ReceitaBx> params = new Ref<>(list.get().get(i));
 
-			String step = "#" + i + "/" + list.get().size() + " - " + params.get().SISTEMA() + " [" + params.get().ULTIMO_PEDIDO_SOLICITADO()
-					+ "/" + params.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO() + "]";
-
-			System.out.println(step);
+			System.out.println("#" + (i+1) + "/" + list.get().size() + " - " + params.get().SISTEMA() + " [" + params.get().ULTIMO_PEDIDO_SOLICITADO() + "] Before...");
 			
 			CountDownLatch doneLatch = new CountDownLatch(1);
 
@@ -45,25 +45,39 @@ public class Controller {
 
 			Thread t1 = new Thread(t1Runnable, "T1-RobotLauncher");
 
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-				//System.out.println("Shutdown hook triggered...");
-				t1Runnable.stop();
-				t1.interrupt();
-			}));
-
-			// t1.setDaemon(true);
 			t1.start();
 			
 			try {
 				doneLatch.await();
-				System.out.println(step);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				System.out.println("#" + (i+1) + "/" + list.get().size() + " - " + params.get().SISTEMA() + " [" + params.get().ULTIMO_PEDIDO_SOLICITADO() + "] After...");
+				System.out.println("------------------------------------------------------------------------------------------------------------------------------------");
+			} catch (Exception e) {
+				message = e.getMessage();
+				System.out.println(message);
 				break;
 			}
 		}
 		
-		System.out.println("Done!");
+		System.out.println("Finished...");
+		listener.value(Menu.DONE.getValue(), message);
+		
+//		while (true) {
+//			// Get pointer info
+//			PointerInfo pointerInfo = MouseInfo.getPointerInfo();
+//			Point point = pointerInfo.getLocation();
+//	
+//			int x = (int) point.getX();
+//			int y = (int) point.getY();
+//	
+//			System.out.println("Mouse position: X=" + x + " Y=" + y);
+//	
+//			try {
+//				Thread.sleep(3000);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			} // pause for three seconds
+//		}
+
 	}
 	
 	public void startThreads(ReceitaBx params) throws AWTException, InterruptedException, InvalidScreenResolution {

@@ -61,6 +61,8 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 		
+		System.setProperty("sun.java2d.uiScale", "1.0");
+
 		FlatRobotoFont.install();
 		UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 12));
 		if (Scheme.isLafDark()) {

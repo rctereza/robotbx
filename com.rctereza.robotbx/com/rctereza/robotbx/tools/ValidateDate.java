@@ -12,15 +12,19 @@ public class ValidateDate {
 		boolean result = true;
 
 		if (dateStr == null || dateStr.isBlank()) {
+			//System.out.println("Reject null or empty strings");
 			result = false; // Reject null or empty strings
 		} else {
 
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.forLanguageTag("pt-BR"))
+			//"uuuu" = proleptic year (the actual year number, no era needed)
+			//"yyyy" = year-of-era (requires era in STRICT mode)
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/uuuu", Locale.forLanguageTag("pt-BR"))
 					.withResolverStyle(ResolverStyle.STRICT); // STRICT ensures 2023-02-29 is rejected
 
 			try {
 				LocalDate.parse(dateStr, formatter);
 			} catch (DateTimeParseException e) {
+				//System.out.println("Parsing error: " + e.getMessage());
 				result = false; // Invalid date format or value
 			}
 		}

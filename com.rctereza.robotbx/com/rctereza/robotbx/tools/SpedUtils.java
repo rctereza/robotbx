@@ -44,7 +44,7 @@ public class SpedUtils {
 		} else if (value.equals(Sped.CONTABIL)) {
 			list.add("Escrituração Contábil Digital");
 			list.add("Dados Agregados de Escrituração Contábil Digital");
-			list.add("Por Período da Escrituração");
+			list.add("Termos Emitidios pelas Juntas Comerciais");
 		} else if (value.equals(Sped.ECF)) {
 			list.add("Escrituração");
 		} else if (value.equals(Sped.EFD)) {
