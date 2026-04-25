@@ -3,6 +3,7 @@ package com.rctereza.robotbx.tools;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 
 import javax.swing.BorderFactory;
@@ -24,6 +25,20 @@ import net.miginfocom.swing.MigLayout;
 
 public class SpedUtils {
 
+	public static String[] contabilFileTypes = { "Escrituração Contábil Digital",
+			"Dados Agregados de Escrituração Contábil Digital", "Termos Emitidios pelas Juntas Comerciais" };
+
+	public static String[] contribuicoesSearchTypes = { "Período de Entrega", "Período de Entrega da Incorporada",
+			"Período da Escrituração", "Período da Escrituração da Incorporada" };
+	
+	public static String[] ecfSearchTypes = { "Período de Entrega", "Período da Escrituração" } ;
+
+	public static String[] efdEventTypes = { "Evento R-1000 Informações do Contribuinte",
+			"Evento R-1050 Tabela de Entidades Ligadas",
+			"Evento R-1070 Tabela de Processos Administrativos/Judiciais" };
+
+	public static String[] efdDownloadSignedFiles = { "NÃO", "SIM" };
+
 	public static String[] getSystemList() {
 		return Arrays.stream(Sped.values()).map(Sped::getValue).toArray(String[]::new);
 	}
@@ -39,16 +54,16 @@ public class SpedUtils {
 
 	private static ArrayList<String> getFileType(Sped value) {
 		ArrayList<String> list = new ArrayList<>();
-		if (value.equals(Sped.CONTRIBUICOES)) {
+		
+		if (value.equals(Sped.CONTRIBUICOES) || value.equals(Sped.ECF)) {
 			list.add("Escrituração");
+			
 		} else if (value.equals(Sped.CONTABIL)) {
-			list.add("Escrituração Contábil Digital");
-			list.add("Dados Agregados de Escrituração Contábil Digital");
-			list.add("Termos Emitidios pelas Juntas Comerciais");
-		} else if (value.equals(Sped.ECF)) {
-			list.add("Escrituração");
+			Collections.addAll(list, contabilFileTypes);
+			
 		} else if (value.equals(Sped.EFD)) {
 			list.add("Eventos de Tabelas");
+			
 		} else if (value.equals(Sped.FISCAL)) {
 			list.add("Escrituração Fiscal Digital");
 		}
@@ -65,36 +80,31 @@ public class SpedUtils {
 	}
 
 	private static ArrayList<String> getSearchType(Sped value, String fileType) {
+		
 		ArrayList<String> list = new ArrayList<>();
 
 		if (value.equals(Sped.CONTRIBUICOES) && (fileType.equals("Escrituração") || fileType.equals(""))) {
-			list.add("Período de Entrega");
-			list.add("Período de Entrega da Incorporada");
-			list.add("Período da Escrituração");
-			list.add("Período da Escrituração da Incorporada");
-		} else if (value.equals(Sped.CONTABIL)
-				&& (fileType.equals("Escrituração Contábil Digital") || fileType.equals(""))) {
+			Collections.addAll(list, contribuicoesSearchTypes);
+			
+		} else if (value.equals(Sped.CONTABIL) && (Arrays.asList(contabilFileTypes).contains(fileType) || fileType.equals(""))) {
 			list.add("Por Período da Escrituração");
-		} else if (value.equals(Sped.CONTABIL)
-				&& (fileType.equals("Dados Agregados de Escrituração Contábil Digital") || fileType.equals(""))) {
-			list.add("Por Período da Escrituração");
-		} else if (value.equals(Sped.CONTABIL)
-				&& (fileType.equals("Por Período da Escrituração") || fileType.equals(""))) {
-			list.add("Por Período da Escrituração");
+			
 		} else if (value.equals(Sped.ECF) && (fileType.equals("Escrituração") || fileType.equals(""))) {
-			list.add("Período de Entrega");
-			list.add("Período da Escrituração");
+			Collections.addAll(list, ecfSearchTypes);
+			
 		} else if (value.equals(Sped.EFD) && (fileType.equals("Eventos de Tabelas") || fileType.equals(""))) {
 			list.add("Baixar Eventos de Tabelas");
-		} else if (value.equals(Sped.FISCAL)
-				&& (fileType.equals("Escrituração Fiscal Digital") || fileType.equals(""))) {
+			
+		} else if (value.equals(Sped.FISCAL) && (fileType.equals("Escrituração Fiscal Digital") || fileType.equals(""))) {
 			list.add("Por Período da Escrituração");
 		}
 
 		return list;
 	}
 
-	public static JPanel getSearchFields(Sped value, String fileType, String searchType, ReceitaBx receitaBx) throws ParseException {
+	public static JPanel getSearchFields(Sped value, String fileType, String searchType, ReceitaBx receitaBx)
+			throws ParseException {
+		
 		JPanel panel = null; // = new JPanel(new MigLayout("", "[][]", "[]"));
 
 		MaskFormatter cnpjMask = new MaskFormatter("##.###.###/####-##");
@@ -102,121 +112,137 @@ public class SpedUtils {
 
 		cnpjMask.setPlaceholderCharacter('_');
 		dateMask.setPlaceholderCharacter('_');
-		
-		if ((value.equals(Sped.CONTRIBUICOES) && (fileType.equals("Escrituração") || fileType.equals("")) && (searchType.equals("Período de Entrega") || searchType.equals("")))
-				|| (value.equals(Sped.CONTRIBUICOES) && fileType.equals("Escrituração") && searchType.equals("Período da Escrituração"))
-				|| (value.equals(Sped.CONTABIL) && fileType.equals("Escrituração Contábil Digital") && searchType.equals("Por Período da Escrituração"))
-				|| (value.equals(Sped.CONTABIL) && fileType.equals("Dados Agregados de Escrituração Contábil Digital") && searchType.equals("Por Período da Escrituração"))
-				|| (value.equals(Sped.CONTABIL) && fileType.equals("Por Período da Escrituração") && searchType.equals("Por Período da Escrituração"))
-				|| (value.equals(Sped.ECF) && fileType.equals("Escrituração") && searchType.equals("Período de Entrega"))
-				|| (value.equals(Sped.ECF) && fileType.equals("Escrituração") && searchType.equals("Período da Escrituração"))
-				) {
-			
+
+		if ((value.equals(Sped.CONTRIBUICOES) && (fileType.equals("Escrituração") || fileType.equals(""))
+				&& (searchType.equals("Período de Entrega") || searchType.equals("")))
+				
+				|| (value.equals(Sped.CONTRIBUICOES) && fileType.equals("Escrituração")
+						&& searchType.equals("Período da Escrituração"))
+				
+				|| (value.equals(Sped.CONTABIL) && Arrays.asList(contabilFileTypes).contains(fileType) 
+						&& searchType.equals("Por Período da Escrituração"))
+				
+				|| (value.equals(Sped.ECF) && fileType.equals("Escrituração")
+						&& Arrays.asList(ecfSearchTypes).contains(searchType))) {
+
 			panel = new JPanel(new MigLayout("", "[][]", "[][]"));
 
 			JLabel inicioDateLabel = new JLabel("Data de início *");
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
 			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
-			inicioDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
+			inicioDateTextField
+					.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
 
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
 			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
 			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
-			
+
 			panel.add(inicioDateLabel, "sg 1");
 			panel.add(inicioDateTextField, "wrap");
 			panel.add(fimDateLabel, "sg 1");
 			panel.add(fimDateTextField, "wrap");
-			
-		}
-		else if ((value.equals(Sped.CONTRIBUICOES) && fileType.equals("Escrituração") && searchType.equals("Período de Entrega da Incorporada"))
-				|| (value.equals(Sped.CONTRIBUICOES) && fileType.equals("Escrituração") && searchType.equals("Período da Escrituração da Incorporada"))) {
-			
+
+		} else if ((value.equals(Sped.CONTRIBUICOES) && fileType.equals("Escrituração")
+				&& searchType.equals("Período de Entrega da Incorporada"))
+				
+				|| (value.equals(Sped.CONTRIBUICOES) && fileType.equals("Escrituração")
+						&& searchType.equals("Período da Escrituração da Incorporada"))) {
+
 			panel = new JPanel(new MigLayout("", "[][]", "[][][]"));
 
 			JLabel inicioDateLabel = new JLabel("Data de início *");
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
 			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
-			inicioDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
-			
+			inicioDateTextField
+					.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
+
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
 			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
 			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
-			
+
 			JLabel incorporadoraCnpjLabel = new JLabel("CNPJ da Incorporada *");
-			JFormattedTextField incorporadoraCnpjTextField = new JFormattedTextField(cnpjMask);	
+			JFormattedTextField incorporadoraCnpjTextField = new JFormattedTextField(cnpjMask);
 			incorporadoraCnpjTextField.setName(SpedSearchField.CNPJ_INCORPORADORA.getValue());
 			incorporadoraCnpjTextField.setColumns(12);
 			incorporadoraCnpjTextField.setValue(receitaBx.CNPJ_INCORPORADORA());
-			
+
 			panel.add(inicioDateLabel, "sg 1");
 			panel.add(inicioDateTextField, "wrap");
 			panel.add(fimDateLabel, "sg 1");
 			panel.add(fimDateTextField, "wrap");
 			panel.add(incorporadoraCnpjLabel, "sg 1");
 			panel.add(incorporadoraCnpjTextField, "wrap");
-		}
-		else if (value.equals(Sped.EFD) && fileType.equals("Eventos de Tabelas") && searchType.equals("Baixar Eventos de Tabelas")) {
-			panel = new JPanel(new MigLayout("", "[][]", "[][]"));
 			
+		} else if (value.equals(Sped.EFD) && fileType.equals("Eventos de Tabelas")
+				&& searchType.equals("Baixar Eventos de Tabelas")) {
+			
+			panel = new JPanel(new MigLayout("", "[][]", "[][]"));
+
 			JLabel eventoTypeLabel = new JLabel("Tipo de Evento *");
-			String[] eventoTypes = { "Evento R-1000 Informações do Contribuinte", "Evento R-1050 Tabela de Entidades Ligadas", "Evento R-1070 Tabela de Processos Administrativos/Judiciais"};
-			JComboBox<String> eventoTypeComboBox = new JComboBox<String>(eventoTypes);
+			// String[] eventoTypes = { "Evento R-1000 Informações do Contribuinte", "Evento
+			// R-1050 Tabela de Entidades Ligadas", "Evento R-1070 Tabela de Processos
+			// Administrativos/Judiciais"};
+			JComboBox<String> eventoTypeComboBox = new JComboBox<String>(efdEventTypes);
 			eventoTypeComboBox.setName(SpedSearchField.TIPO_EVENTO.getValue());
 			eventoTypeComboBox.setSelectedItem(receitaBx.TIPO_EVENTO());
-			
+
 			JLabel baixarFileLabel = new JLabel("Baixar arquivo com Assinatura Digital *");
-			String[] baixarFileOptions = {"NÃO","SIM"};
-			JComboBox<String> baixarFileComboBox = new JComboBox<String>(baixarFileOptions);
+			// String[] baixarFileOptions = {"NÃO","SIM"};
+			JComboBox<String> baixarFileComboBox = new JComboBox<String>(efdDownloadSignedFiles);
 			baixarFileComboBox.setName(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue());
 			baixarFileComboBox.setSelectedItem(receitaBx.BAIXAR_ARQUIVO_ASSINADO());
-			
+
 			panel.add(eventoTypeLabel, "sg 1");
 			panel.add(eventoTypeComboBox, "wrap");
 			panel.add(baixarFileLabel, "sg 1");
 			panel.add(baixarFileComboBox, "wrap");
-		}
-		else if (value.equals(Sped.FISCAL) && fileType.equals("Escrituração Fiscal Digital") && searchType.equals("Por Período da Escrituração")) {
-			panel = new JPanel(new MigLayout("", "[][]", "[][][][][][]"));
 			
+		} else if (value.equals(Sped.FISCAL) && fileType.equals("Escrituração Fiscal Digital")
+				&& searchType.equals("Por Período da Escrituração")) {
+			
+			panel = new JPanel(new MigLayout("", "[][]", "[][][][][][]"));
+
 			JLabel cnpjEstabelecimentoLabel = new JLabel("CNPJ do Estabelecimento");
 			JFormattedTextField cnpjEstabelecimentoTextField = new JFormattedTextField(cnpjMask);
 			cnpjEstabelecimentoTextField.setName(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue());
 			cnpjEstabelecimentoTextField.setColumns(12);
 			cnpjEstabelecimentoTextField.setValue(receitaBx.CNPJ_ESTABELECIMENTO());
-			
+
 			JLabel buscarArquivosLabel = new JLabel("Buscar Arquivos de Todos os Estabelecimentos *");
 			JCheckBox buscarArquivosCheckBox = new JCheckBox("");
 			buscarArquivosCheckBox.setName(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue());
-			buscarArquivosCheckBox.setSelected(Objects.requireNonNullElse(receitaBx.BUSCAR_TODOS_ESTABLECIMENTOS(), false));
-			
+			buscarArquivosCheckBox
+					.setSelected(Objects.requireNonNullElse(receitaBx.BUSCAR_TODOS_ESTABLECIMENTOS(), false));
+
 			JLabel incricaoEstadualLabel = new JLabel("Inscrição Estadual");
 			JTextField incricaoEstadualTextField = new JTextField(10);
 			incricaoEstadualTextField.setName(SpedSearchField.INSCRICAO_ESTADUAL.getValue());
 			incricaoEstadualTextField.setText(receitaBx.INSCRICAO_ESTADUAL());
-			
+
 			JLabel inicioDateLabel = new JLabel("Data de início *");
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
 			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
-			inicioDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
-			
+			inicioDateTextField
+					.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
+
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
 			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
 			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
-			
+
 			JLabel ultimoArquivoLabel = new JLabel("Ultimo arquivo transmitido *");
 			JCheckBox ultimoArquivoCheckBox = new JCheckBox("");
 			ultimoArquivoCheckBox.setName(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue());
-			ultimoArquivoCheckBox.setSelected(Objects.requireNonNullElse(receitaBx.ULTIMO_ARQUIVO_TRANSMITIDO(), false));
+			ultimoArquivoCheckBox
+					.setSelected(Objects.requireNonNullElse(receitaBx.ULTIMO_ARQUIVO_TRANSMITIDO(), false));
 
 			panel.add(cnpjEstabelecimentoLabel, "sg 1");
 			panel.add(cnpjEstabelecimentoTextField, "wrap");
@@ -230,16 +256,16 @@ public class SpedUtils {
 			panel.add(fimDateTextField, "wrap");
 			panel.add(ultimoArquivoLabel, "sg 1");
 			panel.add(ultimoArquivoCheckBox, "wrap");
-
 		}
-		
+
 		TitledBorder title;
-		title = BorderFactory.createTitledBorder("Preencha os campos para refinar a busca (os campos marcados com * são obrigatórios)");
+		title = BorderFactory.createTitledBorder(
+				"Preencha os campos para refinar a busca (os campos marcados com * são obrigatórios)");
 		panel.setBorder(title);
 
 		return panel;
 	}
-	
+
 //	private String getInicioDate() {
 //		String result = Constants.PROGRAM_PERIOD_START;
 //		

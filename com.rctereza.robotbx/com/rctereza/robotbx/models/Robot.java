@@ -7,13 +7,11 @@ public record Robot(
 	, String  NAME
 	, Integer SCREEN_HEIGHT
 	, Integer SCREEN_WIDTH
-	, Integer WINDOW_HEIGHT
-	, Integer WINDOW_WIDTH
 	, Boolean ENABLED
 	, List<RobotAction> ROBOT_ACTIONS
 ) 
 {
 	public Robot() {
-		this(null,null,null,null,null,null,null,null);
+		this(null,null,null,null,null,null);
 	}
 }

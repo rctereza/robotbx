@@ -1,6 +1,7 @@
 package com.rctereza.robotbx.views;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -107,6 +108,17 @@ public class MainForm2 extends JFrame {
 
 	private JLabel passwordLabel;
 	private JTextField passwordTextField;
+	private JButton passwordCheckButton;
+
+	private JLabel customerLabel;
+	private JTextField customerTextField;
+
+	private JLabel customerDocumentLabel;
+	private JTextField customerDocumentTextField;
+
+	private JLabel downloadFolderLabel;
+	private JTextField downloadFolderTextField;
+	private JButton downloadFolderOpenButton;
 
 	private JLabel profileLabel;
 	private JRadioButton profileContribuinte;
@@ -166,29 +178,6 @@ public class MainForm2 extends JFrame {
 		// setIconImage(Resources.getImage(Constants.SOFTWARE_ICON, null));
 
 		setJMenuBar(createMenuBar());
-
-		controller.addObjectListener(new Listenable() {
-			@Override
-			public void value(Object... objs) {
-				
-				startButton.setEnabled(true);
-
-				if (objs != null && objs.length > 0) {
-					String action = (String) objs[0];
-					if (action.equals(Menu.DONE.getValue())) {
-						if (objs.length > 1) {
-							String message = (String) objs[1];
-							if (message.equals("")) {
-								JOptionPane.showMessageDialog(null,"Processamento concluído.", "Informação", JOptionPane.INFORMATION_MESSAGE);
-							}
-							else {
-								JOptionPane.showMessageDialog(null, message, "Atenção", JOptionPane.WARNING_MESSAGE);
-							}
-						}
-					}
-				}
-			}
-		});
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -256,6 +245,7 @@ public class MainForm2 extends JFrame {
 		});
 
 		certificateLoadButton = new JButton("Carregar");
+		certificateLoadButton.setPreferredSize(new Dimension(80, 20));
 		certificateLoadButton.addActionListener(e -> {
 			JFileChooser chooser = new JFileChooser();
 			chooser.setDialogTitle("Selecione a pasta do(s) certificado(s)");
@@ -271,15 +261,46 @@ public class MainForm2 extends JFrame {
 
 		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
 		selectCertificateComboBoxItem(receitaBx.CERTIFICADO().toString());
-		//System.out.println(receitaBx.CERTIFICADO());
-		//certificateComboBox.setSelectedItem(receitaBx.CERTIFICADO());
+		// System.out.println(receitaBx.CERTIFICADO());
+		// certificateComboBox.setSelectedItem(receitaBx.CERTIFICADO());
 
 		// LINE 3
 		passwordLabel = new JLabel("Senha do Certificado");
 		passwordTextField = new JTextField();
 		passwordTextField.setText(receitaBx.CERTIFICADO().PASS());
-
+		passwordCheckButton = new JButton("Validar");
+		passwordCheckButton.setPreferredSize(new Dimension(80, 20));
+		passwordCheckButton.addActionListener(e -> {
+		
+		});
+		
 		// LINE 4
+//		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
+		
+		// LINE 5
+		customerLabel = new JLabel("Nome do Cliente");
+		customerTextField = new JTextField();
+		customerTextField.setText("");
+
+		// LINE 6
+		customerDocumentLabel = new JLabel("CNPJ do Cliente");
+		customerDocumentTextField = new JTextField();
+		customerDocumentTextField.setText("");
+
+		// LINE 7
+		downloadFolderLabel = new JLabel("Caminho dos Arquivos baixados");
+		downloadFolderTextField = new JTextField();
+		downloadFolderTextField.setText("");
+		downloadFolderOpenButton = new JButton("Abrir");
+		downloadFolderOpenButton.setPreferredSize(new Dimension(80, 20));
+		downloadFolderOpenButton.addActionListener(e -> {
+			
+		});
+		
+		// LINE 8
+//		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
+		
+		// LINE 9
 		profileLabel = new JLabel("Selecione um Perfil");
 		profileContribuinte = new JRadioButton("Contribuinte", true);
 		profileContribuinte.addActionListener(new ActionListener() {
@@ -329,7 +350,7 @@ public class MainForm2 extends JFrame {
 			profileTypeValueTextField.setValue(receitaBx.PERFIL_VALUE());
 		}
 
-		// LINE 5
+		// LINE 10
 		systemLabel = new JLabel("Selecione um Sistema");
 		systemComboBox = new JComboBox<String>(SpedUtils.getSystemList());
 		systemComboBox.addItemListener(new ItemListener() {
@@ -346,7 +367,7 @@ public class MainForm2 extends JFrame {
 			}
 		});
 
-		// LINE 6
+		// LINE 11
 		systemFileTypeLabel = new JLabel("Selecione um Tipo de Arquivo");
 		systemFileTypeComboBox = new JComboBox<String>(SpedUtils.getSystemFileType(Sped.CONTRIBUICOES));
 		systemFileTypeComboBox.addItemListener(new ItemListener() {
@@ -363,7 +384,7 @@ public class MainForm2 extends JFrame {
 			}
 		});
 
-		// LINE 7
+		// LINE 12
 		systemSearchTypeLabel = new JLabel("Selecione um Tipo de Pesquisa");
 		systemSearchTypeComboBox = new JComboBox<String>(SpedUtils.getSystemSearchType(Sped.CONTRIBUICOES, ""));
 		systemSearchTypeComboBox.addItemListener(new ItemListener() {
@@ -379,7 +400,7 @@ public class MainForm2 extends JFrame {
 						} catch (ParseException e1) {
 							e1.printStackTrace();
 						}
-						panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
+						panelMain.add(systemSearchFieldsPanel, "cell 0 14, span, grow, wrap");
 						panelMain.revalidate();
 						panelMain.repaint();
 					} else {
@@ -394,17 +415,17 @@ public class MainForm2 extends JFrame {
 			}
 		});
 
-		// LINE 8
-		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
+		// LINE 13
+//		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
 
-		// LINE 9
+		// LINE 14
 		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx);
 
 		systemComboBox.setSelectedItem(receitaBx.SISTEMA());
 		systemFileTypeComboBox.setSelectedItem(receitaBx.TIPO_ARQUIVO());
 		systemSearchTypeComboBox.setSelectedItem(receitaBx.TIPO_PESQUISA());
 
-		// LINE 10 - Adicionar button
+		// LINE 15 - Adicionar button
 		addButton = new JButton("Adicionar");
 		addButton.addActionListener(new ActionListener() {
 			@Override
@@ -412,20 +433,19 @@ public class MainForm2 extends JFrame {
 				String result = validateFormFields();
 				if (result.equals("")) {
 					if (isTableAlreadyPopulated()) {
-						String[] options = {"Sim", "Não"};
-						
-						int choice = JOptionPane.showOptionDialog(
-							    null,                               						// Parent component
-							    "Estes dados já foram adicionados. Deseja Atualizá-los?",   // Message
-							    "Confirmação",                     							// Title
-							    JOptionPane.YES_NO_OPTION,          						// Option type
-							    JOptionPane.QUESTION_MESSAGE,       						// Message type
-							    null,                               						// Icon (null for default)
-							    options,                            						// Custom button labels
-							    options[0]                          						// Default button focused
-							);
-						
-						if (choice == 0) { //Sim
+						String[] options = { "Sim", "Não" };
+
+						int choice = JOptionPane.showOptionDialog(null, // Parent component
+								"Este item já foi adicionado. Deseja Atualizá-lo?", // Message
+								"Confirmação", // Title
+								JOptionPane.YES_NO_OPTION, // Option type
+								JOptionPane.QUESTION_MESSAGE, // Message type
+								null, // Icon (null for default)
+								options, // Custom button labels
+								options[0] // Default button focused
+						);
+
+						if (choice == 0) { // Sim
 							updateGrid();
 						}
 
@@ -438,7 +458,7 @@ public class MainForm2 extends JFrame {
 			}
 		});
 
-		// LINE 11 - Grid (table) to hold the queued searches
+		// LINE 16 - Grid (table) to hold the queued searches
 		removerEditor = new RemoverButtonEditor();
 		tableModel = new DefaultTableModel(FIXED_COLUMNS, 0) {
 			@Override
@@ -452,8 +472,8 @@ public class MainForm2 extends JFrame {
 			@Override
 			public javax.swing.table.TableCellRenderer getCellRenderer(int row, int viewCol) {
 				int modelCol = convertColumnIndexToModel(viewCol);
-				
-				//Button Column
+
+				// Button Column
 				if (tableModel.getColumnName(modelCol).equals("")) {
 					return (table, value, isSelected, hasFocus, r, c) -> {
 						JButton btn = new JButton("Remover");
@@ -461,22 +481,21 @@ public class MainForm2 extends JFrame {
 						return btn;
 					};
 				}
-				
+
 				// Default renderer but centered
-		        TableCellRenderer defaultRenderer = super.getCellRenderer(row, viewCol);
+				TableCellRenderer defaultRenderer = super.getCellRenderer(row, viewCol);
 
-		        return (table, value, isSelected, hasFocus, r, c) -> {
-		            Component comp = defaultRenderer.getTableCellRendererComponent(
-		                table, value, isSelected, hasFocus, r, c
-		            );
+				return (table, value, isSelected, hasFocus, r, c) -> {
+					Component comp = defaultRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus,
+							r, c);
 
-		            if (comp instanceof JLabel) {
-		                ((JLabel) comp).setHorizontalAlignment(SwingConstants.CENTER);
-		            }
+					if (comp instanceof JLabel) {
+						((JLabel) comp).setHorizontalAlignment(SwingConstants.CENTER);
+					}
 
-		            return comp;
-		        };
-				
+					return comp;
+				};
+
 //				return super.getCellRenderer(row, viewCol);
 			}
 
@@ -508,78 +527,99 @@ public class MainForm2 extends JFrame {
 		});
 		itemsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		itemsTable.getSelectionModel().addListSelectionListener(e -> {
-		    if (!e.getValueIsAdjusting()) {
-		        int selectedRow = itemsTable.getSelectedRow();
-		        if (selectedRow != -1) {
-		            //System.out.println("Selected row: " + selectedRow);
-		            int colCount = itemsTable.getColumnCount();
-		            for (int col = 0; col < colCount; col++) {
-		                String columnName = itemsTable.getColumnName(col);
-		                Object value = itemsTable.getValueAt(selectedRow, col);
-		                //System.out.println(columnName + ": " + value);
-		                
-		                if (columnName.equals("Sistema")) { systemComboBox.setSelectedItem(value); }
-		                if (columnName.equals("Tipo de Arquivo")) { systemFileTypeComboBox.setSelectedItem(value); }
-		                if (columnName.equals("Tipo de Pesquisa")) { systemSearchTypeComboBox.setSelectedItem(value); }
-		                
-		        		for (Component c : systemSearchFieldsPanel.getComponents()) {
-		        			if (c instanceof JTextField) {
-		        				JTextField textField = (JTextField) c;
+			if (!e.getValueIsAdjusting()) {
+				int selectedRow = itemsTable.getSelectedRow();
+				if (selectedRow != -1) {
+					// System.out.println("Selected row: " + selectedRow);
+					int colCount = itemsTable.getColumnCount();
+					for (int col = 0; col < colCount; col++) {
+						String columnName = itemsTable.getColumnName(col);
+						Object value = itemsTable.getValueAt(selectedRow, col);
+						// System.out.println(columnName + ": " + value);
+
+						if (columnName.equals("Sistema")) {
+							systemComboBox.setSelectedItem(value);
+						}
+						if (columnName.equals("Tipo de Arquivo")) {
+							systemFileTypeComboBox.setSelectedItem(value);
+						}
+						if (columnName.equals("Tipo de Pesquisa")) {
+							systemSearchTypeComboBox.setSelectedItem(value);
+						}
+
+						for (Component c : systemSearchFieldsPanel.getComponents()) {
+							if (c instanceof JTextField) {
+								JTextField textField = (JTextField) c;
 //		        				System.out.println("JTextField : " + textField.getText());
-		        				if (textField.getName().equals(columnName)) {
-		        					textField.setText((String) value);
-		        					break;
-		        				}
-		        			} 
-		        			if (c instanceof JComboBox) {
-		        				JComboBox<?> comboBox = (JComboBox<?>) c;
+								if (textField.getName().equals(columnName)) {
+									textField.setText((String) value);
+									break;
+								}
+							}
+							if (c instanceof JComboBox) {
+								JComboBox<?> comboBox = (JComboBox<?>) c;
 //		        				System.out.println("JComboBox : " + comboBox.getSelectedItem().toString());
-		        				if (comboBox.getName().equals(columnName)) {
-		        					comboBox.setSelectedItem((String) value);
-		        					break;
-		        				}
-		        			} 
-		        			if (c instanceof JCheckBox) {
-		        				JCheckBox checkBox = (JCheckBox) c;
+								if (comboBox.getName().equals(columnName)) {
+									comboBox.setSelectedItem((String) value);
+									break;
+								}
+							}
+							if (c instanceof JCheckBox) {
+								JCheckBox checkBox = (JCheckBox) c;
 //		        				System.out.println("JCheckBox : " + checkBox.getText());
-		        				if (checkBox.getName().equals(columnName)) {
-		        					checkBox.setSelected((boolean) value);
-		        					break;
-		        				}
-		        			}
-		        		}
-		            }
-		        }
-		    }
+								if (checkBox.getName().equals(columnName)) {
+									checkBox.setSelected((boolean) value);
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
 		});
-		
+
 		tableScrollPane = new JScrollPane(itemsTable);
 		tableScrollPane.setPreferredSize(new java.awt.Dimension(0, 150));
 
-		// LINE 12
+		// LINE 17
 		startButton = new JButton("Iniciar");
 		startButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (tableModel.getRowCount() == 0) {
 					JOptionPane.showMessageDialog(null,
-							"Adicione pelo menos um item à lista antes de iniciar o processamento dos arquivos.",
-							"Atenção", JOptionPane.WARNING_MESSAGE);
+							"Adicione pelo menos um item à lista antes de iniciar o processamento.", "Atenção",
+							JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 
 				try {
 					Ref<List<ReceitaBx>> list = new Ref<>(getListOfFiles());
+
 					startButton.setEnabled(false);
-					controller.startRobot(list);
+
+					Map<ReceitaBx, String> resultList = controller.startRobot(list, false);
+
+					StringBuilder message = new StringBuilder("O processo foi concluido. Veja o resultado abaixo.\n\n");
+
+					if (resultList.size() > 0) {
+
+						for (Map.Entry<ReceitaBx, String> entry : resultList.entrySet()) {
+//							System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
+							message.append(entry.getKey().SISTEMA()).append(" - ").append(entry.getValue()).append("\n");
+						}
+					}
+
+					JOptionPane.showMessageDialog(null, message.toString(), "Information",
+							JOptionPane.INFORMATION_MESSAGE);
 
 				} catch (InvalidCertificate | InvalidKeyException | InvalidAlgorithmParameterException
 						| NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException
 						| IOException e1) {
 					JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-					startButton.setEnabled(true);
 				}
 
+				startButton.setEnabled(true);
 			}
 		});
 
@@ -590,10 +630,10 @@ public class MainForm2 extends JFrame {
 				listener.value(Menu.CLOSE.getValue());
 			}
 		});
-		
+
 		populateGrid();
 
-//		JPanel panel = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]", "[]10[]10[]"));
+//		panelMain = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]", "[]10[]10[]"));
 		panelMain = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
 
 		panelMain.add(themeLabel, "split, span3, right");
@@ -605,7 +645,17 @@ public class MainForm2 extends JFrame {
 		panelMain.add(certificateComboBox, "pushx, growx");
 		panelMain.add(certificateLoadButton, "left, wrap");
 		panelMain.add(passwordLabel, "left, sg 1");
-		panelMain.add(passwordTextField, "pushx, growx, wrap");
+		panelMain.add(passwordTextField, "pushx, growx");
+		panelMain.add(passwordCheckButton, "left, wrap");
+		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap");
+		panelMain.add(customerLabel, "left, sg 1");
+		panelMain.add(customerTextField, "pushx, growx, wrap");
+		panelMain.add(customerDocumentLabel, "left, sg 1");
+		panelMain.add(customerDocumentTextField, "pushx, growx, wrap");
+		panelMain.add(downloadFolderLabel, "left, sg 1");
+		panelMain.add(downloadFolderTextField, "pushx, growx");
+		panelMain.add(downloadFolderOpenButton, "left, wrap");
+		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap");
 		panelMain.add(profileLabel, "left, sg 1");
 		panelMain.add(profileContribuinte, "split");
 		panelMain.add(profileProcurador);
@@ -617,12 +667,12 @@ public class MainForm2 extends JFrame {
 		panelMain.add(systemFileTypeComboBox, "wrap");
 		panelMain.add(systemSearchTypeLabel, "left, sg 1");
 		panelMain.add(systemSearchTypeComboBox, "wrap");
-		panelMain.add(horizontalLine, "span, grow, wrap");
-		panelMain.add(systemSearchFieldsPanel, "cell 0 9, span, grow, wrap");
-		panelMain.add(addButton, "cell 0 10, wrap");
-		panelMain.add(tableScrollPane, "cell 0 11, span, grow, wrap");
-		panelMain.add(startButton, "cell 0 12");
-		panelMain.add(closeButton, "cell 2 12, left, wrap");
+		//panelMain.add(horizontalLine, "span, grow, wrap");
+		panelMain.add(systemSearchFieldsPanel, "cell 0 14, span, grow, wrap");
+		panelMain.add(addButton, "cell 0 15, wrap");
+		panelMain.add(tableScrollPane, "cell 0 16, span, grow, wrap");
+		panelMain.add(startButton, "cell 0 17");
+		panelMain.add(closeButton, "cell 2 17, left, wrap");
 
 //		TitledBorder title;
 //		title = BorderFactory.createTitledBorder("Pesquisa de Arquivos");
@@ -685,13 +735,13 @@ public class MainForm2 extends JFrame {
 				if (textField.getName().equals(SpedSearchField.DATA_INICIO.getValue())) {
 					DATA_INICIO = textField.getText();
 					if (!ValidateDate.isValidDate(DATA_INICIO)) {
-						//System.out.println("DATA_INICIO [" + DATA_INICIO + "]");
+						// System.out.println("DATA_INICIO [" + DATA_INICIO + "]");
 						result.append("Favor informar uma data inicial válida.\n");
 					}
 				} else if (textField.getName().equals(SpedSearchField.DATA_FIM.getValue())) {
 					DATA_FIM = textField.getText();
 					if (!ValidateDate.isValidDate(DATA_FIM)) {
-						//System.out.println("DATA_FIM [" + DATA_FIM + "]");
+						// System.out.println("DATA_FIM [" + DATA_FIM + "]");
 						result.append("Favor informar uma data final válida.\n");
 					} else {
 						if (!ValidateDate.isValidRange(DATA_INICIO, DATA_FIM)) {
@@ -843,120 +893,121 @@ public class MainForm2 extends JFrame {
 //
 //		return result.toString();
 //	}
-	
+
 	private boolean isTableAlreadyPopulated() {
-		boolean result = false; 
-		
+		boolean result = false;
+
 		String sistema = systemComboBox.getSelectedItem().toString();
 		String tipoArquivo = systemFileTypeComboBox.getSelectedItem().toString();
 		String tipoPesquisa = systemSearchTypeComboBox.getSelectedItem().toString();
-		
+
 		for (int row = 0; row < tableModel.getRowCount(); row++) {
-			if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema) &&
-			    tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString().equals(tipoArquivo) &&
-			    tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa")).toString().equals(tipoPesquisa)) {
+			if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema)
+					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString().equals(tipoArquivo)
+					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa")).toString()
+							.equals(tipoPesquisa)) {
 				result = true;
 				break;
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	private void updateGrid() {
-		
+
 		String sistema = systemComboBox.getSelectedItem().toString();
 		String tipoArquivo = systemFileTypeComboBox.getSelectedItem().toString();
 		String tipoPesquisa = systemSearchTypeComboBox.getSelectedItem().toString();
-		
+
 		for (int row = 0; row < tableModel.getRowCount(); row++) {
-			if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema) &&
-			    tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString().equals(tipoArquivo) &&
-			    tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa")).toString().equals(tipoPesquisa)) {
-				
-        		for (Component c : systemSearchFieldsPanel.getComponents()) {
-        			if (c instanceof JTextField) {
-        				JTextField textField = (JTextField) c;
+			if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema)
+					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString().equals(tipoArquivo)
+					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa")).toString()
+							.equals(tipoPesquisa)) {
+
+				for (Component c : systemSearchFieldsPanel.getComponents()) {
+					if (c instanceof JTextField) {
+						JTextField textField = (JTextField) c;
 //        				System.out.println("JTextField: " + textField.getName() + " ["+ textField.getText() + "]");
-        				tableModel.setValueAt(textField.getText(), row, getModelColumnIndex(textField.getName()));
-        			} 
-        			if (c instanceof JComboBox) {
-        				JComboBox<?> comboBox = (JComboBox<?>) c;
+						tableModel.setValueAt(textField.getText(), row, getModelColumnIndex(textField.getName()));
+					}
+					if (c instanceof JComboBox) {
+						JComboBox<?> comboBox = (JComboBox<?>) c;
 //        				System.out.println("JComboBox : " + comboBox.getSelectedItem().toString());
-//        				if (comboBox.getName().equals(columnName)) {
-//        					comboBox.setSelectedItem((String) value);
-//        					break;
-//        				}
-        			} 
-        			if (c instanceof JCheckBox) {
-        				JCheckBox checkBox = (JCheckBox) c;
+						tableModel.setValueAt(comboBox.getSelectedItem(), row, getModelColumnIndex(comboBox.getName()));
+					}
+					if (c instanceof JCheckBox) {
+						JCheckBox checkBox = (JCheckBox) c;
 //        				System.out.println("JCheckBox : " + checkBox.getText());
-//        				if (checkBox.getName().equals(columnName)) {
-//        					checkBox.setSelected((boolean) value);
-//        					break;
-//        				}
-        			}
-        		}
-				
+						tableModel.setValueAt(checkBox.isSelected(), row, getModelColumnIndex(checkBox.getName()));
+					}
+				}
+
 				break;
 			}
 		}
 	}
 
 	private void populateGrid() {
-		
+
 		for (ReceitaBx receitaBx : receitaBxList) {
-			
+
 			String sistema = receitaBx.SISTEMA();
 			String tipoArquivo = receitaBx.TIPO_ARQUIVO();
 			String tipoPesquisa = receitaBx.TIPO_PESQUISA();
 			Map<String, String> dynamicFields = new LinkedHashMap<>();
-			
-			if (receitaBx.DATA_INICIO() !=null && !receitaBx.DATA_INICIO().equals("")) 
+
+			if (receitaBx.DATA_INICIO() != null && !receitaBx.DATA_INICIO().equals(""))
 				dynamicFields.put(SpedSearchField.DATA_INICIO.getValue(), receitaBx.DATA_INICIO());
-			
-			if (receitaBx.DATA_FIM() !=null && !receitaBx.DATA_FIM().equals("")) 
+
+			if (receitaBx.DATA_FIM() != null && !receitaBx.DATA_FIM().equals(""))
 				dynamicFields.put(SpedSearchField.DATA_FIM.getValue(), receitaBx.DATA_FIM());
-				
-			if (receitaBx.CNPJ_INCORPORADORA() !=null && !receitaBx.CNPJ_INCORPORADORA().equals("")) 
+
+			if (receitaBx.CNPJ_INCORPORADORA() != null && !receitaBx.CNPJ_INCORPORADORA().equals(""))
 				dynamicFields.put(SpedSearchField.CNPJ_INCORPORADORA.getValue(), receitaBx.CNPJ_INCORPORADORA());
-			
+
 			if (sistema.equals(Sped.EFD.getValue())) {
-				
+
 				dynamicFields.put(SpedSearchField.TIPO_EVENTO.getValue(), receitaBx.TIPO_EVENTO());
-				
-				dynamicFields.put(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue(), receitaBx.BAIXAR_ARQUIVO_ASSINADO());
-				
+
+				dynamicFields.put(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue(),
+						receitaBx.BAIXAR_ARQUIVO_ASSINADO());
+
 			}
-			
+
 			if (sistema.equals(Sped.FISCAL.getValue())) {
 
 				dynamicFields.put(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue(), receitaBx.CNPJ_ESTABELECIMENTO());
-				
-				dynamicFields.put(SpedSearchField.INSCRICAO_ESTADUAL.getValue(), receitaBx.INSCRICAO_ESTADUAL().toString());
-				
-				dynamicFields.put(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue(), receitaBx.BUSCAR_TODOS_ESTABLECIMENTOS().toString());
-				
-				dynamicFields.put(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue(), receitaBx.ULTIMO_ARQUIVO_TRANSMITIDO().toString());
-				
+
+				dynamicFields.put(SpedSearchField.INSCRICAO_ESTADUAL.getValue(),
+						receitaBx.INSCRICAO_ESTADUAL().toString());
+
+				dynamicFields.put(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue(),
+						receitaBx.BUSCAR_TODOS_ESTABLECIMENTOS().toString());
+
+				dynamicFields.put(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue(),
+						receitaBx.ULTIMO_ARQUIVO_TRANSMITIDO().toString());
+
 			}
-	
+
 			addRowToGrid(sistema, tipoArquivo, tipoPesquisa, dynamicFields);
 		}
-		
+
 	}
-	
+
 	private void addRowToGrid() {
 		String sistema = systemComboBox.getSelectedItem().toString();
 		String tipoArquivo = systemFileTypeComboBox.getSelectedItem().toString();
 		String tipoPesquisa = systemSearchTypeComboBox.getSelectedItem().toString();
-		
+
 		Map<String, String> dynamicFields = collectDynamicFields();
 		addRowToGrid(sistema, tipoArquivo, tipoPesquisa, dynamicFields);
 	}
 
-	private void addRowToGrid(String sistema, String tipoArquivo, String tipoPesquisa, Map<String, String> dynamicFields) {
-	
+	private void addRowToGrid(String sistema, String tipoArquivo, String tipoPesquisa,
+			Map<String, String> dynamicFields) {
+
 		// Find current Remover column position (-1 = not yet added)
 		int removerModelIndex = -1;
 		for (int c = 0; c < tableModel.getColumnCount(); c++) {
@@ -1101,9 +1152,6 @@ public class MainForm2 extends JFrame {
 			PERFIL_VALUE = profileTypeValueTextField.getText();
 		}
 
-		String ULTIMO_PEDIDO_SOLICITADO = "";
-		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
-
 		for (int row = 0; row < tableModel.getRowCount(); row++) {
 
 			String SISTEMA = (String) tableModel.getValueAt(row, getModelColumnIndex("Sistema"));
@@ -1118,6 +1166,8 @@ public class MainForm2 extends JFrame {
 			Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
 			String INSCRICAO_ESTADUAL = "";
 			Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
+			String ULTIMO_PEDIDO_SOLICITADO = "";
+			String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
 
 			// Dynamic fields — read from the stored map for this row
 			Map<String, String> dynamic = rowDynamicData.get(row);
@@ -1144,7 +1194,7 @@ public class MainForm2 extends JFrame {
 				}
 			}
 
-			ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+			ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), null, null, null, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
 					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
 					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
 					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO);
@@ -1242,17 +1292,17 @@ public class MainForm2 extends JFrame {
 			}
 		}
 	}
-	
+
 	public void selectCertificateComboBoxItem(String valueToFind) {
-	    for (int i = 0; i < certificateComboBox.getItemCount(); i++) {
-	        Certificate cert = certificateComboBox.getItemAt(i);
-	        if (cert.toString().equals(valueToFind)) {
-	        	certificateComboBox.setSelectedIndex(i);
-	            break; // stop once found
-	        }
-	    }
+		for (int i = 0; i < certificateComboBox.getItemCount(); i++) {
+			Certificate cert = certificateComboBox.getItemAt(i);
+			if (cert.toString().equals(valueToFind)) {
+				certificateComboBox.setSelectedIndex(i);
+				break; // stop once found
+			}
+		}
 	}
-	
+
 	private void changeThemes(boolean dark) {
 		if (FlatLaf.isLafDark() != dark) {
 			if (!dark) {

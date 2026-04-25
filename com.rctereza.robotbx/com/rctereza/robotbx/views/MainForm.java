@@ -1,6 +1,5 @@
 package com.rctereza.robotbx.views;
 
-import java.awt.AWTException;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -53,7 +52,6 @@ import com.rctereza.robotbx.components.DarkLightSwitchIcon;
 import com.rctereza.robotbx.controllers.Controller;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.enums.Sped;
-import com.rctereza.robotbx.exceptions.InvalidScreenResolution;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.ReceitaBx;
@@ -127,17 +125,17 @@ public class MainForm extends JFrame {
 
 		controller = new Controller();
 
-		controller.addObjectListener(new Listenable() {
-			@Override
-			public void value(Object... objs) {
-				if (objs != null && objs.length > 0) {
-					String action = (String) objs[0];
-					if (action.equals(Menu.DONE.getValue())) {
-						searchButton.setEnabled(true);
-					}
-				}
-			}
-		});
+//		controller.addObjectListener(new Listenable() {
+//			@Override
+//			public void value(Object... objs) {
+//				if (objs != null && objs.length > 0) {
+//					String action = (String) objs[0];
+//					if (action.equals(Menu.DONE.getValue())) {
+//						searchButton.setEnabled(true);
+//					}
+//				}
+//			}
+//		});
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -360,8 +358,8 @@ public class MainForm extends JFrame {
 				if (result.equals("")) {
 					try {
 						searchButton.setEnabled(false);
-						controller.startThreads(receitaBx.get());
-					} catch (AWTException | InterruptedException | InvalidScreenResolution e1) {
+						//controller.startThreads(receitaBx.get());
+					} catch (Exception e1) {
 						JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 						searchButton.setEnabled(true);
 					}
@@ -497,6 +495,8 @@ public class MainForm extends JFrame {
 			result.append("Favor informar a senha do certificado.\n");
 		else
 			SENHA = passwordTextField.getText();
+		
+		System.out.println(SENHA);
 
 		if (profileProcurador.isSelected()) {
 
@@ -552,7 +552,7 @@ public class MainForm extends JFrame {
 		}
 
 		if (result.isEmpty()) {
-			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
+			receitaBx.set(new ReceitaBx(SCREEN, CERTIFICADO, null, null, null, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
 					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
 					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
 					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO));

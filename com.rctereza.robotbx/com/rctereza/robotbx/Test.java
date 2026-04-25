@@ -122,7 +122,7 @@ public class Test {
 		// *******************************************************************************************
 		// LOAD ROBOT PARAMENTERS
 		// *******************************************************************************************
-		Robot robot = RobotUtils.getRobotBasedOnScreenResolution2(receitaBx.get());
+		Robot robot = RobotUtils.getRobotBasedOnScreenResolution(receitaBx.get());
 		System.out.println("Starting robot.....: " + robot.NAME());
 
 		// *******************************************************************************************
@@ -426,7 +426,7 @@ public class Test {
 			throws InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
 			NoSuchPaddingException, InvalidKeySpecException, IOException {
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
+		receitaBx.set(new ReceitaBx(receitaBx.get().RESOLUCAO_TELA(), receitaBx.get().CERTIFICADO(), null, null, null,  
 				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
 				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
 				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
@@ -445,7 +445,7 @@ public class Test {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = currentDateTime.format(formatter);
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
+		receitaBx.set(new ReceitaBx(receitaBx.get().RESOLUCAO_TELA(), receitaBx.get().CERTIFICADO(), null, null, null,  
 				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
 				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
 				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
@@ -460,7 +460,7 @@ public class Test {
 	private static void reset(Ref<ReceitaBx> receitaBx) throws InvalidKeyException, InvalidAlgorithmParameterException,
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().SCREEN(), receitaBx.get().CERTIFICADO(), 
+		receitaBx.set(new ReceitaBx(receitaBx.get().RESOLUCAO_TELA(), receitaBx.get().CERTIFICADO(), null, null, null,  
 				receitaBx.get().PERFIL(), receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(),
 				receitaBx.get().SISTEMA(), receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(),
 				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),

@@ -10,7 +10,7 @@ public class Constants {
 	public static final boolean DEBUG = false;
 	
 	public static final int WINDOW_WIDTH = 1100;
-	public static final int WINDOW_HEIGHT = 700;
+	public static final int WINDOW_HEIGHT = 800;
 
 	public static final String SOFTWARE_NAME = "Receitanet BX Robô";
 	public static final String SOFTWARE_VERSION = "1.00";
@@ -23,6 +23,8 @@ public class Constants {
 	public static final String PROGRAM_COMMAND = "\"C:\\Program Files (x86)\\Programas RFB\\Receitanet BX\\receitanetbx-gui-1.9.24.jar\"";
 	public static final String PROGRAM_COMMAND2 = "\"C:\\Program Files (x86)\\Programas RFB\\Receitanet BX\\ReceitanetBX.exe\"";
 	public static final String PROGRAM_CERTIFICATES = "C:\\Temp\\Certificados";
+	public static final String PROGRAM_DOWNLOADED_FOLDER = "C:\\Temp\\ReceitanetBX";
+	
 	public static final String PROGRAM_PERIOD_START = "01/01/2020";
 	public static final String PROGRAM_PERIOD_END = getCurrentDate();
 	
