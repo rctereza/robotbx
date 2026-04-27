@@ -432,7 +432,7 @@ public class Test {
 				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
 				receitaBx.get().TIPO_EVENTO(), receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(),
 				receitaBx.get().CNPJ_ESTABELECIMENTO(), receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(),
-				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), orderNumber, null));
+				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), orderNumber, null, null,null,null));
 
 		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 	}
@@ -452,7 +452,7 @@ public class Test {
 				receitaBx.get().TIPO_EVENTO(), receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(),
 				receitaBx.get().CNPJ_ESTABELECIMENTO(), receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(),
 				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(),
-				receitaBx.get().ULTIMO_PEDIDO_SOLICITADO(), DATA_HORA_CONCLUSAO_PROCESSAMENTO));
+				receitaBx.get().ULTIMO_PEDIDO_SOLICITADO(), DATA_HORA_CONCLUSAO_PROCESSAMENTO, null,null,null));
 
 		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 	}
@@ -466,7 +466,7 @@ public class Test {
 				receitaBx.get().DATA_INICIO(), receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(),
 				receitaBx.get().TIPO_EVENTO(), receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(),
 				receitaBx.get().CNPJ_ESTABELECIMENTO(), receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(),
-				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), "", ""));
+				receitaBx.get().INSCRICAO_ESTADUAL(), receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), "", "", null,null,null));
 
 		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 		

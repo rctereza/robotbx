@@ -12,6 +12,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -21,6 +24,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -271,35 +275,60 @@ public class MainForm2 extends JFrame {
 		passwordCheckButton = new JButton("Validar");
 		passwordCheckButton.setPreferredSize(new Dimension(80, 20));
 		passwordCheckButton.addActionListener(e -> {
-		
+			Ref<Certificate> CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
+			try {
+				ValidatePfx.load(CERTIFICADO, passwordTextField.getText());
+				// ValidatePfx.print();
+				customerTextField.setText(ValidatePfx.getCustomer());
+				customerDocumentTextField.setText(ValidatePfx.getCustomerDocument());
+				JOptionPane.showMessageDialog(null, "O certificado foi validado com sucesso.", "Information",
+						JOptionPane.INFORMATION_MESSAGE);
+			} catch (InvalidCertificate e1) {
+				JOptionPane.showMessageDialog(null, e1.getMessage(), "Atenção", JOptionPane.WARNING_MESSAGE);
+			}
 		});
-		
+
 		// LINE 4
 //		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
-		
+
 		// LINE 5
 		customerLabel = new JLabel("Nome do Cliente");
 		customerTextField = new JTextField();
-		customerTextField.setText("");
+		customerTextField.setText(receitaBx.NOME_CLIENTE());
+		customerTextField.setEditable(false);
 
 		// LINE 6
 		customerDocumentLabel = new JLabel("CNPJ do Cliente");
 		customerDocumentTextField = new JTextField();
-		customerDocumentTextField.setText("");
+		customerDocumentTextField.setText(receitaBx.CNPJ_CLIENTE());
+		customerDocumentTextField.setEditable(false);
 
 		// LINE 7
 		downloadFolderLabel = new JLabel("Caminho dos Arquivos baixados");
 		downloadFolderTextField = new JTextField();
-		downloadFolderTextField.setText("");
+		downloadFolderTextField.setText(
+				Objects.requireNonNullElse(receitaBx.CAMINHO_ARQUIVOS_BAIXADOS(), Constants.PROGRAM_DOWNLOADED_FOLDER));
 		downloadFolderOpenButton = new JButton("Abrir");
 		downloadFolderOpenButton.setPreferredSize(new Dimension(80, 20));
 		downloadFolderOpenButton.addActionListener(e -> {
-			
+			String folderPath = downloadFolderTextField.getText();
+			Path path = Paths.get(folderPath);
+			if (Files.exists(path) && Files.isDirectory(path)) {
+				try {
+					new ProcessBuilder("explorer.exe", folderPath).start();
+				} catch (IOException e1) {
+					JOptionPane.showMessageDialog(null, e1.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+				}
+			} else {
+				JOptionPane.showMessageDialog(null,
+						"O caminho informado não existe ou não é um diretorio: " + folderPath, "Atenção",
+						JOptionPane.WARNING_MESSAGE);
+			}
 		});
-		
+
 		// LINE 8
 //		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
-		
+
 		// LINE 9
 		profileLabel = new JLabel("Selecione um Perfil");
 		profileContribuinte = new JRadioButton("Contribuinte", true);
@@ -568,7 +597,11 @@ public class MainForm2 extends JFrame {
 								JCheckBox checkBox = (JCheckBox) c;
 //		        				System.out.println("JCheckBox : " + checkBox.getText());
 								if (checkBox.getName().equals(columnName)) {
-									checkBox.setSelected((boolean) value);
+									if (String.valueOf(value).equals("true"))
+										checkBox.setSelected(true);
+									else
+										checkBox.setSelected(false);
+
 									break;
 								}
 							}
@@ -598,15 +631,27 @@ public class MainForm2 extends JFrame {
 
 					startButton.setEnabled(false);
 
-					Map<ReceitaBx, String> resultList = controller.startRobot(list, false);
+					controller.startRobot(list, false);
 
+					saveListOfFiles(list.get());
+					
 					StringBuilder message = new StringBuilder("O processo foi concluido. Veja o resultado abaixo.\n\n");
 
-					if (resultList.size() > 0) {
+					if (list.get().size() > 0) {
+						for (ReceitaBx entry : list.get()) {
+							message.append(entry.SISTEMA()).append(" - ").append(entry.TIPO_ARQUIVO()).append(" - ")
+									.append(entry.MENSAGEM_CONCLUSAO_PROCESSAMENTO());
 
-						for (Map.Entry<ReceitaBx, String> entry : resultList.entrySet()) {
-//							System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
-							message.append(entry.getKey().SISTEMA()).append(" - ").append(entry.getValue()).append("\n");
+							if (entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO() != null
+									&& entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO().length() > 0) {
+
+								if (entry.TOTAL_PERIODOS_FALTANDO() == 0)
+									message.append(" [Nenhum período esta faltando]").append("\n");
+								else {
+									message.append(" [" + entry.TOTAL_PERIODOS_FALTANDO() + "] período(s) faltando.");
+									message.append(" [" + entry.PERIODOS_FALTANDO() + "]").append("\n");
+								}
+							}
 						}
 					}
 
@@ -667,7 +712,7 @@ public class MainForm2 extends JFrame {
 		panelMain.add(systemFileTypeComboBox, "wrap");
 		panelMain.add(systemSearchTypeLabel, "left, sg 1");
 		panelMain.add(systemSearchTypeComboBox, "wrap");
-		//panelMain.add(horizontalLine, "span, grow, wrap");
+		// panelMain.add(horizontalLine, "span, grow, wrap");
 		panelMain.add(systemSearchFieldsPanel, "cell 0 14, span, grow, wrap");
 		panelMain.add(addButton, "cell 0 15, wrap");
 		panelMain.add(tableScrollPane, "cell 0 16, span, grow, wrap");
@@ -705,6 +750,34 @@ public class MainForm2 extends JFrame {
 			SENHA = passwordTextField.getText();
 
 		result.append(ValidatePfx.check(CERTIFICADO, SENHA));
+
+		if (customerTextField.getText().isBlank())
+			result.append("Favor informar o nome do cliente clicando no botão 'Validar'.\n");
+		else {
+			if (!customerTextField.getText().equals(ValidatePfx.getCustomer())) {
+				result.append(
+						"O nome do cliente esta diferente do encontrado no certificado! Clique no botão 'Validar' para atualizá-lo.\n");
+			}
+		}
+
+		if (customerDocumentTextField.getText().isBlank())
+			result.append("Favor informar o cnpj do cliente clicando no botão 'Validar'.\n");
+		else {
+			if (!customerDocumentTextField.getText().equals(ValidatePfx.getCustomerDocument())) {
+				result.append(
+						"O cnpj do cliente esta diferente do encontrado no certificado! Clique no botão 'Validar' para atualizá-lo.\n");
+			}
+		}
+
+		if (downloadFolderTextField.getText().isBlank())
+			result.append("Favor informar o caminho que os arquivos serão baixados.\n");
+		else {
+			String folderPath = downloadFolderTextField.getText();
+			Path path = Paths.get(folderPath);
+			if (!Files.exists(path) || !Files.isDirectory(path)) {
+				result.append("O caminho informado não existe ou não é um diretorio: " + folderPath + "\n");
+			}
+		}
 
 		if (profileProcurador.isSelected()) {
 
@@ -1142,6 +1215,10 @@ public class MainForm2 extends JFrame {
 
 		ValidatePfx.load(CERTIFICADO, SENHA);
 
+		String NOME_CLIENTE = customerTextField.getText();
+		String CNPJ_CLIENTE = customerDocumentTextField.getText();
+		String CAMINHO_ARQUIVOS_BAIXADOS = downloadFolderTextField.getText();
+
 		String PERFIL = profileContribuinte.getText();
 		String PERFIL_TYPE = "";
 		String PERFIL_VALUE = "";
@@ -1194,21 +1271,16 @@ public class MainForm2 extends JFrame {
 				}
 			}
 
-			ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), null, null, null, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA,
-					TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO,
-					BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL,
-					ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO);
+			ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), NOME_CLIENTE, CNPJ_CLIENTE,
+					CAMINHO_ARQUIVOS_BAIXADOS, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA,
+					DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO,
+					CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO,
+					ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO, null, null, null);
 
 			result.add(receitaBx);
 		}
-
-		if (appData.getLastListAdded().size() == 0) {
-			appData.addList(result);
-		} else {
-			appData.updateList(appData.getLastIdAdded(), result);
-		}
-
-		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+		
+		saveListOfFiles(result);
 
 		return result;
 	}
@@ -1221,6 +1293,16 @@ public class MainForm2 extends JFrame {
 			}
 		}
 		return -1;
+	}
+
+	private void saveListOfFiles(List<ReceitaBx> list) throws InvalidKeyException, InvalidAlgorithmParameterException,
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
+		if (appData.getLastListAdded().size() == 0) {
+			appData.addList(list);
+		} else {
+			appData.updateList(appData.getLastIdAdded(), list);
+		}
+		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 	}
 
 	private JMenuBar createMenuBar() {

@@ -23,7 +23,7 @@ import com.rctereza.robotbx.wrappers.Ref;
 public class ValidatePfx {
 
 	private static Ref<com.rctereza.robotbx.models.Certificate> cert = null;
-	
+
 	private static KeyStore keystore = null;
 	private static PrivateKey privateKey = null;
 	private static Certificate certificate = null;
@@ -35,6 +35,9 @@ public class ValidatePfx {
 	private static Date validFrom = null;
 	private static Date validTo = null;
 	
+	private static String customer = "";
+	private static String customerDocument = "";
+
 	private static Boolean okay = false;
 
 //	public ValidatePfx(Ref<com.rctereza.robotbx.models.Certificate> cert, String password) {
@@ -43,17 +46,18 @@ public class ValidatePfx {
 //		this.password = password;
 //	}
 
-	public static void load(Ref<com.rctereza.robotbx.models.Certificate> certificate, String password) throws InvalidCertificate {
-		String result = check(certificate,password);
+	public static void load(Ref<com.rctereza.robotbx.models.Certificate> certificate, String password)
+			throws InvalidCertificate {
+		String result = check(certificate, password);
 		if (!result.equals("")) {
 			throw new InvalidCertificate(result);
 		}
 	}
-	
+
 	public static String check(Ref<com.rctereza.robotbx.models.Certificate> certificate, String password) {
 
 		String result = "";
-		
+
 		cert = certificate;
 		pass = password;
 		okay = false;
@@ -79,8 +83,8 @@ public class ValidatePfx {
 		return result;
 	}
 
-	private static void checkPassword() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException,
-			UnrecoverableKeyException {
+	private static void checkPassword() throws KeyStoreException, NoSuchAlgorithmException, CertificateException,
+			IOException, UnrecoverableKeyException {
 
 		keystore = KeyStore.getInstance("PKCS12");
 
@@ -99,8 +103,29 @@ public class ValidatePfx {
 			issuer = x509.getIssuerX500Principal().toString();
 			validFrom = x509.getNotBefore();
 			validTo = x509.getNotAfter();
-		}
 
+			if (subject != null && !subject.equals("") && subject.contains("CN=") && subject.indexOf(",") > 0) {
+				String value = subject.substring(3, subject.indexOf(","));
+				if (value.contains(":")) {
+					String[] values = value.split(":");
+					customer = values[0];
+					customerDocument = values[1];
+				}
+				else {
+					customer = value;
+				}
+			}
+		}
+	}
+
+	public static void print() {
+		System.out.println("Alias............:" + alias);
+		System.out.println("Subject..........:" + subject);
+		System.out.println("Issuer...........:" + issuer);
+		System.out.println("Valid From.......:" + validFrom);
+		System.out.println("Valid To.........:" + validTo);
+		System.out.println("Customer.........:" + customer);
+		System.out.println("Customer Document:" + customerDocument);
 	}
 
 	private static void checkExpirationDate() {
@@ -123,11 +148,11 @@ public class ValidatePfx {
 
 	private static void updateCertificate() {
 		com.rctereza.robotbx.models.Certificate updCert = new com.rctereza.robotbx.models.Certificate(cert.get().ID(),
-				cert.get().NAME(), cert.get().PATH(), pass, getAlias(), getSubject(), getIssuer(), getValidFrom(), getValidTo());
-		cert.set(updCert);		
+				cert.get().NAME(), cert.get().PATH(), pass, getAlias(), getSubject(), getIssuer(), getValidFrom(),
+				getValidTo());
+		cert.set(updCert);
 	}
 
-	
 	public static PrivateKey getPrivateKey() {
 		return privateKey;
 	}
@@ -155,7 +180,15 @@ public class ValidatePfx {
 	public static Date getValidTo() {
 		return validTo;
 	}
+
+	public static String getCustomer() {
+		return customer;
+	}
 	
+	public static String getCustomerDocument() {
+		return customerDocument;
+	}
+
 	public static Boolean isValid() {
 		return okay;
 	}

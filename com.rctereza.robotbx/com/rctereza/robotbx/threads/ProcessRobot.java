@@ -181,7 +181,7 @@ public class ProcessRobot implements Callable<String> {
 
 							if (text.trim().equals(rmg.MESSAGE())) {
 
-								result = "ATTENTION: " + rmg.RESPONSE();
+								result = rmg.RESPONSE();
 								System.out.println(result);
 
 								// JOptionPane.showMessageDialog(null, rmg.RESPONSE(), "Atenção",
@@ -199,7 +199,7 @@ public class ProcessRobot implements Callable<String> {
 
 							if (text.contains(rmg.MESSAGE())) {
 
-								result = "ATTENTION: " + rmg.RESPONSE();
+								result = rmg.RESPONSE();
 								System.out.println(result);
 
 								// JOptionPane.showMessageDialog(null, rmg.RESPONSE(), "Atenção",
@@ -239,7 +239,7 @@ public class ProcessRobot implements Callable<String> {
 
 									} else {
 
-										result = "ATTENTION: " + rmg.RESPONSE();
+										result = rmg.RESPONSE();
 										System.out.println(result);
 										
 										// AutoCloseMessageDialog.show(rmg.RESPONSE(), "Atenção", 5000);
@@ -328,7 +328,7 @@ public class ProcessRobot implements Callable<String> {
 
 									} else {
 
-										result = "ATTENTION: This process was ended after waiting 5 minutes for its conclusion.";
+										result = "Este processamento foi cancelado após esperar 5 minutos pela sua conclusão.";
 										System.out.println(result);
 										// AutoCloseMessageDialog.show(rmg.RESPONSE(), "Atenção", 5000);
 
@@ -374,7 +374,7 @@ public class ProcessRobot implements Callable<String> {
 				receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(), receitaBx.get().TIPO_EVENTO(),
 				receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(), receitaBx.get().CNPJ_ESTABELECIMENTO(),
 				receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(), receitaBx.get().INSCRICAO_ESTADUAL(),
-				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), orderNumber, null));
+				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), orderNumber, "", "", "", 0));
 
 //		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 	}
@@ -392,7 +392,7 @@ public class ProcessRobot implements Callable<String> {
 				receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(), receitaBx.get().CNPJ_ESTABELECIMENTO(),
 				receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(), receitaBx.get().INSCRICAO_ESTADUAL(),
 				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), receitaBx.get().ULTIMO_PEDIDO_SOLICITADO(),
-				DATA_HORA_CONCLUSAO_PROCESSAMENTO));
+				DATA_HORA_CONCLUSAO_PROCESSAMENTO, "", "", 0));
 
 //		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 	}
@@ -405,7 +405,7 @@ public class ProcessRobot implements Callable<String> {
 				receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(), receitaBx.get().TIPO_EVENTO(),
 				receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(), receitaBx.get().CNPJ_ESTABELECIMENTO(),
 				receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(), receitaBx.get().INSCRICAO_ESTADUAL(),
-				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), "", ""));
+				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), "", "", "", "", 0));
 
 //		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 

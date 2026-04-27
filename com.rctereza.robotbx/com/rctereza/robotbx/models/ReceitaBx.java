@@ -25,9 +25,12 @@ public record ReceitaBx(
 	, Boolean ULTIMO_ARQUIVO_TRANSMITIDO
 	, String ULTIMO_PEDIDO_SOLICITADO
 	, String DATA_HORA_CONCLUSAO_PROCESSAMENTO
+	, String MENSAGEM_CONCLUSAO_PROCESSAMENTO
+	, String PERIODOS_FALTANDO
+	, Integer TOTAL_PERIODOS_FALTANDO
 ) implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public ReceitaBx() {
-		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
+		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
 	}
 }
