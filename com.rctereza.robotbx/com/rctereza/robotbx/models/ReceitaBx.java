@@ -2,6 +2,8 @@ package com.rctereza.robotbx.models;
 
 import java.io.Serializable;
 
+import com.rctereza.robotbx.enums.Status;
+
 public record ReceitaBx(  
 	  String RESOLUCAO_TELA
 	, Certificate CERTIFICADO
@@ -28,9 +30,10 @@ public record ReceitaBx(
 	, String MENSAGEM_CONCLUSAO_PROCESSAMENTO
 	, String PERIODOS_FALTANDO
 	, Integer TOTAL_PERIODOS_FALTANDO
+	, Status STATUS
 ) implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public ReceitaBx() {
-		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
+		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null, null);
 	}
 }

@@ -1,12 +1,25 @@
 package com.rctereza.robotbx.threads;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
 import com.rctereza.robotbx.enums.Message;
+import com.rctereza.robotbx.enums.Sped;
+import com.rctereza.robotbx.enums.Status;
 import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
@@ -14,24 +27,26 @@ import com.rctereza.robotbx.models.RobotCommand;
 import com.rctereza.robotbx.models.RobotMessageBox;
 import com.rctereza.robotbx.tools.Actions;
 import com.rctereza.robotbx.tools.RobotUtils;
-import com.rctereza.robotbx.wrappers.Ref;
+import com.rctereza.robotbx.tools.SpedUtils;
 import com.rctereza.robotocr.MessageBox2;
 
-public class ProcessRobot implements Callable<String> {
+public class ProcessRobot implements Callable<ReceitaBx> {
 
-	private Ref<ReceitaBx> receitaBx;
+	private ReceitaBx original;
 
-	public ProcessRobot(Ref<ReceitaBx> receitaBx, boolean reset) {
-		this.receitaBx = receitaBx;
-		if (reset) {
-			reset();
-		}
+	private String ULTIMO_PEDIDO_SOLICITADO = "";
+	private String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
+	private String MENSAGEM_CONCLUSAO_PROCESSAMENTO = "";
+	private String PERIODOS_FALTANDO = "";
+	private Integer TOTAL_PERIODOS_FALTANDO = 0;
+	private Status STATUS = Status.PENDING;
+
+	public ProcessRobot(ReceitaBx original) {
+		this.original = original;
 	}
 
 	@Override
-	public String call() {
-
-		String result = "";
+	public ReceitaBx call() {
 
 		System.out.println("Thread Starting...");
 
@@ -51,15 +66,33 @@ public class ProcessRobot implements Callable<String> {
 			// *******************************************************************************************
 			// GET ROBOT PARAMETERS
 			// *******************************************************************************************
-			Robot robot = RobotUtils.getRobotBasedOnScreenResolution(receitaBx.get());
+			Robot robot = RobotUtils.getRobotBasedOnScreenResolution(original);
 
 			// *******************************************************************************************
 			// PERFORM THE ACTIONS
 			// *******************************************************************************************
-			result = performActions(robot, receitaBx);
+			MENSAGEM_CONCLUSAO_PROCESSAMENTO = performActions(robot);
+
+			// *******************************************************************************************
+			// SET THE STATUS
+			// *******************************************************************************************
+			if (DATA_HORA_CONCLUSAO_PROCESSAMENTO != null && !DATA_HORA_CONCLUSAO_PROCESSAMENTO.equals(""))
+				STATUS = Status.SUCCESS;
+			else
+				STATUS = Status.WARNING;
+
+			// *******************************************************************************************
+			// GET THE MISSING PERIODS BY CHECKING THE FILES DOWNLOADED
+			// *******************************************************************************************
+			PERIODOS_FALTANDO = getMissingPeriods();
+			if (PERIODOS_FALTANDO.length() > 0) {
+				String[] periods = PERIODOS_FALTANDO.split(",");
+				TOTAL_PERIODOS_FALTANDO = periods.length;
+			}
 
 		} catch (Exception e) {
-			result = "ERROR: [" + e.getMessage() + "]";
+			MENSAGEM_CONCLUSAO_PROCESSAMENTO = "ERROR: [" + e.getMessage() + "]";
+			STATUS = Status.ERROR;
 
 		} finally {
 			if (process != null) {
@@ -70,10 +103,17 @@ public class ProcessRobot implements Callable<String> {
 
 		System.out.println("Thread Terminated!");
 
-		return result;
+		return new ReceitaBx(original.RESOLUCAO_TELA(), original.CERTIFICADO(), original.NOME_CLIENTE(),
+				original.CNPJ_CLIENTE(), original.CAMINHO_ARQUIVOS_BAIXADOS(), original.PERFIL(),
+				original.PERFIL_TYPE(), original.PERFIL_VALUE(), original.SISTEMA(), original.TIPO_ARQUIVO(),
+				original.TIPO_PESQUISA(), original.DATA_INICIO(), original.DATA_FIM(), original.CNPJ_INCORPORADORA(),
+				original.TIPO_EVENTO(), original.BAIXAR_ARQUIVO_ASSINADO(), original.CNPJ_ESTABELECIMENTO(),
+				original.BUSCAR_TODOS_ESTABLECIMENTOS(), original.INSCRICAO_ESTADUAL(),
+				original.ULTIMO_ARQUIVO_TRANSMITIDO(), ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO,
+				MENSAGEM_CONCLUSAO_PROCESSAMENTO, PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS);
 	}
 
-	private String performActions(Robot robot, Ref<ReceitaBx> receitaBx) throws Exception {
+	private String performActions(Robot robot) throws Exception {
 
 		String result = "";
 
@@ -241,7 +281,7 @@ public class ProcessRobot implements Callable<String> {
 
 										result = rmg.RESPONSE();
 										System.out.println(result);
-										
+
 										// AutoCloseMessageDialog.show(rmg.RESPONSE(), "Atenção", 5000);
 
 										if (rmg.ABORT()) {
@@ -256,7 +296,7 @@ public class ProcessRobot implements Callable<String> {
 											+ "] is not setting to WAIT [" + ra.WAIT()
 											+ "] and it's using a message set to WAIT";
 									System.out.println(result);
-									RUNNING=false;
+									RUNNING = false;
 								}
 								break;
 							}
@@ -268,15 +308,13 @@ public class ProcessRobot implements Callable<String> {
 
 								int position = text.indexOf(rmg.MESSAGE()) + rmg.MESSAGE().length() + 1;
 
-								String order = text.substring(position);
+								String value = text.substring(position);
 
-								order = order.substring(0, order.indexOf(" "));
-
-								saveOrderNumber(order);
+								ULTIMO_PEDIDO_SOLICITADO = value.substring(0, value.indexOf(" "));
 
 								RobotAction robotAction = new RobotAction(ra.ID(),
-										ra.DESCRIPTION() + " - Confirmando pedido [" + order + "]", false, null, false,
-										0, 0, true, false, true, rmg.COMMANDS());
+										ra.DESCRIPTION() + " - Confirmando pedido [" + ULTIMO_PEDIDO_SOLICITADO + "]",
+										false, null, false, 0, 0, true, false, true, rmg.COMMANDS());
 
 								robot.ROBOT_ACTIONS().set(i, robotAction);
 
@@ -291,14 +329,13 @@ public class ProcessRobot implements Callable<String> {
 
 							if (text.contains(rmg.MESSAGE())) {
 
-								saveDateTimeOfConclusion();
+								DATA_HORA_CONCLUSAO_PROCESSAMENTO = getDateTimeOfConclusion();
 
-								result = "SUCCESS: [" + receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO() + "]";
+								result = "SUCCESS: [" + DATA_HORA_CONCLUSAO_PROCESSAMENTO + "]";
 								System.out.println(result);
 
 								RobotAction robotAction = new RobotAction(ra.ID(),
-										rmg.RESPONSE() + " - Conclusão ["
-												+ receitaBx.get().DATA_HORA_CONCLUSAO_PROCESSAMENTO() + "]",
+										rmg.RESPONSE() + " - Conclusão [" + DATA_HORA_CONCLUSAO_PROCESSAMENTO + "]",
 										false, null, false, 0, 0, true, false, true, rmg.COMMANDS());
 
 								robot.ROBOT_ACTIONS().set(i, robotAction);
@@ -366,48 +403,181 @@ public class ProcessRobot implements Callable<String> {
 		return result;
 	}
 
-	private void saveOrderNumber(String orderNumber) {
-
-		receitaBx.set(new ReceitaBx(receitaBx.get().RESOLUCAO_TELA(), receitaBx.get().CERTIFICADO(), null, null, null, receitaBx.get().PERFIL(),
-				receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(), receitaBx.get().SISTEMA(),
-				receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(), receitaBx.get().DATA_INICIO(),
-				receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(), receitaBx.get().TIPO_EVENTO(),
-				receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(), receitaBx.get().CNPJ_ESTABELECIMENTO(),
-				receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(), receitaBx.get().INSCRICAO_ESTADUAL(),
-				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), orderNumber, "", "", "", 0));
-
-//		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
-	}
-
-	private void saveDateTimeOfConclusion() {
-
+	private String getDateTimeOfConclusion() {
 		LocalDateTime currentDateTime = LocalDateTime.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		String DATA_HORA_CONCLUSAO_PROCESSAMENTO = currentDateTime.format(formatter);
-
-		receitaBx.set(new ReceitaBx(receitaBx.get().RESOLUCAO_TELA(), receitaBx.get().CERTIFICADO(), null, null, null, receitaBx.get().PERFIL(),
-				receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(), receitaBx.get().SISTEMA(),
-				receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(), receitaBx.get().DATA_INICIO(),
-				receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(), receitaBx.get().TIPO_EVENTO(),
-				receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(), receitaBx.get().CNPJ_ESTABELECIMENTO(),
-				receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(), receitaBx.get().INSCRICAO_ESTADUAL(),
-				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), receitaBx.get().ULTIMO_PEDIDO_SOLICITADO(),
-				DATA_HORA_CONCLUSAO_PROCESSAMENTO, "", "", 0));
-
-//		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+		return currentDateTime.format(formatter);
 	}
 
-	private void reset() {
+	private String getMissingPeriods() {
+		String result = "";
 
-		receitaBx.set(new ReceitaBx(receitaBx.get().RESOLUCAO_TELA(), receitaBx.get().CERTIFICADO(), null, null, null, receitaBx.get().PERFIL(),
-				receitaBx.get().PERFIL_TYPE(), receitaBx.get().PERFIL_VALUE(), receitaBx.get().SISTEMA(),
-				receitaBx.get().TIPO_ARQUIVO(), receitaBx.get().TIPO_PESQUISA(), receitaBx.get().DATA_INICIO(),
-				receitaBx.get().DATA_FIM(), receitaBx.get().CNPJ_INCORPORADORA(), receitaBx.get().TIPO_EVENTO(),
-				receitaBx.get().BAIXAR_ARQUIVO_ASSINADO(), receitaBx.get().CNPJ_ESTABELECIMENTO(),
-				receitaBx.get().BUSCAR_TODOS_ESTABLECIMENTOS(), receitaBx.get().INSCRICAO_ESTADUAL(),
-				receitaBx.get().ULTIMO_ARQUIVO_TRANSMITIDO(), "", "", "", "", 0));
+		int startYear;
+		int startMonth;
+		int endYear;
+		int endMonth;
+		String fileNameBegins;
+		String fileFolderPath;
+		int fileFolderIndex;
 
-//		CryptoUtils.saveEncryptedGCM(receitaBx.get(), Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+		if (original.SISTEMA().equals(Sped.EFD.getValue())
+				&& original.TIPO_PESQUISA().equals(SpedUtils.contribuicoesSearchTypes[2])) {
 
+			// SISTEMA.........: SPED Contribuições
+			// TIPO DE ARQUIVO.: Escrituração
+			// TIPO DE PESQUISA: Período da Escrituração
+			// NOME DO ARQUIVO.:
+			// PISCOFINS_20200101_20200131_07214419000195_Original_20200311170643_466E91B68B0768A77ED8E18073A1310E47D56CF1.txt
+
+			String[] values = original.DATA_INICIO().split("/");
+			startYear = Integer.parseInt(values[2]);
+			startMonth = Integer.parseInt(values[1]);
+
+			values = original.DATA_FIM().split("/");
+			endYear = Integer.parseInt(values[2]);
+			endMonth = Integer.parseInt(values[1]);
+
+			fileNameBegins = "PISCOFINS";
+			fileFolderPath = original.CAMINHO_ARQUIVOS_BAIXADOS() + "\\Escrituração";
+			fileFolderIndex = 0;
+
+			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
+					fileFolderIndex);
+		}
+
+		else if (original.SISTEMA().equals(Sped.EFD.getValue())) {
+
+			// SISTEMA.........: SPED Fiscal-EFD ICMS IPI
+			// TIPO DE ARQUIVO.: Escrituração Fiscal Digital
+			// TIPO DE PESQUISA: Por Período da Escrituração
+			// NOME DO ARQUIVO.:
+			// 07214419000195-293845298-20210401-20210430-0-9535ADC3A5F5892956F5ECDEDE1E6D397F8FE8B4-SPED-EFD.txt
+
+			String[] values = original.DATA_INICIO().split("/");
+			startYear = Integer.parseInt(values[2]);
+			startMonth = Integer.parseInt(values[1]);
+
+			values = original.DATA_FIM().split("/");
+			endYear = Integer.parseInt(values[2]);
+			endMonth = Integer.parseInt(values[1]);
+
+			fileNameBegins = original.CNPJ_CLIENTE(); // "07214419000195";
+			fileFolderPath = original.CAMINHO_ARQUIVOS_BAIXADOS() + "\\Escrituração Fiscal Digital";
+			fileFolderIndex = 1;
+
+			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
+					fileFolderIndex);
+
+		}
+
+		else if (original.SISTEMA().equals(Sped.ECF.getValue())
+				&& original.TIPO_PESQUISA().equals(SpedUtils.ecfSearchTypes[1])) {
+
+			// SISTEMA.........: SPED ECF
+			// TIPO DE ARQUIVO.: Escrituração
+			// TIPO DE PESQUISA: Período da Escrituração
+			// NOME DO ARQUIVO.: SPEDECF-07214419000195-20140101-20141231-20150924103745.txt
+
+			String[] values = original.DATA_INICIO().split("/");
+			startYear = Integer.parseInt(values[2]);
+			startMonth = Integer.parseInt(values[1]);
+
+			values = original.DATA_FIM().split("/");
+			endYear = Integer.parseInt(values[2]);
+			endMonth = Integer.parseInt(values[1]);
+
+			fileNameBegins = "SPEDECF";
+			fileFolderPath = original.CAMINHO_ARQUIVOS_BAIXADOS() + "\\Escrituração";
+			fileFolderIndex = 2;
+
+			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
+					fileFolderIndex);
+		}
+
+		return result;
+
+	}
+
+	private String getPeriods(int startYear, int startMonth, int endYear, int endMonth, String fileNameBegins,
+			String fileFolder, int fileFolderIndex) {
+
+		String result = "";
+
+		Path folderPath = Paths.get(fileFolder);
+
+		List<String> periods = new ArrayList<>();
+
+		try (Stream<Path> paths = Files.list(folderPath)) {
+
+			paths.filter(Files::isRegularFile).filter(p -> p.toString().endsWith(".txt")) // filter by extension
+					.forEach(p -> {
+						String fileName = p.getFileName().toString();
+
+						if (fileName.startsWith(fileNameBegins)) {
+
+							String extracted = extractPart(fileName, fileFolderIndex);
+
+//							System.out.println("File: " + fileName);
+//							System.out.println("Extracted: " + extracted);
+
+							periods.add(extracted);
+						}
+
+					});
+
+			Set<YearMonth> existingMonths = new HashSet<>();
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+			for (String period : periods) {
+				String startDateStr = period.split("_")[0];
+				LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+				existingMonths.add(YearMonth.from(startDate));
+			}
+
+			// Define full range
+			YearMonth start = YearMonth.of(startYear, startMonth);
+			YearMonth end = YearMonth.of(endYear, endMonth);
+
+			List<YearMonth> missingMonths = new ArrayList<>();
+
+			YearMonth current = start;
+			while (!current.isAfter(end)) {
+				if (!existingMonths.contains(current)) {
+					missingMonths.add(current);
+				}
+				current = current.plusMonths(1);
+			}
+
+			if (missingMonths.size() == 0) {
+				System.out.println("Todos os meses foram encontrados para o periodo informado.");
+			} else {
+				// Print result
+//				missingMonths.forEach(System.out::println);
+//				System.out.println(missingMonths.size() + " months are missing...");
+				System.out.println(
+						"(" + missingMonths.size() + ") meses não foram encontrados para o periodo informado.");
+				result = missingMonths.toString();
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return result;
+	}
+
+	private String extractPart(String fileName, int fileFolderIndex) {
+		String result = "";
+
+		if (fileFolderIndex == 0) {
+			int initialPosition = fileName.indexOf('_') + 1;
+			result = fileName.substring(initialPosition, 27);
+		} else if (fileFolderIndex == 1 || fileFolderIndex == 2) {
+			String value = fileName.substring(fileName.indexOf("-") + 1);
+			value = value.substring(value.indexOf("-") + 1);
+			result = value.substring(0, 17).replace("-", "_");
+		}
+
+		return result;
 	}
 }
