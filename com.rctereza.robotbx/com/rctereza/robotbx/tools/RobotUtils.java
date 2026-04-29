@@ -356,7 +356,7 @@ public class RobotUtils {
 
 		// **********************************************************************************************************************************************
 		commands.clear();
-		commands.add(new RobotCommand(1, Command.WAIT, null, null, 3000, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.MOVE, 687, 611, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Marque todos o resultado da pesquisa", false, null, false, 0, 0,

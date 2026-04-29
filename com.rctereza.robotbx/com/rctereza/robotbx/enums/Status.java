@@ -35,4 +35,24 @@ public enum Status {
     	
     	return result;
     }
+    
+    public String getDescription() {
+    	
+    	String result = null;
+    	
+    	if (this == SUCCESS) {
+    		result = "Processado com sucesso.";
+    	}
+    	else if (this == ERROR) {
+    		result = "Processamento falhou.";
+    	}
+    	else if (this == WARNING) {
+    		result = "Processado com avisos.";
+    	}
+    	else if (this == PENDING) {
+    		result = "Não foi processado ainda.";
+    	}
+    	
+    	return result;
+    }
 }

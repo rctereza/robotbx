@@ -15,6 +15,9 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.enums.Command;
 import com.rctereza.robotbx.enums.Message;
@@ -32,6 +35,8 @@ import com.rctereza.robotocr.MessageBox2;
 
 public class ProcessRobot implements Callable<ReceitaBx> {
 
+	private static final Logger logger = LoggerFactory.getLogger(ProcessRobot.class);
+
 	private ReceitaBx original;
 
 	private String ULTIMO_PEDIDO_SOLICITADO = "";
@@ -48,7 +53,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	@Override
 	public ReceitaBx call() {
 
-		System.out.println("Thread Starting...");
+		logger.info("Thread Starting...");
 
 		ProcessBuilder processBuilder = new ProcessBuilder("java", "--add-exports",
 				"jdk.crypto.mscapi/sun.security.mscapi=ALL-UNNAMED", "-jar", Constants.PROGRAM_COMMAND);
@@ -91,6 +96,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			}
 
 		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
 			MENSAGEM_CONCLUSAO_PROCESSAMENTO = "ERROR: [" + e.getMessage() + "]";
 			STATUS = Status.ERROR;
 
@@ -101,7 +107,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			}
 		}
 
-		System.out.println("Thread Terminated!");
+		logger.info("Thread Terminated!");
 
 		return new ReceitaBx(original.RESOLUCAO_TELA(), original.CERTIFICADO(), original.NOME_CLIENTE(),
 				original.CNPJ_CLIENTE(), original.CAMINHO_ARQUIVOS_BAIXADOS(), original.PERFIL(),
@@ -131,7 +137,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 			RobotAction ra = robot.ROBOT_ACTIONS().get(i);
 
-			System.out.println("Action.............: " + ra.toString());
+			logger.info("Action.............: {}", ra.toString());
 
 			if ((ra.ENABLED()) && (ra.ID() >= START_ACTIONS_AT)) {
 
@@ -139,7 +145,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 					if (rc.ENABLED()) {
 
-						System.out.println("Command............: " + rc.toString());
+						logger.info("Command............: {}", rc.toString());
 
 						switch (rc.COMMAND()) {
 
@@ -205,10 +211,11 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 				if (ra.MESSAGEBOX()) {
 
-					System.out.println("Checking if there's a message box...");
+					logger.info("Checking if there's a message box...");
 					MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME);
 					String text = mb.getText();
-					System.out.println("Message box text found..: [" + text + "]");
+					text = text.replace("\n","");
+					logger.info("Message box text found: [{}]", text);
 
 					Boolean found = false;
 					Message mtype = Message.NONE;
@@ -222,7 +229,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 							if (text.trim().equals(rmg.MESSAGE())) {
 
 								result = rmg.RESPONSE();
-								System.out.println(result);
+								logger.info(result);
 
 								// JOptionPane.showMessageDialog(null, rmg.RESPONSE(), "Atenção",
 								// JOptionPane.WARNING_MESSAGE);
@@ -240,7 +247,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 							if (text.contains(rmg.MESSAGE())) {
 
 								result = rmg.RESPONSE();
-								System.out.println(result);
+								logger.info(result);
 
 								// JOptionPane.showMessageDialog(null, rmg.RESPONSE(), "Atenção",
 								// JOptionPane.WARNING_MESSAGE);
@@ -268,8 +275,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 										String counter = "#" + String.valueOf(NUMBER_OF_ATTEMPTS) + "/"
 												+ ra.NUMBER_OF_ATTEMPTS().toString();
 
-										System.out.println(counter + " - Waiting for this action [" + ra.DESCRIPTION()
-												+ "] to be checked again...");
+										logger.info("{} - Waiting for this action [{}] to be checked again...", counter, ra.DESCRIPTION());
 
 										actions.Wait(ra.WAIT_MILLISECONDS());
 
@@ -280,7 +286,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 									} else {
 
 										result = rmg.RESPONSE();
-										System.out.println(result);
+										logger.info(result);
 
 										// AutoCloseMessageDialog.show(rmg.RESPONSE(), "Atenção", 5000);
 
@@ -295,7 +301,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 									result = "ATTENTION: This action [" + ra.DESCRIPTION()
 											+ "] is not setting to WAIT [" + ra.WAIT()
 											+ "] and it's using a message set to WAIT";
-									System.out.println(result);
+									logger.info(result);
 									RUNNING = false;
 								}
 								break;
@@ -332,7 +338,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 								DATA_HORA_CONCLUSAO_PROCESSAMENTO = getDateTimeOfConclusion();
 
 								result = "SUCCESS: [" + DATA_HORA_CONCLUSAO_PROCESSAMENTO + "]";
-								System.out.println(result);
+								logger.info(result);
 
 								RobotAction robotAction = new RobotAction(ra.ID(),
 										rmg.RESPONSE() + " - Conclusão [" + DATA_HORA_CONCLUSAO_PROCESSAMENTO + "]",
@@ -354,8 +360,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 										String counter = "#" + String.valueOf(NUMBER_OF_ATTEMPTS) + "/"
 												+ ra.NUMBER_OF_ATTEMPTS().toString();
 
-										System.out.println(counter + " - Waiting for this action [" + rmg.MESSAGE()
-												+ "] to be checked again...");
+										logger.info("{} - Waiting for this action [{}] to be checked again...", counter, rmg.MESSAGE());
 
 										actions.Wait(ra.WAIT_MILLISECONDS());
 
@@ -366,7 +371,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 									} else {
 
 										result = "Este processamento foi cancelado após esperar 5 minutos pela sua conclusão.";
-										System.out.println(result);
+										logger.info(result);
 										// AutoCloseMessageDialog.show(rmg.RESPONSE(), "Atenção", 5000);
 
 										if (rmg.ABORT()) {
@@ -381,7 +386,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 									result = "ATTENTION: This action [" + ra.DESCRIPTION()
 											+ "] is not setting to WAIT [" + ra.WAIT()
 											+ "] and it's using a message set to WAIT";
-									System.out.println(result);
+									logger.info(result);
 									RUNNING = false;
 								}
 							}
@@ -549,13 +554,12 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			}
 
 			if (missingMonths.size() == 0) {
-				System.out.println("Todos os meses foram encontrados para o periodo informado.");
+				logger.info("Todos os meses foram encontrados para o periodo informado.");
 			} else {
 				// Print result
 //				missingMonths.forEach(System.out::println);
 //				System.out.println(missingMonths.size() + " months are missing...");
-				System.out.println(
-						"(" + missingMonths.size() + ") meses não foram encontrados para o periodo informado.");
+				logger.info("({}) meses não foram encontrados para o periodo informado.", missingMonths.size());
 				result = missingMonths.toString();
 			}
 

@@ -15,6 +15,8 @@ module com.rctereza.robotbx {
 	requires transitive com.sun.jna;
 	
 	requires com.rctereza.robotocr;
+	requires java.datatransfer;
+	requires org.slf4j;
 	
 	exports com.rctereza.robotbx.enums;
 	exports com.rctereza.robotbx.models;

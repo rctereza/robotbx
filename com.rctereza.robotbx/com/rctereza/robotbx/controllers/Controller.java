@@ -6,6 +6,9 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.threads.ProcessRobot;
@@ -14,28 +17,30 @@ import com.rctereza.robotbx.wrappers.Ref;
 
 public class Controller {
 
+	private static final Logger logger = LoggerFactory.getLogger(Controller.class);
+
 	public void startRobot(Ref<List<ReceitaBx>> list) throws InterruptedException, ExecutionException {
 
 		try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
 
-			System.out.println("Starting...");
+			logger.info("Starting...");
 
 			cleanDirectory(); // delete all files/folders in the directory where the files will be downloaded.
 
 			for (int i = 0; i < list.get().size(); i++) {
 
 				if (i > 0) {
-					System.out.println("Waiting 5 seconds before starting to process the next item...");
+					logger.info("Waiting 5 seconds before starting to process the next item...");
 					Thread.sleep(5000);
 				}
 
 				ReceitaBx params = list.get().get(i);
 
-				System.out.println("-------------------------------------------------------------------------------");
+				logger.info("-------------------------------------------------------------------------------");
 
-				System.out.println("#" + (i + 1) + "/" + list.get().size() + " - " + params.SISTEMA() + " ["
-						+ params.ULTIMO_PEDIDO_SOLICITADO() + "] [" + params.DATA_HORA_CONCLUSAO_PROCESSAMENTO()
-						+ "] Before...");
+				logger.info("#{}/{} - {} / {} / {} [{}] [{}] Before...", (i + 1), list.get().size(), params.SISTEMA(),
+						params.TIPO_ARQUIVO(), params.TIPO_PESQUISA(), params.ULTIMO_PEDIDO_SOLICITADO(),
+						params.DATA_HORA_CONCLUSAO_PROCESSAMENTO());
 
 				var future = executor.submit(new ProcessRobot(params));
 
@@ -43,15 +48,14 @@ public class Controller {
 
 				list.get().set(i, updated);
 
-				System.out.println("#" + (i + 1) + "/" + list.get().size() + " - " + updated.SISTEMA() + " ["
-						+ updated.ULTIMO_PEDIDO_SOLICITADO() + "] [" + updated.DATA_HORA_CONCLUSAO_PROCESSAMENTO()
-						+ "] After...");
-
+				logger.info("#{}/{} - {} / {} / {} [{}] [{}] After...", (i + 1), list.get().size(), updated.SISTEMA(),
+						updated.TIPO_ARQUIVO(), updated.TIPO_PESQUISA(), updated.ULTIMO_PEDIDO_SOLICITADO(),
+						updated.DATA_HORA_CONCLUSAO_PROCESSAMENTO());
 			}
 		}
 
-		System.out.println("-------------------------------------------------------------------------------");
-		System.out.println("Done. It was processed [" + list.get().size() + "] item(s).");
+		logger.info("-------------------------------------------------------------------------------");
+		logger.info("Done. It was processed [{}] item(s).", list.get().size());
 
 	}
 
