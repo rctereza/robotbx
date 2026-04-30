@@ -3,7 +3,14 @@ package com.rctereza.robotbx;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Window;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.text.ParseException;
 
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.JOptionPane;
 import javax.swing.JWindow;
 import javax.swing.UIManager;
@@ -22,7 +29,7 @@ import com.rctereza.robotbx.views.MainForm;
 public class Main {
 
 	private static final Logger logger = LoggerFactory.getLogger(Main.class);
-	
+
 	private static final Main instance = new Main();
 
 	private MainForm mainForm;
@@ -34,10 +41,12 @@ public class Main {
 		return instance;
 	}
 
-	private void showApp() {
+	private void showApp() throws InvalidKeyException, ClassNotFoundException, InvalidAlgorithmParameterException,
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException, ParseException {
 		mainForm.setVisible(true);
+		mainForm.init();
 	}
-	
+
 	private void hideApp() {
 		mainForm.setVisible(false);
 		Window[] windows = JWindow.getWindows();
@@ -65,16 +74,17 @@ public class Main {
 						System.gc();
 						System.exit(0);
 //						}
-					}
-					else if (action.equals(Menu.RESTART.getValue())) {
+					} else if (action.equals(Menu.RESTART.getValue())) {
+						logger.info("Restarting application...");
 						hideApp();
 						try {
-//							mainForm.dispose();
-//							mainForm = new MainForm();
+							Thread.sleep(2000);
 							showApp();
 						} catch (Exception e) {
 							logger.error(e.getMessage(), e);
-							JOptionPane.showMessageDialog(null, "Um erro ocorreu ao reinicilizar o aplicativo.\nFavor checar o log para mais detalhes.", "Erro", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(null,
+									"Um erro ocorreu ao reinicilizar o aplicativo.\nFavor checar o log para mais detalhes.",
+									"Erro", JOptionPane.ERROR_MESSAGE);
 							System.gc();
 							System.exit(0);
 						}
@@ -85,7 +95,18 @@ public class Main {
 
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				showApp();
+				try {
+					showApp();
+				} catch (InvalidKeyException | ClassNotFoundException | InvalidAlgorithmParameterException
+						| NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException | IOException
+						| ParseException e) {
+					logger.error(e.getMessage(), e);
+					JOptionPane.showMessageDialog(null,
+							"Um erro ocorreu ao inicilizar o aplicativo.\nFavor checar o log para mais detalhes.",
+							"Erro", JOptionPane.ERROR_MESSAGE);
+					System.gc();
+					System.exit(0);
+				}
 			}
 		});
 

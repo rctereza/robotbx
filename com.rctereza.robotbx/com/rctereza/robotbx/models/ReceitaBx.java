@@ -9,7 +9,8 @@ public record ReceitaBx(
 	, Certificate CERTIFICADO
 	, String NOME_CLIENTE
 	, String CNPJ_CLIENTE
-	, String CAMINHO_ARQUIVOS_BAIXADOS
+	, String PASTA_ORIGEM_ARQUIVOS_BAIXADOS
+	, String PASTA_DESTINO_ARQUIVOS_BAIXADOS
 	, String PERFIL
 	, String PERFIL_TYPE
 	, String PERFIL_VALUE
@@ -34,6 +35,6 @@ public record ReceitaBx(
 ) implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public ReceitaBx() {
-		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null, null);
+		this(null,new Certificate(),null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null, null);
 	}
 }

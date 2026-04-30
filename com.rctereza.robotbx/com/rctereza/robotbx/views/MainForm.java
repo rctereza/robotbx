@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -66,6 +65,9 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.MaskFormatter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
@@ -99,7 +101,7 @@ public class MainForm extends JFrame {
 
 	private static final long serialVersionUID = 8829044892271317875L;
 
-	// private static final Logger logger = LoggerFactory.getLogger(MainForm.class);
+	private static final Logger logger = LoggerFactory.getLogger(MainForm.class);
 
 	private static final String softwareNameAndVersion = Constants.SOFTWARE_NAME + " " + Constants.SOFTWARE_VERSION;
 
@@ -130,9 +132,13 @@ public class MainForm extends JFrame {
 	private JLabel customerDocumentLabel;
 	private JTextField customerDocumentTextField;
 
-	private JLabel downloadFolderLabel;
-	private JTextField downloadFolderTextField;
-	private JButton downloadFolderOpenButton;
+	private JLabel sourceFolderDownloadedFilesLabel;
+	private JTextField sourceFolderDownloadedFilesTextField;
+	private JButton sourceFolderDownloadedFilesSelectButton;
+
+	private JLabel targetFolderDownloadedFilesLabel;
+	private JTextField targetFolderDownloadedFilesTextField;
+	private JButton targetFolderDownloadedFilesSelectButton;
 
 	private JLabel profileLabel;
 	private JRadioButton profileContribuinte;
@@ -177,16 +183,6 @@ public class MainForm extends JFrame {
 	public MainForm() throws Exception {
 		super(softwareNameAndVersion);
 
-//		appData = CryptoUtils.loadRef(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,	AppData::new);
-		appData = CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,
-				AppData::new);
-
-		receitaBxList = appData.getLastListAdded();
-
-		if (receitaBxList.size() > 0) {
-			receitaBx = receitaBxList.get(0);
-		}
-
 		controller = new Controller();
 
 		// setIconImage(Resources.getImage(Constants.SOFTWARE_ICON, null));
@@ -202,8 +198,6 @@ public class MainForm extends JFrame {
 				listener.value(Menu.MINIMIZE.getValue());
 			}
 		});
-
-		// FileUtils.removeCertificatePathChosen();
 
 		cnpjMask = new MaskFormatter("##.###.###/####-##");
 		cnpjMask.setPlaceholderCharacter('_');
@@ -240,23 +234,13 @@ public class MainForm extends JFrame {
 		}
 
 		// LINE 1
-		screenResolutionLabel = new JLabel("Resolução do Monitor");
+		screenResolutionLabel = new JLabel("Resolução do monitor");
 		screenResolutionTextField = new JTextField();
-		screenResolutionTextField.setText(ScreenResolution.getResolution());
 		screenResolutionTextField.setEditable(false);
 
 		// LINE 2
-		certificateLabel = new JLabel("Selecione um Certificado");
+		certificateLabel = new JLabel("Selecione um certificado");
 		certificateComboBox = new JComboBox<>();
-		certificateComboBox.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent e) {
-				/*
-				 * if (e.getStateChange() == ItemEvent.SELECTED) { Certificate certificate =
-				 * (Certificate) e.getItem();
-				 * passwordTextField.setText(certificate.FILE_PASS()); }
-				 */
-			}
-		});
 
 		certificateLoadButton = new JButton("Carregar");
 		certificateLoadButton.setPreferredSize(new Dimension(80, 20));
@@ -273,13 +257,9 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
-		selectCertificateComboBoxItem(receitaBx.CERTIFICADO().toString());
-
 		// LINE 3
-		passwordLabel = new JLabel("Senha do Certificado");
+		passwordLabel = new JLabel("Senha do certificado");
 		passwordTextField = new JTextField();
-		passwordTextField.setText(receitaBx.CERTIFICADO().PASS());
 		passwordCheckButton = new JButton("Validar");
 		passwordCheckButton.setPreferredSize(new Dimension(80, 20));
 		passwordCheckButton.addActionListener(e -> {
@@ -300,45 +280,83 @@ public class MainForm extends JFrame {
 //		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
 
 		// LINE 5
-		customerLabel = new JLabel("Nome do Cliente");
+		customerLabel = new JLabel("Nome do cliente");
 		customerTextField = new JTextField();
-		customerTextField.setText(receitaBx.NOME_CLIENTE());
 		customerTextField.setEditable(false);
 
 		// LINE 6
-		customerDocumentLabel = new JLabel("CNPJ do Cliente");
+		customerDocumentLabel = new JLabel("CNPJ do cliente");
 		customerDocumentTextField = new JTextField();
-		customerDocumentTextField.setText(receitaBx.CNPJ_CLIENTE());
 		customerDocumentTextField.setEditable(false);
 
 		// LINE 7
-		downloadFolderLabel = new JLabel("Caminho dos Arquivos baixados");
-		downloadFolderTextField = new JTextField();
-		downloadFolderTextField.setText(
-				Objects.requireNonNullElse(receitaBx.CAMINHO_ARQUIVOS_BAIXADOS(), Constants.PROGRAM_DOWNLOADED_FOLDER));
-		downloadFolderOpenButton = new JButton("Abrir");
-		downloadFolderOpenButton.setPreferredSize(new Dimension(80, 20));
-		downloadFolderOpenButton.addActionListener(e -> {
-			String folderPath = downloadFolderTextField.getText();
-			Path path = Paths.get(folderPath);
-			if (Files.exists(path) && Files.isDirectory(path)) {
-				try {
-					new ProcessBuilder("explorer.exe", folderPath).start();
-				} catch (IOException e1) {
-					JOptionPane.showMessageDialog(null, e1.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+		sourceFolderDownloadedFilesLabel = new JLabel("Pasta onde os arquivos serão baixados");
+		sourceFolderDownloadedFilesTextField = new JTextField();
+		sourceFolderDownloadedFilesTextField.setEditable(false);
+		sourceFolderDownloadedFilesTextField
+				.setToolTipText("Clique duas vezes sobre esse campo para abrir a pasta informada nele.");
+		sourceFolderDownloadedFilesTextField.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					if (!sourceFolderDownloadedFilesTextField.getText().isEmpty()) {
+						FileUtils.openFolderWithExplorer(sourceFolderDownloadedFilesTextField.getText());
+					}
 				}
-			} else {
-				JOptionPane.showMessageDialog(null,
-						"O caminho informado não existe ou não é um diretorio: " + folderPath, "Atenção",
-						JOptionPane.WARNING_MESSAGE);
+			}
+		});
+
+		sourceFolderDownloadedFilesSelectButton = new JButton("Selecionar");
+		sourceFolderDownloadedFilesSelectButton.setPreferredSize(new Dimension(80, 20));
+		sourceFolderDownloadedFilesSelectButton.addActionListener(e -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle("Selecione a pasta aonde os arquivos serão baixados");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+
+			int result = chooser.showOpenDialog(this);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				File selectedFolder = chooser.getSelectedFile();
+				sourceFolderDownloadedFilesTextField.setText(selectedFolder.getAbsolutePath());
 			}
 		});
 
 		// LINE 8
-//		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
+		targetFolderDownloadedFilesLabel = new JLabel("Pasta destino após processamento");
+		targetFolderDownloadedFilesTextField = new JTextField();
+		targetFolderDownloadedFilesTextField.setEditable(false);
+		targetFolderDownloadedFilesTextField
+				.setToolTipText("Clique duas vezes sobre esse campo para abrir a pasta informada nele.");
+		targetFolderDownloadedFilesTextField.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					if (!targetFolderDownloadedFilesTextField.getText().isEmpty()) {
+						FileUtils.openFolderWithExplorer(targetFolderDownloadedFilesTextField.getText());
+					}
+				}
+			}
+		});
+		targetFolderDownloadedFilesSelectButton = new JButton("Selecionar");
+		targetFolderDownloadedFilesSelectButton.setPreferredSize(new Dimension(80, 20));
+		targetFolderDownloadedFilesSelectButton.addActionListener(e -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle("Selecione a pasta aonde os arquivos serão copiados após o processamento");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+
+			int result = chooser.showOpenDialog(this);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				File selectedFolder = chooser.getSelectedFile();
+				targetFolderDownloadedFilesTextField.setText(selectedFolder.getAbsolutePath());
+			}
+		});
 
 		// LINE 9
-		profileLabel = new JLabel("Selecione um Perfil");
+//		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
+
+		// LINE 10
+		profileLabel = new JLabel("Selecione um perfil");
 		profileContribuinte = new JRadioButton("Contribuinte", true);
 		profileContribuinte.addActionListener(new ActionListener() {
 			@Override
@@ -379,17 +397,10 @@ public class MainForm extends JFrame {
 		profileTypeValueTextField = new JFormattedTextField(cpfMask);
 		profileTypeValueTextField.setVisible(false);
 
-		if (receitaBx.PERFIL() != null && receitaBx.PERFIL().equals(profileProcurador.getText())) {
-			profileProcurador.setSelected(true);
-			profileTypeComboBox.setVisible(true);
-			profileTypeValueTextField.setVisible(true);
-			profileTypeComboBox.setSelectedItem(receitaBx.PERFIL_TYPE());
-			profileTypeValueTextField.setValue(receitaBx.PERFIL_VALUE());
-		}
-
-		// LINE 10
-		systemLabel = new JLabel("Selecione um Sistema");
+		// LINE 11
+		systemLabel = new JLabel("Selecione um sistema");
 		systemComboBox = new JComboBox<String>(SpedUtils.getSystemList());
+		systemComboBox.setSelectedIndex(-1);
 		systemComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -404,9 +415,10 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		// LINE 11
-		systemFileTypeLabel = new JLabel("Selecione um Tipo de Arquivo");
+		// LINE 12
+		systemFileTypeLabel = new JLabel("Selecione um tipo de arquivo");
 		systemFileTypeComboBox = new JComboBox<String>(SpedUtils.getSystemFileType(Sped.CONTRIBUICOES));
+		systemFileTypeComboBox.setSelectedIndex(-1);
 		systemFileTypeComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
@@ -421,48 +433,37 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		// LINE 12
-		systemSearchTypeLabel = new JLabel("Selecione um Tipo de Pesquisa");
+		// LINE 13
+		systemSearchTypeLabel = new JLabel("Selecione um tipo de pesquisa");
 		systemSearchTypeComboBox = new JComboBox<String>(SpedUtils.getSystemSearchType(Sped.CONTRIBUICOES, ""));
+		systemSearchTypeComboBox.setSelectedIndex(-1);
 		systemSearchTypeComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
+
 					Sped system = Sped.getSped(systemComboBox.getSelectedItem().toString());
 					String systemFileType = systemFileTypeComboBox.getSelectedItem().toString();
+					String systemSearchType = e.getItem().toString();
+
 					if (systemSearchFieldsPanel != null && systemSearchFieldsPanel.isShowing()) {
 						panelMain.remove(systemSearchFieldsPanel);
-						try {
-							systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType,
-									e.getItem().toString(), receitaBx);
-						} catch (ParseException e1) {
-							e1.printStackTrace();
-						}
-						panelMain.add(systemSearchFieldsPanel, "cell 0 14, span, grow, wrap");
+						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, systemSearchType,
+								receitaBx);
+						panelMain.add(systemSearchFieldsPanel, "cell 0 15, span, grow, wrap");
 						panelMain.revalidate();
 						panelMain.repaint();
-					} else {
-						try {
-							systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.getSped(receitaBx.SISTEMA()),
-									receitaBx.TIPO_ARQUIVO(), receitaBx.TIPO_PESQUISA(), receitaBx);
-						} catch (ParseException e1) {
-							e1.printStackTrace();
-						}
 					}
 				}
 			}
 		});
 
-		// LINE 13
+		// LINE 14
 //		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
 
-		// LINE 14
+		// LINE 15
 		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx);
 
-		systemComboBox.setSelectedItem(receitaBx.SISTEMA());
-		systemFileTypeComboBox.setSelectedItem(receitaBx.TIPO_ARQUIVO());
-		systemSearchTypeComboBox.setSelectedItem(receitaBx.TIPO_PESQUISA());
-
-		// LINE 15 - Adicionar button
+		// LINE 16 - Adicionar button
 		addButton = new JButton("Adicionar");
 		addButton.addActionListener(new ActionListener() {
 			@Override
@@ -495,7 +496,7 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		// LINE 16 - Grid (table) to hold the queued documents
+		// LINE 17 - Grid (table) to hold the queued documents
 		TableCellRenderer statusRenderer = new DefaultTableCellRenderer() {
 			private final Icon pendingIcon = loadIcon("/icons/pending.png");
 			private final Icon successIcon = loadIcon("/icons/success.png");
@@ -608,37 +609,50 @@ public class MainForm extends JFrame {
 		detailsItem.addActionListener(e -> {
 			int row = itemsTable.getSelectedRow();
 			ReceitaBx obj = getItem(row);
-			DetailsForm form = new DetailsForm(MainForm.this, Menu.DETAILS, obj);
-			form.addObjectListener(new Listenable() {
-				@Override
-				public void value(Object... objs) {
-					String action = (String) objs[0];
-					if (action.equals(Menu.CLOSE.getValue())) {
-						form.close();
+			if (obj == null) {
+				JOptionPane.showMessageDialog(null,
+						"Este item ainda não foi processado. Após seu processamento seus detalhes estarão disponíveis.",
+						"Atenção", JOptionPane.WARNING_MESSAGE);
+			} else {
+				DetailsForm form = new DetailsForm(MainForm.this, Menu.DETAILS, obj);
+				form.addObjectListener(new Listenable() {
+					@Override
+					public void value(Object... objs) {
+						String action = (String) objs[0];
+						if (action.equals(Menu.CLOSE.getValue())) {
+							form.close();
+						}
 					}
-				}
-			});
-			form.load();
+				});
+				form.load();
+			}
 		});
 
-//		JMenuItem retryItem = new JMenuItem("Retry");
-//		retryItem.addActionListener(e -> {
-//			int row = itemsTable.getSelectedRow();
-//		});
-//		
+		JMenuItem retryItem = new JMenuItem("Reprocessar");
+		retryItem.addActionListener(e -> {
+			int row = itemsTable.getSelectedRow();
+			if (row != -1) {
+				row = itemsTable.convertRowIndexToModel(row);
+			}
+			tableModel.setValueAt(Status.PENDING, row, getModelColumnIndex("Status"));
+		});
+
 		JMenuItem deleteItem = new JMenuItem("Remover");
 		deleteItem.addActionListener(e -> {
-			int currentRow = itemsTable.getSelectedRow();
+			int row = itemsTable.getSelectedRow();
+			if (row != -1) {
+				row = itemsTable.convertRowIndexToModel(row);
+			}
 			if (confirmDeletion()) {
-				tableModel.removeRow(currentRow);
-				if (currentRow < rowDynamicData.size()) {
-					rowDynamicData.remove(currentRow);
+				tableModel.removeRow(row);
+				if (row < rowDynamicData.size()) {
+					rowDynamicData.remove(row);
 				}
 			}
 		});
 
 		popupMenu.add(detailsItem);
-//		popupMenu.add(retryItem);
+		popupMenu.add(retryItem);
 		popupMenu.add(deleteItem);
 
 		itemsTable.setRowHeight(24); // important for icons
@@ -673,8 +687,18 @@ public class MainForm extends JFrame {
 				if (e.isPopupTrigger()) {
 					int row = itemsTable.rowAtPoint(e.getPoint());
 
+					retryItem.setEnabled(false);
+
 					if (row >= 0) {
+
 						itemsTable.setRowSelectionInterval(row, row);
+
+						Status status = (Status) tableModel.getValueAt(row, getModelColumnIndex("Status"));
+
+						if (status == Status.SUCCESS) {
+							retryItem.setEnabled(true);
+						}
+
 					}
 
 					popupMenu.show(e.getComponent(), e.getX(), e.getY());
@@ -684,12 +708,15 @@ public class MainForm extends JFrame {
 		itemsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		itemsTable.getSelectionModel().addListSelectionListener(e -> {
 			if (!e.getValueIsAdjusting()) {
-				int selectedRow = itemsTable.getSelectedRow();
-				if (selectedRow != -1) {
+				int row = itemsTable.getSelectedRow();
+				if (row != -1) {
+					row = itemsTable.convertRowIndexToModel(row);
+				}
+				if (row != -1) {
 					int colCount = itemsTable.getColumnCount();
 					for (int col = 0; col < colCount; col++) {
 						String columnName = itemsTable.getColumnName(col);
-						Object value = itemsTable.getValueAt(selectedRow, col);
+						Object value = itemsTable.getValueAt(row, col);
 
 						if (columnName.equals("Sistema")) {
 							systemComboBox.setSelectedItem(value);
@@ -702,6 +729,13 @@ public class MainForm extends JFrame {
 						}
 
 						for (Component c : systemSearchFieldsPanel.getComponents()) {
+							if (c instanceof JFormattedTextField) {
+								JFormattedTextField textField = (JFormattedTextField) c;
+								if (textField.getName().equals(columnName)) {
+									textField.setValue((String) value);
+									break;
+								}
+							}
 							if (c instanceof JTextField) {
 								JTextField textField = (JTextField) c;
 								if (textField.getName().equals(columnName)) {
@@ -745,6 +779,11 @@ public class MainForm extends JFrame {
 					JOptionPane.showMessageDialog(null,
 							"Adicione pelo menos um item à lista antes de iniciar o processamento.", "Atenção",
 							JOptionPane.WARNING_MESSAGE);
+					return;
+				} else if (!isThereItemToBeProcessed()) {
+					JOptionPane.showMessageDialog(null,
+							"Não existe items para serem processados. Somente itens com status diferente de 'Sucesso' serão processados. Caso queira reprocessar um item pressione a tecla direita do mouse sobre ele e escolha a opção reprocessar.",
+							"Atenção", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 
@@ -800,8 +839,6 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		populateGrid();
-
 //		panelMain = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]", "[]10[]10[]"));
 		panelMain = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
 
@@ -821,9 +858,12 @@ public class MainForm extends JFrame {
 		panelMain.add(customerTextField, "pushx, growx, wrap");
 		panelMain.add(customerDocumentLabel, "left, sg 1");
 		panelMain.add(customerDocumentTextField, "pushx, growx, wrap");
-		panelMain.add(downloadFolderLabel, "left, sg 1");
-		panelMain.add(downloadFolderTextField, "pushx, growx");
-		panelMain.add(downloadFolderOpenButton, "left, wrap");
+		panelMain.add(sourceFolderDownloadedFilesLabel, "left, sg 1");
+		panelMain.add(sourceFolderDownloadedFilesTextField, "pushx, growx");
+		panelMain.add(sourceFolderDownloadedFilesSelectButton, "left, wrap");
+		panelMain.add(targetFolderDownloadedFilesLabel, "left, sg 1");
+		panelMain.add(targetFolderDownloadedFilesTextField, "pushx, growx");
+		panelMain.add(targetFolderDownloadedFilesSelectButton, "left, wrap");
 		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap");
 		panelMain.add(profileLabel, "left, sg 1");
 		panelMain.add(profileContribuinte, "split");
@@ -837,11 +877,11 @@ public class MainForm extends JFrame {
 		panelMain.add(systemSearchTypeLabel, "left, sg 1");
 		panelMain.add(systemSearchTypeComboBox, "wrap");
 		// panelMain.add(horizontalLine, "span, grow, wrap");
-		panelMain.add(systemSearchFieldsPanel, "cell 0 14, span, grow, wrap");
-		panelMain.add(addButton, "cell 0 15, wrap");
-		panelMain.add(tableScrollPane, "cell 0 16, span, grow, wrap");
-		panelMain.add(startButton, "cell 0 17");
-		panelMain.add(exitButton, "cell 2 17, left, wrap");
+		panelMain.add(systemSearchFieldsPanel, "cell 0 15, span, grow, wrap");
+		panelMain.add(addButton, "cell 0 16, wrap");
+		panelMain.add(tableScrollPane, "cell 0 17, span, grow, wrap");
+		panelMain.add(startButton, "cell 0 18");
+		panelMain.add(exitButton, "cell 2 18, left, wrap");
 
 //		TitledBorder title;
 //		title = BorderFactory.createTitledBorder("Pesquisa de Arquivos");
@@ -853,6 +893,48 @@ public class MainForm extends JFrame {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setResizable(false);
+	}
+
+	public void init() throws InvalidKeyException, ClassNotFoundException, InvalidAlgorithmParameterException,
+			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException, ParseException {
+
+		appData = CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,
+				AppData::new);
+
+		receitaBxList = appData.getLastListAdded();
+
+		if (receitaBxList.size() > 0) {
+			receitaBx = receitaBxList.get(0);
+		}
+
+		// FileUtils.removeCertificatePathChosen();
+
+		screenResolutionTextField.setText(ScreenResolution.getResolution());
+
+		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
+		selectCertificateComboBoxItem(receitaBx.CERTIFICADO().toString());
+
+		passwordTextField.setText(receitaBx.CERTIFICADO().PASS());
+		customerTextField.setText(receitaBx.NOME_CLIENTE());
+		customerDocumentTextField.setText(receitaBx.CNPJ_CLIENTE());
+		sourceFolderDownloadedFilesTextField.setText(receitaBx.PASTA_ORIGEM_ARQUIVOS_BAIXADOS());
+		targetFolderDownloadedFilesTextField.setText(receitaBx.PASTA_DESTINO_ARQUIVOS_BAIXADOS());
+
+		profileTypeValueTextField.setVisible(false);
+
+		if (receitaBx.PERFIL() != null && receitaBx.PERFIL().equals(profileProcurador.getText())) {
+			profileProcurador.setSelected(true);
+			profileTypeComboBox.setVisible(true);
+			profileTypeValueTextField.setVisible(true);
+			profileTypeComboBox.setSelectedItem(receitaBx.PERFIL_TYPE());
+			profileTypeValueTextField.setValue(receitaBx.PERFIL_VALUE());
+		}
+
+		systemComboBox.setSelectedItem(receitaBx.SISTEMA());
+		systemFileTypeComboBox.setSelectedItem(receitaBx.TIPO_ARQUIVO());
+		systemSearchTypeComboBox.setSelectedItem(receitaBx.TIPO_PESQUISA());
+
+		populateGrid();
 	}
 
 	private String validateFormFields() {
@@ -893,14 +975,30 @@ public class MainForm extends JFrame {
 			}
 		}
 
-		if (downloadFolderTextField.getText().isBlank())
-			result.append("Favor informar o caminho que os arquivos serão baixados.\n");
+		if (sourceFolderDownloadedFilesTextField.getText().isBlank())
+			result.append("Favor informar a pasta onde os arquivos serão baixados.\n");
 		else {
-			String folderPath = downloadFolderTextField.getText();
+			String folderPath = sourceFolderDownloadedFilesTextField.getText();
 			Path path = Paths.get(folderPath);
 			if (!Files.exists(path) || !Files.isDirectory(path)) {
 				result.append("O caminho informado não existe ou não é um diretorio: " + folderPath + "\n");
 			}
+		}
+
+		if (targetFolderDownloadedFilesTextField.getText().isBlank())
+			result.append("Favor informar a pasta onde os arquivos serão copiados após processamento.\n");
+		else {
+			String folderPath = targetFolderDownloadedFilesTextField.getText();
+			Path path = Paths.get(folderPath);
+			if (!Files.exists(path) || !Files.isDirectory(path)) {
+				result.append("O caminho informado não existe ou não é um diretorio: " + folderPath + "\n");
+			}
+		}
+
+		if (!sourceFolderDownloadedFilesTextField.getText().isBlank()
+				&& !targetFolderDownloadedFilesTextField.getText().isBlank() && sourceFolderDownloadedFilesTextField
+						.getText().equals(targetFolderDownloadedFilesTextField.getText())) {
+			result.append("A pasta onde os arquivos foram baixados e a pasta destino nao podem ser iguais\n");
 		}
 
 		if (profileProcurador.isSelected()) {
@@ -926,33 +1024,40 @@ public class MainForm extends JFrame {
 			result.append("Favor selecionar um tipo de pesquisa.\n");
 
 		for (Component c : systemSearchFieldsPanel.getComponents()) {
-			if (c instanceof JTextField) {
-				JTextField textField = (JTextField) c;
-				if (textField.getName().equals(SpedSearchField.DATA_INICIO.getValue())) {
-					DATA_INICIO = textField.getText();
+			if (c instanceof JFormattedTextField) {
+				JFormattedTextField formattedTextField = (JFormattedTextField) c;
+				if (formattedTextField.getName().equals(SpedSearchField.DATA_INICIO.getValue())) {
+					DATA_INICIO = formattedTextField.getValue().toString();
 					if (!ValidateDate.isValidDate(DATA_INICIO)) {
-						result.append("Favor informar uma data inicial válida.\n");
+						result.append("Favor informar uma data inicial válida. [" + DATA_INICIO + "]\n");
 					}
-				} else if (textField.getName().equals(SpedSearchField.DATA_FIM.getValue())) {
-					DATA_FIM = textField.getText();
+				} else if (formattedTextField.getName().equals(SpedSearchField.DATA_FIM.getValue())) {
+					DATA_FIM = formattedTextField.getValue().toString();
 					if (!ValidateDate.isValidDate(DATA_FIM)) {
-						result.append("Favor informar uma data final válida.\n");
+						result.append("Favor informar uma data final válida. [" + DATA_FIM + "]\n");
 					} else {
 						if (!ValidateDate.isValidRange(DATA_INICIO, DATA_FIM)) {
 							result.append("Favor informar uma data inicial que seja anterior a data final.\n");
 						}
 					}
-				} else if (textField.getName().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
-					if (!ValidateCpfCnpj.isCnpjValid(textField.getText())) {
+				} else if (formattedTextField.getName().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
+					if (!ValidateCpfCnpj.isCnpjValid(formattedTextField.getValue().toString())) {
 						result.append("Favor informar um cnpj válido para a Incorporadora.\n");
 					}
-				} else if (textField.getName().equals(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue())) {
-					if (!ValidateCpfCnpj.isCnpjValid(textField.getText())) {
+				} else if (formattedTextField.getName().equals(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue())) {
+					if (!ValidateCpfCnpj.isCnpjValid(formattedTextField.getValue().toString())) {
 						result.append("Favor informar um cnpj válido para o Estabelecimento.\n");
 					}
-//				} else if (textField.getName().equals(SpedSearchField.INSCRICAO_ESTADUAL.getValue())) {
-//					INSCRICAO_ESTADUAL = textField.getText();
 				}
+//			}
+//			else if (c instanceof JTextField) {
+//				JTextField textField = (JTextField) c;
+//				if (textField.getName().equals(SpedSearchField.INSCRICAO_ESTADUAL.getValue())) {
+//					String INSCRICAO_ESTADUAL = textField.getText();
+//					if (INSCRICAO_ESTADUAL.isBlank()) {
+//						result.append("Favor informar uma inscrição estadual válida.\n");
+//					}
+//				}
 			} else if (c instanceof JComboBox) {
 				JComboBox<?> comboBox = (JComboBox<?>) c;
 				if (comboBox.getName().equals(SpedSearchField.TIPO_EVENTO.getValue())) {
@@ -976,6 +1081,18 @@ public class MainForm extends JFrame {
 		}
 
 		return result.toString();
+	}
+
+	private boolean isThereItemToBeProcessed() {
+		boolean result = false;
+		for (int row = 0; row < tableModel.getRowCount(); row++) {
+			Status status = (Status) tableModel.getValueAt(row, getModelColumnIndex("Status"));
+			if (status != Status.SUCCESS) {
+				result = true;
+				break;
+			}
+		}
+		return result;
 	}
 
 	private boolean isTableAlreadyPopulated() {
@@ -1073,7 +1190,16 @@ public class MainForm extends JFrame {
 		return result;
 	}
 
+	private void emptyGrid() {
+		for (int row = 0; row < tableModel.getRowCount(); row++) {
+			tableModel.removeRow(row);
+		}
+		rowDynamicData.clear();
+	}
+
 	private void populateGrid() {
+
+		emptyGrid();
 
 		for (ReceitaBx receitaBx : receitaBxList) {
 
@@ -1292,7 +1418,8 @@ public class MainForm extends JFrame {
 
 		String NOME_CLIENTE = customerTextField.getText();
 		String CNPJ_CLIENTE = customerDocumentTextField.getText();
-		String CAMINHO_ARQUIVOS_BAIXADOS = downloadFolderTextField.getText();
+		String PASTA_ORIGEM_ARQUIVOS_BAIXADOS = sourceFolderDownloadedFilesTextField.getText();
+		String PASTA_DESTINO_ARQUIVOS_BAIXADOS = targetFolderDownloadedFilesTextField.getText();
 
 		String PERFIL = profileContribuinte.getText();
 		String PERFIL_TYPE = "";
@@ -1306,57 +1433,62 @@ public class MainForm extends JFrame {
 
 		for (int row = 0; row < tableModel.getRowCount(); row++) {
 
-			String SISTEMA = (String) tableModel.getValueAt(row, getModelColumnIndex("Sistema"));
-			String TIPO_ARQUIVO = (String) tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo"));
-			String TIPO_PESQUISA = (String) tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa"));
-			String DATA_INICIO = "";
-			String DATA_FIM = "";
-			String CNPJ_INCORPORADORA = "";
-			String TIPO_EVENTO = "";
-			String BAIXAR_ARQUIVO_ASSINADO = "";
-			String CNPJ_ESTABELECIMENTO = "";
-			Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
-			String INSCRICAO_ESTADUAL = "";
-			Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
-			String ULTIMO_PEDIDO_SOLICITADO = "";
-			String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
-			String MENSAGEM_CONCLUSAO_PROCESSAMENTO = "";
-			String PERIODOS_FALTANDO = "";
-			Integer TOTAL_PERIODOS_FALTANDO = 0;
-			Status STATUS = Status.PENDING;
+			Status STATUS = (Status) tableModel.getValueAt(row, getModelColumnIndex("Status"));
 
-			// Dynamic fields — read from the stored map for this row
-			Map<String, String> dynamic = rowDynamicData.get(row);
-			for (Map.Entry<String, String> entry : dynamic.entrySet()) {
-				if (entry.getKey().equals(SpedSearchField.DATA_INICIO.getValue())) {
-					DATA_INICIO = entry.getValue();
-				} else if (entry.getKey().equals(SpedSearchField.DATA_FIM.getValue())) {
-					DATA_FIM = entry.getValue();
-				} else if (entry.getKey().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
-					CNPJ_INCORPORADORA = entry.getValue();
-				} else if (entry.getKey().equals(SpedSearchField.TIPO_EVENTO.getValue())) {
-					TIPO_EVENTO = entry.getValue();
-				} else if (entry.getKey().equals(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue())) {
-					BAIXAR_ARQUIVO_ASSINADO = entry.getValue();
-				} else if (entry.getKey().equals(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue())) {
-					CNPJ_ESTABELECIMENTO = entry.getValue();
-				} else if (entry.getKey().equals(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue())) {
-					BUSCAR_TODOS_ESTABLECIMENTOS = Boolean.parseBoolean(entry.getValue());
-				} else if (entry.getKey().equals(SpedSearchField.INSCRICAO_ESTADUAL.getValue())) {
-					INSCRICAO_ESTADUAL = entry.getValue();
-				} else if (entry.getKey().equals(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue())) {
-					ULTIMO_ARQUIVO_TRANSMITIDO = Boolean.parseBoolean(entry.getValue());
+			if (STATUS != Status.SUCCESS) {
+
+				String SISTEMA = (String) tableModel.getValueAt(row, getModelColumnIndex("Sistema"));
+				String TIPO_ARQUIVO = (String) tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo"));
+				String TIPO_PESQUISA = (String) tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa"));
+				String DATA_INICIO = "";
+				String DATA_FIM = "";
+				String CNPJ_INCORPORADORA = "";
+				String TIPO_EVENTO = "";
+				String BAIXAR_ARQUIVO_ASSINADO = "";
+				String CNPJ_ESTABELECIMENTO = "";
+				Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
+				String INSCRICAO_ESTADUAL = "";
+				Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
+				String ULTIMO_PEDIDO_SOLICITADO = "";
+				String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
+				String MENSAGEM_CONCLUSAO_PROCESSAMENTO = "";
+				String PERIODOS_FALTANDO = "";
+				Integer TOTAL_PERIODOS_FALTANDO = 0;
+
+				// Dynamic fields — read from the stored map for this row
+				Map<String, String> dynamic = rowDynamicData.get(row);
+				for (Map.Entry<String, String> entry : dynamic.entrySet()) {
+					if (entry.getKey().equals(SpedSearchField.DATA_INICIO.getValue())) {
+						DATA_INICIO = entry.getValue();
+					} else if (entry.getKey().equals(SpedSearchField.DATA_FIM.getValue())) {
+						DATA_FIM = entry.getValue();
+					} else if (entry.getKey().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
+						CNPJ_INCORPORADORA = entry.getValue();
+					} else if (entry.getKey().equals(SpedSearchField.TIPO_EVENTO.getValue())) {
+						TIPO_EVENTO = entry.getValue();
+					} else if (entry.getKey().equals(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue())) {
+						BAIXAR_ARQUIVO_ASSINADO = entry.getValue();
+					} else if (entry.getKey().equals(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue())) {
+						CNPJ_ESTABELECIMENTO = entry.getValue();
+					} else if (entry.getKey().equals(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue())) {
+						BUSCAR_TODOS_ESTABLECIMENTOS = Boolean.parseBoolean(entry.getValue());
+					} else if (entry.getKey().equals(SpedSearchField.INSCRICAO_ESTADUAL.getValue())) {
+						INSCRICAO_ESTADUAL = entry.getValue();
+					} else if (entry.getKey().equals(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue())) {
+						ULTIMO_ARQUIVO_TRANSMITIDO = Boolean.parseBoolean(entry.getValue());
+					}
 				}
+
+				ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), NOME_CLIENTE, CNPJ_CLIENTE,
+						PASTA_ORIGEM_ARQUIVOS_BAIXADOS, PASTA_DESTINO_ARQUIVOS_BAIXADOS, PERFIL, PERFIL_TYPE,
+						PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA,
+						TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS,
+						INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO,
+						DATA_HORA_CONCLUSAO_PROCESSAMENTO, MENSAGEM_CONCLUSAO_PROCESSAMENTO, PERIODOS_FALTANDO,
+						TOTAL_PERIODOS_FALTANDO, STATUS);
+
+				result.add(receitaBx);
 			}
-
-			ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), NOME_CLIENTE, CNPJ_CLIENTE,
-					CAMINHO_ARQUIVOS_BAIXADOS, PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA,
-					DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA, TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO,
-					CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO,
-					ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO, MENSAGEM_CONCLUSAO_PROCESSAMENTO,
-					PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS);
-
-			result.add(receitaBx);
 		}
 
 		saveListOfFiles(result);
@@ -1377,6 +1509,8 @@ public class MainForm extends JFrame {
 	private void saveListOfFiles(List<ReceitaBx> list) throws InvalidKeyException, InvalidAlgorithmParameterException,
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
 
+		logger.info("Saving customer data...");
+
 		if (appData.getLastListAdded().size() == 0) {
 			appData.addList(list);
 		} else {
@@ -1384,6 +1518,8 @@ public class MainForm extends JFrame {
 		}
 
 		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+		
+		receitaBxList = appData.getLastListAdded();
 
 	}
 
@@ -1395,11 +1531,12 @@ public class MainForm extends JFrame {
 		newCustomer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
+				logger.info("Creating a new customer data...");
+
 				certificateComboBox.setSelectedIndex(-1);
 				passwordTextField.setText("");
 				customerTextField.setText("");
 				customerDocumentTextField.setText("");
-				// downloadFolderTextField.setText("");
 				profileContribuinte.setSelected(true);
 				systemSearchTypeComboBox.setSelectedIndex(-1);
 				systemFileTypeComboBox.setSelectedIndex(-1);
@@ -1423,11 +1560,7 @@ public class MainForm extends JFrame {
 					}
 				}
 
-				for (int row = 0; row < tableModel.getRowCount(); row++) {
-					tableModel.removeRow(row);
-				}
-				
-				rowDynamicData.clear();
+				emptyGrid();
 
 				appData.addList(new ArrayList<>());
 
@@ -1455,6 +1588,15 @@ public class MainForm extends JFrame {
 			}
 		});
 
+		JMenuItem restart = new JMenuItem(Menu.RESTART.getValue());
+		restart.setMnemonic(KeyEvent.VK_R);
+		restart.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.CTRL_MASK));
+		restart.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				listener.value(Menu.RESTART.getValue());
+			}
+		});
+
 		JMenuItem setting = new JMenuItem(Menu.SETTING.getValue());
 		setting.setMnemonic(KeyEvent.VK_C);
 		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
@@ -1471,15 +1613,6 @@ public class MainForm extends JFrame {
 				form.load();
 			}
 		});
-		
-		JMenuItem restart = new JMenuItem(Menu.RESTART.getValue());
-		restart.setMnemonic(KeyEvent.VK_R);
-		restart.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.CTRL_MASK));
-		restart.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				listener.value(Menu.RESTART.getValue());
-			}
-		});
 
 		JMenuItem exit = new JMenuItem(Menu.EXIT.getValue());
 		exit.setMnemonic(KeyEvent.VK_S);
@@ -1494,10 +1627,9 @@ public class MainForm extends JFrame {
 		fileMenu.setMnemonic(KeyEvent.VK_M);
 		fileMenu.add(newCustomer);
 		fileMenu.add(historic);
+		fileMenu.add(restart);
 		fileMenu.addSeparator();
 		fileMenu.add(setting);
-		fileMenu.addSeparator();
-		fileMenu.add(restart);
 		fileMenu.addSeparator();
 		fileMenu.add(exit);
 

@@ -4,7 +4,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Objects;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -16,7 +15,9 @@ import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.MaskFormatter;
 
-import com.rctereza.robotbx.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rctereza.robotbx.enums.Sped;
 import com.rctereza.robotbx.enums.SpedSearchField;
 import com.rctereza.robotbx.models.ReceitaBx;
@@ -25,6 +26,8 @@ import net.miginfocom.swing.MigLayout;
 
 public class SpedUtils {
 
+	private static final Logger logger = LoggerFactory.getLogger(SpedUtils.class);
+	
 	public static String[] contabilFileTypes = { "Escrituração Contábil Digital",
 			"Dados Agregados de Escrituração Contábil Digital", "Termos Emitidios pelas Juntas Comerciais" };
 
@@ -102,16 +105,46 @@ public class SpedUtils {
 		return list;
 	}
 
-	public static JPanel getSearchFields(Sped value, String fileType, String searchType, ReceitaBx receitaBx)
-			throws ParseException {
+	public static JPanel getSearchFields(Sped value, String fileType, String searchType, ReceitaBx receitaBx) {
 		
+		String DATA_INICIO = "";
+		String DATA_FIM = "";
+		String CNPJ_INCORPORADORA = "";
+		String TIPO_EVENTO = "";
+		String BAIXAR_ARQUIVO_ASSINADO = "";
+		String CNPJ_ESTABELECIMENTO = "";
+		Boolean BUSCAR_TODOS_ESTABLECIMENTOS = false;
+		String INSCRICAO_ESTADUAL = "";
+		Boolean ULTIMO_ARQUIVO_TRANSMITIDO = false;
+		
+		if (receitaBx != null) {
+			DATA_INICIO = receitaBx.DATA_INICIO();
+			DATA_FIM = receitaBx.DATA_FIM();
+			CNPJ_INCORPORADORA = receitaBx.CNPJ_INCORPORADORA();
+			TIPO_EVENTO = receitaBx.TIPO_EVENTO();
+			BAIXAR_ARQUIVO_ASSINADO = receitaBx.BAIXAR_ARQUIVO_ASSINADO();
+			CNPJ_ESTABELECIMENTO = receitaBx.CNPJ_ESTABELECIMENTO();
+			BUSCAR_TODOS_ESTABLECIMENTOS = receitaBx.BUSCAR_TODOS_ESTABLECIMENTOS();
+			INSCRICAO_ESTADUAL = receitaBx.INSCRICAO_ESTADUAL();
+			ULTIMO_ARQUIVO_TRANSMITIDO = receitaBx.ULTIMO_ARQUIVO_TRANSMITIDO();
+		}
+			
 		JPanel panel = null; // = new JPanel(new MigLayout("", "[][]", "[]"));
 
-		MaskFormatter cnpjMask = new MaskFormatter("##.###.###/####-##");
-		MaskFormatter dateMask = new MaskFormatter("##/##/####");
+		MaskFormatter cnpjMask = null;
+		MaskFormatter dateMask = null;
+		
+		try {
+			
+			cnpjMask = new MaskFormatter("##.###.###/####-##");
+			cnpjMask.setPlaceholderCharacter('_');
 
-		cnpjMask.setPlaceholderCharacter('_');
-		dateMask.setPlaceholderCharacter('_');
+			dateMask = new MaskFormatter("##/##/####");
+			dateMask.setPlaceholderCharacter('_');
+			
+		} catch (ParseException e) {
+			logger.error(e.getMessage(), e);
+		}
 
 		if ((value.equals(Sped.CONTRIBUICOES) && (fileType.equals("Escrituração") || fileType.equals(""))
 				&& (searchType.equals("Período de Entrega") || searchType.equals("")))
@@ -131,14 +164,13 @@ public class SpedUtils {
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
 			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
-			inicioDateTextField
-					.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
+			inicioDateTextField.setValue(DATA_INICIO);
 
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
 			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
-			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
+			fimDateTextField.setValue(DATA_FIM);
 
 			panel.add(inicioDateLabel, "sg 1");
 			panel.add(inicioDateTextField, "wrap");
@@ -157,20 +189,19 @@ public class SpedUtils {
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
 			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
-			inicioDateTextField
-					.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
+			inicioDateTextField.setValue(DATA_INICIO);
 
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
 			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
-			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
+			fimDateTextField.setValue(DATA_FIM);
 
 			JLabel incorporadoraCnpjLabel = new JLabel("CNPJ da Incorporada *");
 			JFormattedTextField incorporadoraCnpjTextField = new JFormattedTextField(cnpjMask);
 			incorporadoraCnpjTextField.setName(SpedSearchField.CNPJ_INCORPORADORA.getValue());
 			incorporadoraCnpjTextField.setColumns(12);
-			incorporadoraCnpjTextField.setValue(receitaBx.CNPJ_INCORPORADORA());
+			incorporadoraCnpjTextField.setValue(CNPJ_INCORPORADORA);
 
 			panel.add(inicioDateLabel, "sg 1");
 			panel.add(inicioDateTextField, "wrap");
@@ -190,13 +221,13 @@ public class SpedUtils {
 			// Administrativos/Judiciais"};
 			JComboBox<String> eventoTypeComboBox = new JComboBox<String>(efdEventTypes);
 			eventoTypeComboBox.setName(SpedSearchField.TIPO_EVENTO.getValue());
-			eventoTypeComboBox.setSelectedItem(receitaBx.TIPO_EVENTO());
+			eventoTypeComboBox.setSelectedItem(TIPO_EVENTO);
 
 			JLabel baixarFileLabel = new JLabel("Baixar arquivo com Assinatura Digital *");
 			// String[] baixarFileOptions = {"NÃO","SIM"};
 			JComboBox<String> baixarFileComboBox = new JComboBox<String>(efdDownloadSignedFiles);
 			baixarFileComboBox.setName(SpedSearchField.BAIXAR_ARQUIVO_ASSINADO.getValue());
-			baixarFileComboBox.setSelectedItem(receitaBx.BAIXAR_ARQUIVO_ASSINADO());
+			baixarFileComboBox.setSelectedItem(BAIXAR_ARQUIVO_ASSINADO);
 
 			panel.add(eventoTypeLabel, "sg 1");
 			panel.add(eventoTypeComboBox, "wrap");
@@ -212,37 +243,34 @@ public class SpedUtils {
 			JFormattedTextField cnpjEstabelecimentoTextField = new JFormattedTextField(cnpjMask);
 			cnpjEstabelecimentoTextField.setName(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue());
 			cnpjEstabelecimentoTextField.setColumns(12);
-			cnpjEstabelecimentoTextField.setValue(receitaBx.CNPJ_ESTABELECIMENTO());
+			cnpjEstabelecimentoTextField.setValue(CNPJ_ESTABELECIMENTO);
 
 			JLabel buscarArquivosLabel = new JLabel("Buscar Arquivos de Todos os Estabelecimentos *");
 			JCheckBox buscarArquivosCheckBox = new JCheckBox("");
 			buscarArquivosCheckBox.setName(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue());
-			buscarArquivosCheckBox
-					.setSelected(Objects.requireNonNullElse(receitaBx.BUSCAR_TODOS_ESTABLECIMENTOS(), false));
+			buscarArquivosCheckBox.setSelected(BUSCAR_TODOS_ESTABLECIMENTOS);
 
 			JLabel incricaoEstadualLabel = new JLabel("Inscrição Estadual");
 			JTextField incricaoEstadualTextField = new JTextField(10);
 			incricaoEstadualTextField.setName(SpedSearchField.INSCRICAO_ESTADUAL.getValue());
-			incricaoEstadualTextField.setText(receitaBx.INSCRICAO_ESTADUAL());
+			incricaoEstadualTextField.setText(INSCRICAO_ESTADUAL);
 
 			JLabel inicioDateLabel = new JLabel("Data de início *");
 			JFormattedTextField inicioDateTextField = new JFormattedTextField(dateMask);
 			inicioDateTextField.setName(SpedSearchField.DATA_INICIO.getValue());
 			inicioDateTextField.setColumns(8);
-			inicioDateTextField
-					.setValue(Objects.requireNonNullElse(receitaBx.DATA_INICIO(), Constants.PROGRAM_PERIOD_START));
+			inicioDateTextField.setValue(DATA_INICIO);
 
 			JLabel fimDateLabel = new JLabel("Data de fim *");
 			JFormattedTextField fimDateTextField = new JFormattedTextField(dateMask);
 			fimDateTextField.setName(SpedSearchField.DATA_FIM.getValue());
 			fimDateTextField.setColumns(8);
-			fimDateTextField.setValue(Objects.requireNonNullElse(receitaBx.DATA_FIM(), Constants.PROGRAM_PERIOD_END));
+			fimDateTextField.setValue(DATA_FIM);
 
 			JLabel ultimoArquivoLabel = new JLabel("Ultimo arquivo transmitido *");
 			JCheckBox ultimoArquivoCheckBox = new JCheckBox("");
 			ultimoArquivoCheckBox.setName(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue());
-			ultimoArquivoCheckBox
-					.setSelected(Objects.requireNonNullElse(receitaBx.ULTIMO_ARQUIVO_TRANSMITIDO(), false));
+			ultimoArquivoCheckBox.setSelected(ULTIMO_ARQUIVO_TRANSMITIDO);
 
 			panel.add(cnpjEstabelecimentoLabel, "sg 1");
 			panel.add(cnpjEstabelecimentoTextField, "wrap");
@@ -265,7 +293,7 @@ public class SpedUtils {
 
 		return panel;
 	}
-
+	
 //	private String getInicioDate() {
 //		String result = Constants.PROGRAM_PERIOD_START;
 //		

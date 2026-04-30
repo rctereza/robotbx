@@ -1,15 +1,12 @@
 package com.rctereza.robotbx.controllers;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.threads.ProcessRobot;
 import com.rctereza.robotbx.tools.FileUtils;
@@ -18,23 +15,33 @@ import com.rctereza.robotbx.wrappers.Ref;
 public class Controller {
 
 	private static final Logger logger = LoggerFactory.getLogger(Controller.class);
+	
+	private static String sourceFolder;
+	private static String targetFolder;
 
-	public void startRobot(Ref<List<ReceitaBx>> list) throws InterruptedException, ExecutionException {
+	public void startRobot(Ref<List<ReceitaBx>> list) throws InterruptedException, ExecutionException, IOException {
 
 		try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
 
 			logger.info("Starting...");
 
-			cleanDirectory(); // delete all files/folders in the directory where the files will be downloaded.
-
 			for (int i = 0; i < list.get().size(); i++) {
 
-				if (i > 0) {
+				ReceitaBx params = list.get().get(i);
+
+				if (i == 0) {
+					sourceFolder = params.PASTA_ORIGEM_ARQUIVOS_BAIXADOS();
+					targetFolder = params.PASTA_DESTINO_ARQUIVOS_BAIXADOS();
+					
+					logger.info("Deleting all files/folders in the directory ({}) before the downloading starts....", sourceFolder);
+					FileUtils.deleteDirectory(sourceFolder);
+					
+				} else {
+					
 					logger.info("Waiting 5 seconds before starting to process the next item...");
 					Thread.sleep(5000);
+					
 				}
-
-				ReceitaBx params = list.get().get(i);
 
 				logger.info("-------------------------------------------------------------------------------");
 
@@ -52,6 +59,9 @@ public class Controller {
 						updated.TIPO_ARQUIVO(), updated.TIPO_PESQUISA(), updated.ULTIMO_PEDIDO_SOLICITADO(),
 						updated.DATA_HORA_CONCLUSAO_PROCESSAMENTO());
 			}
+			
+			logger.info("Moving all files/folders downloaded to this new location at ({})....", targetFolder);
+			FileUtils.moveDirectory(sourceFolder,targetFolder);
 		}
 
 		logger.info("-------------------------------------------------------------------------------");
@@ -59,12 +69,4 @@ public class Controller {
 
 	}
 
-	private void cleanDirectory() {
-		Path folderPath = Paths.get(Constants.PROGRAM_DOWNLOADED_FOLDER); // Change to your folder path
-		try {
-			FileUtils.clearDirectory(folderPath);
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-		}
-	}
 }

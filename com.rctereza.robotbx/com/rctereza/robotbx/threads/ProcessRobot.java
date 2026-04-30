@@ -110,10 +110,11 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 		logger.info("Thread Terminated!");
 
 		return new ReceitaBx(original.RESOLUCAO_TELA(), original.CERTIFICADO(), original.NOME_CLIENTE(),
-				original.CNPJ_CLIENTE(), original.CAMINHO_ARQUIVOS_BAIXADOS(), original.PERFIL(),
-				original.PERFIL_TYPE(), original.PERFIL_VALUE(), original.SISTEMA(), original.TIPO_ARQUIVO(),
-				original.TIPO_PESQUISA(), original.DATA_INICIO(), original.DATA_FIM(), original.CNPJ_INCORPORADORA(),
-				original.TIPO_EVENTO(), original.BAIXAR_ARQUIVO_ASSINADO(), original.CNPJ_ESTABELECIMENTO(),
+				original.CNPJ_CLIENTE(), original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS(),
+				original.PASTA_DESTINO_ARQUIVOS_BAIXADOS(), original.PERFIL(), original.PERFIL_TYPE(),
+				original.PERFIL_VALUE(), original.SISTEMA(), original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(),
+				original.DATA_INICIO(), original.DATA_FIM(), original.CNPJ_INCORPORADORA(), original.TIPO_EVENTO(),
+				original.BAIXAR_ARQUIVO_ASSINADO(), original.CNPJ_ESTABELECIMENTO(),
 				original.BUSCAR_TODOS_ESTABLECIMENTOS(), original.INSCRICAO_ESTADUAL(),
 				original.ULTIMO_ARQUIVO_TRANSMITIDO(), ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO,
 				MENSAGEM_CONCLUSAO_PROCESSAMENTO, PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS);
@@ -214,7 +215,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 					logger.info("Checking if there's a message box...");
 					MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME);
 					String text = mb.getText();
-					text = text.replace("\n","");
+					text = text.replace("\n", "");
 					logger.info("Message box text found: [{}]", text);
 
 					Boolean found = false;
@@ -275,7 +276,8 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 										String counter = "#" + String.valueOf(NUMBER_OF_ATTEMPTS) + "/"
 												+ ra.NUMBER_OF_ATTEMPTS().toString();
 
-										logger.info("{} - Waiting for this action [{}] to be checked again...", counter, ra.DESCRIPTION());
+										logger.info("{} - Waiting for this action [{}] to be checked again...", counter,
+												ra.DESCRIPTION());
 
 										actions.Wait(ra.WAIT_MILLISECONDS());
 
@@ -360,7 +362,8 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 										String counter = "#" + String.valueOf(NUMBER_OF_ATTEMPTS) + "/"
 												+ ra.NUMBER_OF_ATTEMPTS().toString();
 
-										logger.info("{} - Waiting for this action [{}] to be checked again...", counter, rmg.MESSAGE());
+										logger.info("{} - Waiting for this action [{}] to be checked again...", counter,
+												rmg.MESSAGE());
 
 										actions.Wait(ra.WAIT_MILLISECONDS());
 
@@ -443,7 +446,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			endMonth = Integer.parseInt(values[1]);
 
 			fileNameBegins = "PISCOFINS";
-			fileFolderPath = original.CAMINHO_ARQUIVOS_BAIXADOS() + "\\Escrituração";
+			fileFolderPath = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\Escrituração";
 			fileFolderIndex = 0;
 
 			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
@@ -467,7 +470,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			endMonth = Integer.parseInt(values[1]);
 
 			fileNameBegins = original.CNPJ_CLIENTE(); // "07214419000195";
-			fileFolderPath = original.CAMINHO_ARQUIVOS_BAIXADOS() + "\\Escrituração Fiscal Digital";
+			fileFolderPath = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\Escrituração Fiscal Digital";
 			fileFolderIndex = 1;
 
 			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
@@ -492,7 +495,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			endMonth = Integer.parseInt(values[1]);
 
 			fileNameBegins = "SPEDECF";
-			fileFolderPath = original.CAMINHO_ARQUIVOS_BAIXADOS() + "\\Escrituração";
+			fileFolderPath = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\Escrituração";
 			fileFolderIndex = 2;
 
 			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,

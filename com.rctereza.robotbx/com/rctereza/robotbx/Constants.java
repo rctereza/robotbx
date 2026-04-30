@@ -9,8 +9,8 @@ public class Constants {
 
 	public static final boolean DEBUG = false;
 	
-	public static final int WINDOW_WIDTH = 1100;
-	public static final int WINDOW_HEIGHT = 800;
+	public static final int WINDOW_WIDTH = 1200;
+	public static final int WINDOW_HEIGHT = 850;
 
 	public static final String SOFTWARE_NAME = "Receitanet BX Robô";
 	public static final String SOFTWARE_VERSION = "1.00";
