@@ -86,4 +86,23 @@ public class Actions {
         robot.keyRelease(KeyEvent.VK_UP);
         robot.delay(defaultDelay);
 	}
+	
+	public void Alt_F_O() {
+        robot.keyPress(KeyEvent.VK_ALT);
+        robot.keyPress(KeyEvent.VK_F);
+        robot.keyRelease(KeyEvent.VK_F);
+        robot.keyRelease(KeyEvent.VK_ALT);
+        robot.delay(300);
+        robot.keyPress(KeyEvent.VK_O);
+        robot.keyRelease(KeyEvent.VK_O);
+        robot.delay(defaultDelay);
+	}
+	
+	public void Ctrl_A() {
+        robot.keyPress(KeyEvent.VK_CONTROL);
+        robot.keyPress(KeyEvent.VK_A);
+        robot.keyRelease(KeyEvent.VK_A);
+        robot.keyRelease(KeyEvent.VK_CONTROL);
+        robot.delay(defaultDelay);
+	}
 }

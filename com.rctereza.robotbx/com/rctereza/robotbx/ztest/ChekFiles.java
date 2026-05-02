@@ -26,20 +26,20 @@ public class ChekFiles {
 
 	public static void main(String[] args) {
 
-		String[] fileFolder = { "C:\\Temp\\ReceitanetBX\\Escrituração",
-				"C:\\Temp\\ReceitanetBX\\Escrituração Fiscal Digital", "C:\\Temp\\ReceitanetBX\\Escrituração" };
+		String[] fileFolder = { "C:\\Temp\\Clientes\\JALAPAO IMPORTADORA EXPORTADORA COMERCIO DE LUBRI\\Escrituração",
+				"C:\\Temp\\Clientes\\Escrituração Fiscal Digital", "C:\\Temp\\Clientes\\Escrituração" };
 
 		// SISTEMA.........: SPED Contribuições
 		// TIPO DE ARQUIVO.: Escrituração
 		// TIPO DE PESQUISA: Período da Escrituração
 		// NOME DO ARQUIVO.:
 		// PISCOFINS_20200101_20200131_07214419000195_Original_20200311170643_466E91B68B0768A77ED8E18073A1310E47D56CF1.txt
-//		startYear = 2021;
-//		startMonth = 4;
-//		endYear = 2026;
-//		endMonth = 3;
-//		fileNameBegins = "PISCOFINS";
-//		fileFolderIndex = 0;
+		startYear = 2021;
+		startMonth = 4;
+		endYear = 2026;
+		endMonth = 3;
+		fileNameBegins = "PISCOFINS";
+		fileFolderIndex = 0;
 
 		// SISTEMA.........: SPED Fiscal-EFD ICMS IPI
 		// TIPO DE ARQUIVO.: Escrituração Fiscal Digital
@@ -57,12 +57,12 @@ public class ChekFiles {
 		// TIPO DE ARQUIVO.: Escrituração
 		// TIPO DE PESQUISA: Período da Escrituração
 		// NOME DO ARQUIVO.: SPEDECF-07214419000195-20140101-20141231-20150924103745.txt
-		startYear = 2014;
-		startMonth = 1;
-		endYear = 2025;
-		endMonth = 12;
-		fileNameBegins = "SPEDECF";
-		fileFolderIndex = 2;
+//		startYear = 2014;
+//		startMonth = 1;
+//		endYear = 2025;
+//		endMonth = 12;
+//		fileNameBegins = "SPEDECF";
+//		fileFolderIndex = 2;
 
 		Path folderPath = Paths.get(fileFolder[fileFolderIndex]);
 

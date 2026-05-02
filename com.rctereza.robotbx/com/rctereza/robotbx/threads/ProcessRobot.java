@@ -1,6 +1,8 @@
 package com.rctereza.robotbx.threads;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -215,7 +217,6 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 					logger.info("Checking if there's a message box...");
 					MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME);
 					String text = mb.getText();
-					text = text.replace("\n", "");
 					logger.info("Message box text found: [{}]", text);
 
 					Boolean found = false;
@@ -393,6 +394,20 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 									RUNNING = false;
 								}
 							}
+						} else if (rmg.TYPE() == Message.FUNCTION) {
+							
+							Class<ProcessRobot> clazz = ProcessRobot.class;
+							
+							Constructor<ProcessRobot> constructor = clazz.getConstructor(ReceitaBx.class);
+							
+							ProcessRobot obj = constructor.newInstance(original);
+
+							Method method = clazz.getDeclaredMethod(rmg.MESSAGE(), Actions.class);
+
+							method.setAccessible(true);
+
+							method.invoke(obj, actions);
+							
 						}
 					}
 
@@ -411,6 +426,95 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 		return result;
 	}
 
+	@SuppressWarnings("unused")
+	private void CheckTOMenu(Actions actions) throws Exception {
+
+		logger.info("Checking the parameters of the menu Tools / Options");
+		
+		String salvarOsArquivosEm = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS();
+		String criarSubDiretorio = "EB Criar sub-diretério para cada tipo de arquivo.";
+		String numeroDownloads = "Número de downloads simultâneos: [5H";
+		String salvarLog = "EB Salvar log para depuração.";
+		
+		boolean changed = false;
+
+		actions.Wait(2000); // 2 seconds
+
+		actions.Alt_F_O();
+
+		actions.Wait(2000); // 2 seconds
+
+		MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME, 3.0);
+		String text = mb.getText();
+		logger.info("This is the current values: {}", text);
+
+		if (!text.contains(salvarOsArquivosEm)) {
+			logger.info("01 - Changing 'Salvar os arquivos em' to [{}]", salvarOsArquivosEm);
+			actions.Move(850, 412);
+			actions.Click();
+			actions.Wait(1000);
+			actions.Ctrl_A();
+			actions.Paste(salvarOsArquivosEm);
+			changed = true;
+
+		}
+		if (!text.contains(criarSubDiretorio)) {
+			logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
+			System.out.println("criarSubDiretorio");
+			actions.Move(788, 453);
+			actions.Click();
+			actions.Wait(1000);
+			changed = true;
+
+		}
+		if (!text.contains(numeroDownloads)) {
+			logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
+			System.out.println("numeroDownloads");
+			actions.Move(967, 512);
+			actions.Click();
+			actions.Wait(1000);
+			actions.Ctrl_A();
+			actions.Paste("5");
+			changed = true;
+
+		}
+		if (!text.contains(salvarLog)) {
+			logger.info("04 - Selecting 'Salvar log para depuração.");
+			actions.Move(788, 613);
+			actions.Click();
+			actions.Wait(1000);
+			logger.info("05 - Changing the path to [{}].", salvarOsArquivosEm + "\\receitanetbx.log");
+			actions.Move(810, 640);
+			actions.Click();
+			actions.Wait(1000);
+			actions.Ctrl_A();
+			actions.Paste(salvarOsArquivosEm + "\\receitanetbx.log");
+			changed = true;
+		}
+		if (changed) {
+			// Save
+			actions.Move(992, 669);
+			actions.Click();
+
+			actions.Wait(2000);
+
+			//OK
+			actions.Move(956, 542);
+			actions.Click();
+			
+			logger.info("Parameters fixed with success.");
+
+		} else {
+			System.out.println("Cancelar");
+			actions.Move(1100, 669);
+			actions.Wait(1000);
+			actions.Click();
+			
+			logger.info("Parameters already fixed. No change needed.");
+		}
+
+	}
+	
 	private String getDateTimeOfConclusion() {
 		LocalDateTime currentDateTime = LocalDateTime.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -428,7 +532,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 		String fileFolderPath;
 		int fileFolderIndex;
 
-		if (original.SISTEMA().equals(Sped.EFD.getValue())
+		if (original.SISTEMA().equals(Sped.CONTRIBUICOES.getValue())
 				&& original.TIPO_PESQUISA().equals(SpedUtils.contribuicoesSearchTypes[2])) {
 
 			// SISTEMA.........: SPED Contribuições
@@ -509,6 +613,9 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	private String getPeriods(int startYear, int startMonth, int endYear, int endMonth, String fileNameBegins,
 			String fileFolder, int fileFolderIndex) {
 
+//		logger.debug("{}/{}, {}/{}, {}, {}, {}", startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolder,
+//				fileFolderIndex);
+
 		String result = "";
 
 		Path folderPath = Paths.get(fileFolder);
@@ -557,12 +664,10 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			}
 
 			if (missingMonths.size() == 0) {
-				logger.info("Todos os meses foram encontrados para o periodo informado.");
+				logger.info("Todos os meses existem para o periodo informado.");
 			} else {
-				// Print result
-//				missingMonths.forEach(System.out::println);
-//				System.out.println(missingMonths.size() + " months are missing...");
-				logger.info("({}) meses não foram encontrados para o periodo informado.", missingMonths.size());
+				
+				logger.info("(Existem meses faltando no periodo informado. Quantidade: {}.", missingMonths.size());
 				result = missingMonths.toString();
 			}
 

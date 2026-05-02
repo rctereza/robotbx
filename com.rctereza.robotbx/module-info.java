@@ -1,21 +1,19 @@
 module com.rctereza.robotbx {
-	requires transitive java.desktop;
 	requires java.base;
 	requires java.prefs;
+	requires java.datatransfer;
 
-	requires com.miglayout.swing;
+	requires transitive java.desktop;
+	requires transitive com.sun.jna.platform;
+	requires transitive com.sun.jna;
 
 	requires com.formdev.flatlaf;
 	requires com.formdev.flatlaf.extras;
 	requires com.formdev.flatlaf.fonts.roboto;
 
+	requires com.miglayout.swing;
 	requires com.github.weisj.jsvg;
-	
-	requires transitive com.sun.jna.platform;
-	requires transitive com.sun.jna;
-	
 	requires com.rctereza.robotocr;
-	requires java.datatransfer;
 	requires org.slf4j;
 	
 	exports com.rctereza.robotbx.enums;

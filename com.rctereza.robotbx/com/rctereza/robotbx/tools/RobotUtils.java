@@ -60,7 +60,11 @@ public class RobotUtils {
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
-		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", false, null, false, 0, 0, false, false,
+		
+		messages.clear();
+		messages.add(new RobotMessageBox(1, "CheckTOMenu", "", false, Message.FUNCTION, null));
+		
+		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(messages), false, 0, 0, false, false,
 				true, new ArrayList<>(commands)));
 
 		// **********************************************************************************************************************************************

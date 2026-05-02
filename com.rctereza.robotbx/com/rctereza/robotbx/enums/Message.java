@@ -7,7 +7,8 @@ public enum Message {
 	WAITING(3),
 	VALIDATION(4),
     CONFIRMATION(5),
-	CONCLUSION(6);
+	CONCLUSION(6),
+	FUNCTION(7);
 
     private int type;
 

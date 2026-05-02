@@ -15,16 +15,13 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JOptionPane;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.models.Certificate;
 
 public class FileUtils {
 
-	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
-	
+//	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
+
 	public static void saveCertificatePathChosen(String path) {
 		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
 		prefs.put(Constants.CERTIFICATE_PATH, path);
@@ -127,7 +124,7 @@ public class FileUtils {
 		// After copying, delete source
 		deleteDirectory(sourceFolder);
 
-		logger.info("Directory moved successfully!");
+//		logger.info("Directory moved successfully!");
 
-	}	
+	}
 }

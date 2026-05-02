@@ -11,7 +11,7 @@ import javax.security.auth.x500.X500Principal;
 
 public class ReadPFX {
     public static void main(String[] args) throws Exception {
-        String pfxPath = "C:\\Temp\\Certificados\\JACIRA DE OLIVEIRA_40977839000107_123456.pfx";
+        String pfxPath = "C:\\Temp\\Certificados\\POOL TRIBUTARIO  ELCIO GHIOTO  CONSULTORIA TRIBUTARIA LTDA_51667751000105 - Venc 21_08_2026 - senha 123456.pfx";
         String password = "123456";
 
         KeyStore keystore = KeyStore.getInstance("PKCS12");

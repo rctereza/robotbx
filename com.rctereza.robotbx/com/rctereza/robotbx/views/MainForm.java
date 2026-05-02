@@ -269,10 +269,10 @@ public class MainForm extends JFrame {
 				// ValidatePfx.print();
 				customerTextField.setText(ValidatePfx.getCustomer());
 				customerDocumentTextField.setText(ValidatePfx.getCustomerDocument());
-				JOptionPane.showMessageDialog(null, "O certificado foi validado com sucesso.", "Information",
+				JOptionPane.showMessageDialog(this, "O certificado foi validado com sucesso.", "Information",
 						JOptionPane.INFORMATION_MESSAGE);
 			} catch (InvalidCertificate e1) {
-				JOptionPane.showMessageDialog(null, e1.getMessage(), "Atenção", JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(this, e1.getMessage(), "Atenção", JOptionPane.WARNING_MESSAGE);
 			}
 		});
 
@@ -282,12 +282,12 @@ public class MainForm extends JFrame {
 		// LINE 5
 		customerLabel = new JLabel("Nome do cliente");
 		customerTextField = new JTextField();
-		customerTextField.setEditable(false);
+//		customerTextField.setEditable(false);
 
 		// LINE 6
 		customerDocumentLabel = new JLabel("CNPJ do cliente");
 		customerDocumentTextField = new JTextField();
-		customerDocumentTextField.setEditable(false);
+//		customerDocumentTextField.setEditable(false);
 
 		// LINE 7
 		sourceFolderDownloadedFilesLabel = new JLabel("Pasta onde os arquivos serão baixados");
@@ -473,7 +473,7 @@ public class MainForm extends JFrame {
 					if (isTableAlreadyPopulated()) {
 						String[] options = { "Sim", "Não" };
 
-						int choice = JOptionPane.showOptionDialog(null, // Parent component
+						int choice = JOptionPane.showOptionDialog(MainForm.this, // Parent component
 								"Este item já foi adicionado. Deseja Atualizá-lo?", // Message
 								"Confirmação", // Title
 								JOptionPane.YES_NO_OPTION, // Option type
@@ -491,7 +491,7 @@ public class MainForm extends JFrame {
 						addRowToGrid();
 					}
 				} else {
-					JOptionPane.showMessageDialog(null, result, "Atenção", JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(MainForm.this, result, "Atenção", JOptionPane.WARNING_MESSAGE);
 				}
 			}
 		});
@@ -610,7 +610,7 @@ public class MainForm extends JFrame {
 			int row = itemsTable.getSelectedRow();
 			ReceitaBx obj = getItem(row);
 			if (obj == null) {
-				JOptionPane.showMessageDialog(null,
+				JOptionPane.showMessageDialog(this,
 						"Este item ainda não foi processado. Após seu processamento seus detalhes estarão disponíveis.",
 						"Atenção", JOptionPane.WARNING_MESSAGE);
 			} else {
@@ -776,12 +776,12 @@ public class MainForm extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (tableModel.getRowCount() == 0) {
-					JOptionPane.showMessageDialog(null,
+					JOptionPane.showMessageDialog(MainForm.this,
 							"Adicione pelo menos um item à lista antes de iniciar o processamento.", "Atenção",
 							JOptionPane.WARNING_MESSAGE);
 					return;
 				} else if (!isThereItemToBeProcessed()) {
-					JOptionPane.showMessageDialog(null,
+					JOptionPane.showMessageDialog(MainForm.this,
 							"Não existe items para serem processados. Somente itens com status diferente de 'Sucesso' serão processados. Caso queira reprocessar um item pressione a tecla direita do mouse sobre ele e escolha a opção reprocessar.",
 							"Atenção", JOptionPane.WARNING_MESSAGE);
 					return;
@@ -802,7 +802,8 @@ public class MainForm extends JFrame {
 
 					if (list.get().size() > 0) {
 						for (ReceitaBx entry : list.get()) {
-							message.append(entry.SISTEMA()).append(" - ").append(entry.TIPO_ARQUIVO()).append("\n")
+							message.append(entry.SISTEMA()).append("/").append(entry.TIPO_ARQUIVO()).append("/")
+									.append(entry.TIPO_PESQUISA()).append("\n")
 									.append(entry.MENSAGEM_CONCLUSAO_PROCESSAMENTO()).append("\n");
 
 							if (entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO() != null
@@ -818,13 +819,13 @@ public class MainForm extends JFrame {
 						}
 					}
 
-					JOptionPane.showMessageDialog(null, message.toString(), "Information",
+					JOptionPane.showMessageDialog(MainForm.this, message.toString(), "Information",
 							JOptionPane.INFORMATION_MESSAGE);
 
 				} catch (InvalidCertificate | InvalidKeyException | InvalidAlgorithmParameterException
 						| NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException | IOException
 						| InterruptedException | ExecutionException e1) {
-					JOptionPane.showMessageDialog(null, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				}
 
 				startButton.setEnabled(true);
@@ -1127,18 +1128,23 @@ public class MainForm extends JFrame {
 					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa")).toString()
 							.equals(tipoPesquisa)) {
 
+				Map<String, String> dynamic = rowDynamicData.get(row);
+
 				for (Component c : systemSearchFieldsPanel.getComponents()) {
 					if (c instanceof JTextField) {
 						JTextField textField = (JTextField) c;
 						tableModel.setValueAt(textField.getText(), row, getModelColumnIndex(textField.getName()));
+						dynamic.put(textField.getName(), textField.getText());
 					}
 					if (c instanceof JComboBox) {
 						JComboBox<?> comboBox = (JComboBox<?>) c;
 						tableModel.setValueAt(comboBox.getSelectedItem(), row, getModelColumnIndex(comboBox.getName()));
+						dynamic.put(comboBox.getName(), comboBox.getSelectedItem().toString());
 					}
 					if (c instanceof JCheckBox) {
 						JCheckBox checkBox = (JCheckBox) c;
 						tableModel.setValueAt(checkBox.isSelected(), row, getModelColumnIndex(checkBox.getName()));
+						dynamic.put(checkBox.getName(), String.valueOf(checkBox.isSelected()));
 					}
 				}
 				break;
@@ -1382,7 +1388,7 @@ public class MainForm extends JFrame {
 	private boolean confirmDeletion() {
 		boolean result = false;
 		String[] options = { "Sim", "Não" };
-		int choice = JOptionPane.showOptionDialog(null, // Parent component
+		int choice = JOptionPane.showOptionDialog(this, // Parent component
 				"Deseja remover este item?", // Message
 				"Confirmação", // Title
 				JOptionPane.YES_NO_OPTION, // Option type
@@ -1518,7 +1524,7 @@ public class MainForm extends JFrame {
 		}
 
 		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
-		
+
 		receitaBxList = appData.getLastListAdded();
 
 	}
@@ -1601,7 +1607,6 @@ public class MainForm extends JFrame {
 		setting.setMnemonic(KeyEvent.VK_C);
 		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
 		setting.addActionListener(new ActionListener() {
-
 			public void actionPerformed(ActionEvent e) {
 				SettingForm form = new SettingForm(MainForm.this, Menu.SETTING);
 				form.addObjectListener(new Listenable() {
