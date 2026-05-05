@@ -4,6 +4,7 @@ public enum Menu {
 	NEW("Novo"),
 	DETAILS("Detalhes"),
 	HISTORIC("Histórico"),
+	PROCURATOR("Procurador"),
 	SETTING("Configuração"),
 	ABOUT("Sobre"),
 	CLOSE("Fechar"),
@@ -11,7 +12,7 @@ public enum Menu {
 	MINIMIZE("Minimizar"),
 	RESTART("Reiniciar"),
 	EXIT("Sair");
-
+	
     private String value;
 
     Menu (String value) {

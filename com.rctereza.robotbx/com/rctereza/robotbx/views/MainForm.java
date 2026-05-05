@@ -902,7 +902,7 @@ public class MainForm extends JFrame {
 		appData = CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,
 				AppData::new);
 
-		receitaBxList = appData.getLastListAdded();
+		receitaBxList = appData.getLastListAdded(ReceitaBx.class);
 
 		if (receitaBxList.size() > 0) {
 			receitaBx = receitaBxList.get(0);
@@ -1409,6 +1409,15 @@ public class MainForm extends JFrame {
 		removerCol.setMaxWidth(85);
 	}
 
+	private int getModelColumnIndex(String columnName) {
+		for (int c = 0; c < tableModel.getColumnCount(); c++) {
+			if (tableModel.getColumnName(c).equals(columnName)) {
+				return c;
+			}
+		}
+		return -1;
+	}
+
 	private List<ReceitaBx> getListOfFiles()
 			throws InvalidCertificate, InvalidKeyException, InvalidAlgorithmParameterException,
 			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
@@ -1497,19 +1506,9 @@ public class MainForm extends JFrame {
 			}
 		}
 
-		saveListOfFiles(result);
+		// saveListOfFiles(result);
 
 		return result;
-	}
-
-	/** Helper: returns the model column index by name, or -1 if not found. */
-	private int getModelColumnIndex(String columnName) {
-		for (int c = 0; c < tableModel.getColumnCount(); c++) {
-			if (tableModel.getColumnName(c).equals(columnName)) {
-				return c;
-			}
-		}
-		return -1;
 	}
 
 	private void saveListOfFiles(List<ReceitaBx> list) throws InvalidKeyException, InvalidAlgorithmParameterException,
@@ -1517,16 +1516,15 @@ public class MainForm extends JFrame {
 
 		logger.info("Saving customer data...");
 
-		if (appData.getLastListAdded().size() == 0) {
-			appData.addList(list);
-		} else {
-			appData.updateList(appData.getLastIdAdded(), list);
+		if (appData.getSequence(ReceitaBx.class) == 0) {
+			appData.setSequence(ReceitaBx.class, appData.nextSequence(ReceitaBx.class));
 		}
+
+		appData.addList(ReceitaBx.class, appData.getSequence(ReceitaBx.class), list);
 
 		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 
-		receitaBxList = appData.getLastListAdded();
-
+		receitaBxList = appData.getLastListAdded(ReceitaBx.class);
 	}
 
 	private JMenuBar createMenuBar() {
@@ -1568,9 +1566,11 @@ public class MainForm extends JFrame {
 
 				emptyGrid();
 
-				appData.addList(new ArrayList<>());
+				appData.setSequence(ReceitaBx.class, appData.nextSequence(ReceitaBx.class));
 
-				receitaBxList = appData.getLastListAdded();
+				appData.addList(ReceitaBx.class, appData.getSequence(ReceitaBx.class), new ArrayList<>());
+
+				receitaBxList = appData.getLastListAdded(ReceitaBx.class);
 
 				receitaBx = new ReceitaBx();
 
@@ -1581,9 +1581,24 @@ public class MainForm extends JFrame {
 		historic.setMnemonic(KeyEvent.VK_H);
 		historic.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK));
 		historic.addActionListener(new ActionListener() {
-
 			public void actionPerformed(ActionEvent e) {
 				HistoricForm form = new HistoricForm(MainForm.this, Menu.HISTORIC);
+				form.addObjectListener(new Listenable() {
+					@Override
+					public void value(Object... objs) {
+						// performActions(form, objs);
+					}
+				});
+				form.load();
+			}
+		});
+
+		JMenuItem procurator = new JMenuItem(Menu.PROCURATOR.getValue());
+		procurator.setMnemonic(KeyEvent.VK_P);
+		procurator.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, ActionEvent.CTRL_MASK));
+		procurator.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ProcuratorForm form = new ProcuratorForm(MainForm.this, Menu.PROCURATOR);
 				form.addObjectListener(new Listenable() {
 					@Override
 					public void value(Object... objs) {
@@ -1632,6 +1647,7 @@ public class MainForm extends JFrame {
 		fileMenu.setMnemonic(KeyEvent.VK_M);
 		fileMenu.add(newCustomer);
 		fileMenu.add(historic);
+		fileMenu.add(procurator);
 		fileMenu.add(restart);
 		fileMenu.addSeparator();
 		fileMenu.add(setting);
