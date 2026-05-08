@@ -5,8 +5,8 @@ import java.lang.reflect.Method;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.models.ReceitaBx;
+import com.rctereza.robotbx.ocr.ExtractImageText;
 import com.rctereza.robotbx.tools.Actions;
-import com.rctereza.robotocr.MessageBox2;
 
 public class CheckingToolsOptions {
 
@@ -56,7 +56,7 @@ public class CheckingToolsOptions {
 
 		actions.Wait(2000); // 2 seconds
 
-		MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME, 3.0);
+		ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 3.0);
 		String text = mb.getText();
 		System.out.println(text);
 

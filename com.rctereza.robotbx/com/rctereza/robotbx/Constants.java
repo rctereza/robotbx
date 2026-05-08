@@ -31,6 +31,12 @@ public class Constants {
 	public static final String CERTIFICATE_PATH = "certificatePath";
 	public static final String SCHEME_THEME = "schemeTheme";
 
+	public static final String SYSTEM_PATH = "user.home";
+	public static final String IMAGES_PATH = "/robotocr/imgs";
+
+	public static final String FILE_NAME = "robotocr.txt";
+	public static final String IMAGE_NAME = "robotocr.png";
+
 	private static String getCurrentDate() {
 		Date currentDate = new Date();
 		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
