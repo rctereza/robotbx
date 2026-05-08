@@ -30,6 +30,7 @@ public class ProcuratorForm extends JDialog {
 		
 		
 		
+		
 		setSize(1200, 550);
 		setResizable(false);
 		setLocationRelativeTo(parent);

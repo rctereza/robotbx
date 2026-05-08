@@ -30,10 +30,10 @@ import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
 import com.rctereza.robotbx.models.RobotCommand;
 import com.rctereza.robotbx.models.RobotMessageBox;
+import com.rctereza.robotbx.ocr.ExtractImageText;
 import com.rctereza.robotbx.tools.Actions;
 import com.rctereza.robotbx.tools.RobotUtils;
 import com.rctereza.robotbx.tools.SpedUtils;
-import com.rctereza.robotocr.MessageBox2;
 
 public class ProcessRobot implements Callable<ReceitaBx> {
 
@@ -215,7 +215,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 				if (ra.MESSAGEBOX()) {
 
 					logger.info("Checking if there's a message box...");
-					MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME);
+					ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME);
 					String text = mb.getText();
 					logger.info("Message box text found: [{}]", text);
 
@@ -444,7 +444,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		actions.Wait(2000); // 2 seconds
 
-		MessageBox2 mb = new MessageBox2(Constants.PROGRAM_NAME, 3.0);
+		ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 3.0);
 		String text = mb.getText();
 		logger.info("This is the current values: {}", text);
 

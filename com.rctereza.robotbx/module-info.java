@@ -3,6 +3,8 @@ module com.rctereza.robotbx {
 	requires java.prefs;
 	requires java.datatransfer;
 
+	requires transitive opencv;
+	requires transitive tess4j;
 	requires transitive java.desktop;
 	requires transitive com.sun.jna.platform;
 	requires transitive com.sun.jna;
@@ -13,7 +15,6 @@ module com.rctereza.robotbx {
 
 	requires com.miglayout.swing;
 	requires com.github.weisj.jsvg;
-	requires com.rctereza.robotocr;
 	requires org.slf4j;
 	
 	exports com.rctereza.robotbx.enums;
