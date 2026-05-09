@@ -22,23 +22,43 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.rctereza.robotbx.exceptions.ErrorSavingSecureFile;
 import com.rctereza.robotbx.wrappers.Ref;
 
 public class CryptoUtils {
+	
+	private static final Logger logger = LoggerFactory.getLogger(CryptoUtils.class);
 
 	private static final String VERSION = "ENCV1"; // version header
 	private static final int IV_LENGTH = 12; // recommended for GCM
 	private static final int TAG_LENGTH = 128; // authentication tag
 
-	public static SecretKey getKeyFromPassword(String password, byte[] salt)
-			throws InvalidKeySpecException, NoSuchAlgorithmException {
-		SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+	public static SecretKey getKeyFromPassword(String password, byte[] salt) throws ErrorSavingSecureFile {
+		
+		SecretKeyFactory factory;
+		try {
+			factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+		} catch (NoSuchAlgorithmException e) {
+			logger.error("1-> {}",e.getMessage(), e);
+			throw new ErrorSavingSecureFile("3-> " + e.getMessage());
+		}
+		
 		PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
-		SecretKey tmp = factory.generateSecret(spec);
+		
+		SecretKey tmp;
+		try {
+			tmp = factory.generateSecret(spec);
+		} catch (InvalidKeySpecException e) {
+			logger.error("2-> {}",e.getMessage(), e);
+			throw new ErrorSavingSecureFile("2-> " + e.getMessage());
+		}
+		
 		return new SecretKeySpec(tmp.getEncoded(), "AES");
 	}
 
@@ -48,70 +68,31 @@ public class CryptoUtils {
 		return salt;
 	}
 
-	public static void saveEncryptedCBC(Object obj, String password, String filePath)
-			throws IOException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
-			NoSuchPaddingException, InvalidKeySpecException {
+	public static void saveEncryptedGCM(Object obj, String password, String filePath) throws ErrorSavingSecureFile  {
 
 		byte[] salt = CryptoUtils.generateSalt();
-		SecretKey key = CryptoUtils.getKeyFromPassword(password, salt);
-
-		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-
-		byte[] iv = new byte[16];
-		new SecureRandom().nextBytes(iv);
-
-		cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
-
-		try (FileOutputStream fos = new FileOutputStream(filePath)) {
-
-			// Save salt + IV first (needed for decryption)
-			fos.write(salt);
-			fos.write(iv);
-
-			CipherOutputStream cos = new CipherOutputStream(fos, cipher);
-
-			try (ObjectOutputStream oos = new ObjectOutputStream(cos)) {
-				oos.writeObject(obj);
-			}
-		}
-	}
-
-	public static Object loadEncryptedCBC(String password, String filePath)
-			throws ClassNotFoundException, IOException, InvalidKeyException, InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException {
-
-		try (FileInputStream fis = new FileInputStream(filePath)) {
-
-			byte[] salt = fis.readNBytes(16);
-			byte[] iv = fis.readNBytes(16);
-
-			SecretKey key = CryptoUtils.getKeyFromPassword(password, salt);
-
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
-
-			CipherInputStream cis = new CipherInputStream(fis, cipher);
-
-			try (ObjectInputStream ois = new ObjectInputStream(cis)) {
-				return ois.readObject();
-			}
-		}
-	}
-
-	public static void saveEncryptedGCM(Object obj, String password, String filePath)
-			throws IOException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
-			NoSuchPaddingException, InvalidKeySpecException {
-
-		byte[] salt = CryptoUtils.generateSalt();
+		
 		SecretKey key = CryptoUtils.getKeyFromPassword(password, salt);
 
 		byte[] iv = new byte[IV_LENGTH];
 		new SecureRandom().nextBytes(iv);
 
-		Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+		Cipher cipher;
+		try {
+			cipher = Cipher.getInstance("AES/GCM/NoPadding");
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+			logger.error("3-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("3-> " + e.getMessage());
+		}
+		
 		GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH, iv);
 
-		cipher.init(Cipher.ENCRYPT_MODE, key, spec);
+		try {
+			cipher.init(Cipher.ENCRYPT_MODE, key, spec);
+		} catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
+			logger.error("4-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("4-> " + e.getMessage());
+		}
 		
 		byte[] versionBytes = VERSION.getBytes(StandardCharsets.UTF_8);
 		
@@ -135,12 +116,19 @@ public class CryptoUtils {
 				oos.writeObject(obj);
 				oos.flush();
 			}
+			
+		} catch (FileNotFoundException e) {
+			logger.error("5-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("5-> " + e.getMessage());
+			
+		} catch (IOException e) {
+			logger.error("6-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("6-> " + e.getMessage());
+			
 		}
 	}
 
-	public static <T> T loadEncryptedGCM(String password, String filePath, Class<T> clazz, Supplier<T> defaultSupplier)
-			throws ClassNotFoundException, IOException, InvalidKeyException, InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException {
+	public static <T> T loadEncryptedGCM(String password, String filePath, Class<T> clazz, Supplier<T> defaultSupplier) throws ErrorSavingSecureFile {
 
 		/*
 		 * What Changes from CBC Version vs CGM Version Integrity Protection If someone
@@ -183,10 +171,39 @@ public class CryptoUtils {
 				}
 
 				return clazz.cast(obj);
+				
+			} catch (ClassNotFoundException e) {
+				logger.error("8-> {}", e.getMessage(), e);
+				throw new ErrorSavingSecureFile("8-> " + e.getMessage());
+				
 			}
 
 		} catch (FileNotFoundException e) {
 			return defaultSupplier.get();
+			
+		} catch (ErrorSavingSecureFile e) {
+			throw new ErrorSavingSecureFile(e.getMessage());
+			
+		} catch (IOException e) {
+			logger.error("3-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("3-> " + e.getMessage());
+			
+		} catch (NoSuchAlgorithmException e) {
+			logger.error("4-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("4-> " + e.getMessage());
+			
+		} catch (NoSuchPaddingException e) {
+			logger.error("5-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("5-> " + e.getMessage());
+			
+		} catch (InvalidKeyException e) {
+			logger.error("6-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("6-> " + e.getMessage());
+			
+		} catch (InvalidAlgorithmParameterException e) {
+			logger.error("7-> {}", e.getMessage(), e);
+			throw new ErrorSavingSecureFile("7-> " + e.getMessage());
+			
 		}
 	}
 	
@@ -198,4 +215,54 @@ public class CryptoUtils {
 
 	    return new Ref<>(CryptoUtils.loadEncryptedGCM(password, file, clazz, supplier));
 	}
+	
+//	public static void saveEncryptedCBC(Object obj, String password, String filePath)
+//	throws IOException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException,
+//	NoSuchPaddingException, InvalidKeySpecException {
+//
+//byte[] salt = CryptoUtils.generateSalt();
+//SecretKey key = CryptoUtils.getKeyFromPassword(password, salt);
+//
+//Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+//
+//byte[] iv = new byte[16];
+//new SecureRandom().nextBytes(iv);
+//
+//cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
+//
+//try (FileOutputStream fos = new FileOutputStream(filePath)) {
+//
+//	// Save salt + IV first (needed for decryption)
+//	fos.write(salt);
+//	fos.write(iv);
+//
+//	CipherOutputStream cos = new CipherOutputStream(fos, cipher);
+//
+//	try (ObjectOutputStream oos = new ObjectOutputStream(cos)) {
+//		oos.writeObject(obj);
+//	}
+//}
+//}
+//
+//public static Object loadEncryptedCBC(String password, String filePath)
+//	throws ClassNotFoundException, IOException, InvalidKeyException, InvalidAlgorithmParameterException,
+//	NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException {
+//
+//try (FileInputStream fis = new FileInputStream(filePath)) {
+//
+//	byte[] salt = fis.readNBytes(16);
+//	byte[] iv = fis.readNBytes(16);
+//
+//	SecretKey key = CryptoUtils.getKeyFromPassword(password, salt);
+//
+//	Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+//	cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
+//
+//	CipherInputStream cis = new CipherInputStream(fis, cipher);
+//
+//	try (ObjectInputStream ois = new ObjectInputStream(cis)) {
+//		return ois.readObject();
+//	}
+//}
+//}
 }

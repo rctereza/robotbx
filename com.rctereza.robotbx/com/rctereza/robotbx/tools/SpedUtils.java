@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -248,7 +249,7 @@ public class SpedUtils {
 			JLabel buscarArquivosLabel = new JLabel("Buscar Arquivos de Todos os Estabelecimentos *");
 			JCheckBox buscarArquivosCheckBox = new JCheckBox("");
 			buscarArquivosCheckBox.setName(SpedSearchField.BUSCAR_TODOS_ESTABLECIMENTOS.getValue());
-			buscarArquivosCheckBox.setSelected(BUSCAR_TODOS_ESTABLECIMENTOS);
+			buscarArquivosCheckBox.setSelected(Objects.requireNonNullElse(false,BUSCAR_TODOS_ESTABLECIMENTOS));
 
 			JLabel incricaoEstadualLabel = new JLabel("Inscrição Estadual");
 			JTextField incricaoEstadualTextField = new JTextField(10);
@@ -270,7 +271,7 @@ public class SpedUtils {
 			JLabel ultimoArquivoLabel = new JLabel("Ultimo arquivo transmitido *");
 			JCheckBox ultimoArquivoCheckBox = new JCheckBox("");
 			ultimoArquivoCheckBox.setName(SpedSearchField.ULTIMO_ARQUIVO_TRANSMITIDO.getValue());
-			ultimoArquivoCheckBox.setSelected(ULTIMO_ARQUIVO_TRANSMITIDO);
+			ultimoArquivoCheckBox.setSelected(Objects.requireNonNullElse(false,ULTIMO_ARQUIVO_TRANSMITIDO));
 
 			panel.add(cnpjEstabelecimentoLabel, "sg 1");
 			panel.add(cnpjEstabelecimentoTextField, "wrap");

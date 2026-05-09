@@ -24,6 +24,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.rctereza.robotbx.Constants;
 
@@ -32,11 +34,13 @@ import net.sourceforge.tess4j.Tesseract;
 
 public class TessUtils {
 
+	private static final Logger logger = LoggerFactory.getLogger(TessUtils.class);
+
 	public static Path prepareTessData() throws IOException {
 
-		String userDir = System.getProperty(Constants.SYSTEM_PATH);
+//		String userDir = System.getProperty(Constants.OCR_SYSTEM_PATH);
 
-		Path dir = Paths.get(userDir, "robotocr", "tessdata");
+		Path dir = Paths.get(Constants.OCR_SYSTEM_PATH, "tessdata");
 
 		if (!Files.exists(dir)) {
 
@@ -91,9 +95,9 @@ public class TessUtils {
 			try {
 				WindowDimensions wd = new WindowDimensions(windowTitle);
 				captureRect = wd.getRectangle();
-				System.out.println("Found [" + windowTitle + "] " + captureRect);
+				logger.info("Found [{}] {}", windowTitle, captureRect);
 			} catch (Exception e) {
-				System.out.println("Not found [" + windowTitle + "], using full screen instead.\n" + e.getMessage());
+				logger.error("Not found [{}], using full screen instead.\n{}", windowTitle, e.getMessage(), e);
 			}
 		}
 
@@ -112,7 +116,8 @@ public class TessUtils {
 		Rect rect = findLargestRectangle(edges);
 
 		if (rect != null) {
-			System.out.println("Detected rectangle: " + rect);
+			
+			logger.info("Detected rectangle: {}.", rect);
 
 			// 5. Crop region
 			BufferedImage cropped = screenshot.getSubimage(rect.x, rect.y, rect.width, rect.height);
@@ -123,15 +128,15 @@ public class TessUtils {
 			// 7. Make image a 2x its size
 			BufferedImage imageBigger = scaleImage(imageRepainted, 2.0);
 
-			String userDir = System.getProperty(Constants.SYSTEM_PATH);
-			File dir = new File(userDir, Constants.IMAGES_PATH);
+			//String userDir = System.getProperty(Constants.OCR_SYSTEM_PATH);
+			File dir = new File(Constants.OCR_SYSTEM_PATH);
 			dir.mkdirs();
 
 			// 8. Save the captured image to a file
-			File file = new File(dir, Constants.IMAGE_NAME);
+			File file = new File(dir, Constants.OCR_IMAGE_NAME);
 			ImageIO.write(imageBigger, "PNG", file);
 
-			System.out.println("Screen capture saved at [" + file.getAbsolutePath() + "]");
+			logger.info("Screen captured and saved at [{}].",file.getAbsolutePath());
 			
 			// (Optional) Save to verify
 			file = new File(dir, "detected.png");
@@ -140,7 +145,7 @@ public class TessUtils {
 			result = imageBigger;
 
 		} else {
-			System.out.println("No rectangle detected.");
+			logger.warn("No rectangle detected.");
 		}
 		
 		return result;
@@ -154,7 +159,7 @@ public class TessUtils {
 		WindowDimensions wd = new WindowDimensions(windowTitle);
 		Rectangle captureRect = wd.getRectangle();
 		
-		System.out.println("Found [" + windowTitle + "] " + captureRect + " - Scale " + imageScale);
+		logger.info("Found [{}] {} - Scale {}", windowTitle, captureRect, imageScale);
 
 		Robot robot = new Robot();
 
@@ -164,14 +169,14 @@ public class TessUtils {
 		
 		BufferedImage imageBigger = scaleImage(imageRepainted, imageScale);
 		
-		String userDir = System.getProperty(Constants.SYSTEM_PATH);
-		File dir = new File(userDir, Constants.IMAGES_PATH);
+//		String userDir = System.getProperty(Constants.OCR_SYSTEM_PATH);
+		File dir = new File(Constants.OCR_SYSTEM_PATH);
 		dir.mkdirs();
 
-		File file = new File(dir, "robotocr2.png");
+		File file = new File(dir, Constants.OCR_IMAGE_NAME);
 		ImageIO.write(imageBigger, "PNG", file);
 
-		System.out.println("Screen2 capture saved at: [" + file.getAbsolutePath() + "]");
+		logger.info("Screen2 captured and saved at: [{}].",file.getAbsolutePath());
 		
 		return imageBigger;
 	}

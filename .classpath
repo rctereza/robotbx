@@ -67,11 +67,6 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/ocr/opencv-4.9.0-0.jar">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="lib" path="libs/ocr/tess4j-5.18.0.jar">
 		<attributes>
 			<attribute name="module" value="true"/>
@@ -88,6 +83,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="libs/ocr/lept4j-1.23.0.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="libs/ocr/opencv-4.9.0-0.jar">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>

@@ -6,6 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rctereza.robotbx.Constants;
 
 import net.sourceforge.tess4j.ITesseract;
@@ -14,12 +17,15 @@ import nu.pattern.OpenCV;
 
 public class ExtractImageText {
 
+	private static final Logger logger = LoggerFactory.getLogger(ExtractImageText.class);
+
+	private String windowTitle = "";
+	
+	private Double imageScale = 2.0;
+
 	static {
 		OpenCV.loadLocally();
 	}
-
-	private String windowTitle = "";
-	private Double imageScale = 2.0;
 	
 	public ExtractImageText() {
 	}
@@ -42,14 +48,20 @@ public class ExtractImageText {
 		BufferedImage screenshot = TessUtils.captureScreen2(this.windowTitle, this.imageScale);
 		
 		try {
+			
 			text = instance.doOCR(screenshot);
 			
-			Path path = Paths.get(System.getProperty(Constants.SYSTEM_PATH) + Constants.IMAGES_PATH, Constants.FILE_NAME);
+			Path path = Paths.get(Constants.OCR_SYSTEM_PATH + Constants.OCR_FILE_NAME);
+			
 			Files.writeString(path, text, StandardCharsets.UTF_8);
-			System.out.println("Text extracted saved at.: [" + path.toAbsolutePath() + "]");
+			
+			logger.info("Text extracted saved at.: [" + path.toAbsolutePath() + "]");
 			
 		} catch (TesseractException e) {
+			
+			logger.error(e.getMessage(), e);
 			throw new Exception(e.getMessage());
+			
 		}
 		
 		return text;

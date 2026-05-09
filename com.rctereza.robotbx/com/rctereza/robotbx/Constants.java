@@ -1,8 +1,5 @@
 package com.rctereza.robotbx;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 public class Constants {
 
 	private Constants() {}
@@ -16,7 +13,7 @@ public class Constants {
 	public static final String SOFTWARE_VERSION = "1.00";
 	
 	public static final String SOFTWARE_SECRET = "Z*mon5xuR3c3i7aBx";
-	public static final String SOFTWARE_SECURE_FILE = "data.sec";
+	public static final String SOFTWARE_SECURE_FILE = System.getenv("LOCALAPPDATA") + "\\Robotbx\\data.sec";
 
 	public static final String PROGRAM_NAME = "Receitanet BX";
 	public static final String PROGRAM_PATH = "C:\\Program Files (x86)\\Programas RFB\\Receitanet BX";
@@ -25,21 +22,20 @@ public class Constants {
 	public static final String PROGRAM_CERTIFICATES = "C:\\Temp\\Certificados";
 	public static final String PROGRAM_DOWNLOADED_FOLDER = "C:\\Temp\\ReceitanetBX";
 	
-	public static final String PROGRAM_PERIOD_START = "01/01/2020";
-	public static final String PROGRAM_PERIOD_END = getCurrentDate();
+//	public static final String PROGRAM_PERIOD_START = "01/01/2020";
+//	public static final String PROGRAM_PERIOD_END = getCurrentDate();
 	
 	public static final String CERTIFICATE_PATH = "certificatePath";
 	public static final String SCHEME_THEME = "schemeTheme";
 
-	public static final String SYSTEM_PATH = "user.home";
-	public static final String IMAGES_PATH = "/robotocr/imgs";
+	// C:\Users\UserName\AppData\Local\robotbx\ocr
+	public static final String OCR_SYSTEM_PATH = System.getenv("LOCALAPPDATA") + "\\Robotbx\\ocr\\";
+	public static final String OCR_FILE_NAME = "text_extracted.txt";
+	public static final String OCR_IMAGE_NAME = "image_captured.png";
 
-	public static final String FILE_NAME = "robotocr.txt";
-	public static final String IMAGE_NAME = "robotocr.png";
-
-	private static String getCurrentDate() {
-		Date currentDate = new Date();
-		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-		return formatter.format(currentDate);
-	}
+//	private static String getCurrentDate() {
+//		Date currentDate = new Date();
+//		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+//		return formatter.format(currentDate);
+//	}
 }

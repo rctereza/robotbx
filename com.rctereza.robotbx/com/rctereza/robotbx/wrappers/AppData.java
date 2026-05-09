@@ -17,7 +17,8 @@ public class AppData implements Serializable {
 	private final Map<Class<?>, TypeBucket<?>> storage = new HashMap<>();
 //	private final Map<Class<?>, TypeBucket<?>> storage = new ConcurrentHashMap<>(); // Thread-safe if needed
 
-	private static class TypeBucket<T extends Wrappable> {
+	private static class TypeBucket<T extends Wrappable> implements Serializable {
+		private static final long serialVersionUID = 4614016601419198907L;
 		int sequence = 0;
 		NavigableMap<Integer, List<T>> data = new TreeMap<>();
 	}

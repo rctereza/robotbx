@@ -21,7 +21,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,6 +79,7 @@ import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.enums.Sped;
 import com.rctereza.robotbx.enums.SpedSearchField;
 import com.rctereza.robotbx.enums.Status;
+import com.rctereza.robotbx.exceptions.ErrorSavingSecureFile;
 import com.rctereza.robotbx.exceptions.InvalidCertificate;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
@@ -822,9 +822,9 @@ public class MainForm extends JFrame {
 					JOptionPane.showMessageDialog(MainForm.this, message.toString(), "Information",
 							JOptionPane.INFORMATION_MESSAGE);
 
-				} catch (InvalidCertificate | InvalidKeyException | InvalidAlgorithmParameterException
-						| NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException | IOException
-						| InterruptedException | ExecutionException e1) {
+				} catch (ErrorSavingSecureFile | InvalidKeyException | InvalidAlgorithmParameterException
+						| NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException
+						| InvalidCertificate | IOException | InterruptedException | ExecutionException e1) {
 					JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				}
 
@@ -896,8 +896,7 @@ public class MainForm extends JFrame {
 		setResizable(false);
 	}
 
-	public void init() throws InvalidKeyException, ClassNotFoundException, InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException, ParseException {
+	public void init() throws ErrorSavingSecureFile  {
 
 		appData = CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,
 				AppData::new);
@@ -1511,8 +1510,7 @@ public class MainForm extends JFrame {
 		return result;
 	}
 
-	private void saveListOfFiles(List<ReceitaBx> list) throws InvalidKeyException, InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException {
+	private void saveListOfFiles(List<ReceitaBx> list) throws ErrorSavingSecureFile {
 
 		logger.info("Saving customer data...");
 
@@ -1524,6 +1522,8 @@ public class MainForm extends JFrame {
 
 		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 
+		logger.info("Customer data was saved with success.");
+		
 		receitaBxList = appData.getLastListAdded(ReceitaBx.class);
 	}
 

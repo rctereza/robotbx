@@ -3,14 +3,7 @@ package com.rctereza.robotbx;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Window;
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.text.ParseException;
 
-import javax.crypto.NoSuchPaddingException;
 import javax.swing.JOptionPane;
 import javax.swing.JWindow;
 import javax.swing.UIManager;
@@ -22,6 +15,7 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.rctereza.robotbx.enums.Menu;
+import com.rctereza.robotbx.exceptions.ErrorSavingSecureFile;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.views.MainForm;
@@ -41,8 +35,7 @@ public class Main {
 		return instance;
 	}
 
-	private void showApp() throws InvalidKeyException, ClassNotFoundException, InvalidAlgorithmParameterException,
-			NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException, IOException, ParseException {
+	private void showApp() throws ErrorSavingSecureFile  {
 		mainForm.setVisible(true);
 		mainForm.init();
 	}
@@ -97,9 +90,7 @@ public class Main {
 			public void run() {
 				try {
 					showApp();
-				} catch (InvalidKeyException | ClassNotFoundException | InvalidAlgorithmParameterException
-						| NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException | IOException
-						| ParseException e) {
+				} catch (ErrorSavingSecureFile e) {
 					logger.error(e.getMessage(), e);
 					JOptionPane.showMessageDialog(null,
 							"Um erro ocorreu ao inicilizar o aplicativo.\nFavor checar o log para mais detalhes.",

@@ -431,7 +431,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		logger.info("Checking the parameters of the menu Tools / Options");
 		
-		String salvarOsArquivosEm = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS();
+		String salvarOsArquivosEm = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\";
 		String criarSubDiretorio = "EB Criar sub-diretério para cada tipo de arquivo.";
 		String numeroDownloads = "Número de downloads simultâneos: [5H";
 		String salvarLog = "EB Salvar log para depuração.";

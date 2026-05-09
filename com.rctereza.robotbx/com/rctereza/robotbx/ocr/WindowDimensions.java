@@ -3,16 +3,19 @@ package com.rctereza.robotbx.ocr;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sun.jna.Library;
 import com.sun.jna.Native;
+import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinNT.HRESULT;
-import com.sun.jna.platform.win32.User32;
-//import com.sun.jna.platform.win32.WinDef.*;
-//import com.sun.jna.win32.StdCallLibrary;
 
 public class WindowDimensions {
+	
+	private static final Logger logger = LoggerFactory.getLogger(WindowDimensions.class);
 
 	private Dimension dimension;
 	private Rectangle rectangle;
@@ -48,8 +51,7 @@ public class WindowDimensions {
 
 		if (hwnd == null || hwnd.getPointer() == null) {
 			
-			System.out.println("Window not found. [" + windowTitle + "]");
-			return;
+			logger.warn("Failed to find a window. [" + windowTitle + "]");
 			
 		} else {
 
@@ -78,7 +80,9 @@ public class WindowDimensions {
 					rectangle = new Rectangle(rect.left, rect.top, width, height);
 
 				} else {
-					System.out.println("Failed to get window dimensions. [" + windowTitle + "]");
+					
+					logger.warn("Failed to get window dimensions. [" + windowTitle + "]");
+					
 				}
 			}
 		}
