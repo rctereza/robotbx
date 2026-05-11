@@ -35,7 +35,7 @@ public class Main {
 		return instance;
 	}
 
-	private void showApp() throws ErrorSavingSecureFile  {
+	private void showApp() throws ErrorSavingSecureFile {
 		mainForm.setVisible(true);
 		mainForm.init();
 	}
@@ -106,6 +106,8 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		logger.info("Opening application...");
 		System.setProperty("sun.java2d.uiScale", "1.0");
+		System.setProperty("sun.java2d.dpiaware", "true");
+
 		FlatRobotoFont.install();
 		UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 12));
 		if (Scheme.isLafDark()) {

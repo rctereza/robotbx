@@ -1,5 +1,6 @@
 package com.rctereza.robotbx.ocr;
 
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -22,6 +23,8 @@ public class ExtractImageText {
 	private String windowTitle = "";
 	
 	private Double imageScale = 2.0;
+	
+	private Dimension monitorSize;
 
 	static {
 		OpenCV.loadLocally();
@@ -47,7 +50,11 @@ public class ExtractImageText {
 
 		BufferedImage screenshot = TessUtils.captureScreen2(this.windowTitle, this.imageScale);
 		
+		monitorSize = TessUtils.getMonitorSize();
+		
 		try {
+			
+//			logger.info("Extracting the text from the window captured...");
 			
 			text = instance.doOCR(screenshot);
 			
@@ -55,7 +62,7 @@ public class ExtractImageText {
 			
 			Files.writeString(path, text, StandardCharsets.UTF_8);
 			
-			logger.info("Text extracted saved at.: [" + path.toAbsolutePath() + "]");
+			logger.info("Text extracted and saved at.: [" + path.toAbsolutePath() + "]");
 			
 		} catch (TesseractException e) {
 			
@@ -65,5 +72,9 @@ public class ExtractImageText {
 		}
 		
 		return text;
+	}
+	
+	public Dimension getMonitorSize() {
+		return monitorSize;
 	}
 }

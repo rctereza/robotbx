@@ -3,8 +3,11 @@ package com.rctereza.robotbx.views;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.GraphicsDevice;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
@@ -25,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -58,6 +62,7 @@ import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -104,6 +109,8 @@ public class MainForm extends JFrame {
 	private static final Logger logger = LoggerFactory.getLogger(MainForm.class);
 
 	private static final String softwareNameAndVersion = Constants.SOFTWARE_NAME + " " + Constants.SOFTWARE_VERSION;
+
+	private GraphicsDevice lastMonitor;
 
 	private MaskFormatter cnpjMask;
 	private MaskFormatter cpfMask;
@@ -180,6 +187,8 @@ public class MainForm extends JFrame {
 
 	private Listenable listener = null;
 
+	private Timer monitorTimer;
+
 	public MainForm() throws Exception {
 		super(softwareNameAndVersion);
 
@@ -196,6 +205,33 @@ public class MainForm extends JFrame {
 
 			public void windowIconified(WindowEvent e) {
 				listener.value(Menu.MINIMIZE.getValue());
+			}
+		});
+
+		lastMonitor = ScreenResolution.getCurrentMonitor(MainForm.this);
+
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentMoved(ComponentEvent e) {
+
+				if (monitorTimer != null) {
+					monitorTimer.stop();
+				}
+
+				monitorTimer = new Timer(500, ev -> {
+
+					monitorTimer.stop();
+
+					GraphicsDevice currentMonitor = ScreenResolution.getCurrentMonitor(MainForm.this);
+					if (!currentMonitor.equals(lastMonitor)) {
+						lastMonitor = currentMonitor;
+						screenResolutionLabel.setText(ScreenResolution.getDisplayLabel(MainForm.this));
+						screenResolutionTextField.setText(ScreenResolution.getResolution(lastMonitor));
+					}
+				});
+
+				monitorTimer.setRepeats(false);
+				monitorTimer.start();
 			}
 		});
 
@@ -234,7 +270,7 @@ public class MainForm extends JFrame {
 		}
 
 		// LINE 1
-		screenResolutionLabel = new JLabel("Resolução do monitor");
+		screenResolutionLabel = new JLabel("");
 		screenResolutionTextField = new JTextField();
 		screenResolutionTextField.setEditable(false);
 
@@ -263,16 +299,20 @@ public class MainForm extends JFrame {
 		passwordCheckButton = new JButton("Validar");
 		passwordCheckButton.setPreferredSize(new Dimension(80, 20));
 		passwordCheckButton.addActionListener(e -> {
-			Ref<Certificate> CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
-			try {
-				ValidatePfx.load(CERTIFICADO, passwordTextField.getText());
-				// ValidatePfx.print();
-				customerTextField.setText(ValidatePfx.getCustomer());
-				customerDocumentTextField.setText(ValidatePfx.getCustomerDocument());
-				JOptionPane.showMessageDialog(this, "O certificado foi validado com sucesso.", "Information",
-						JOptionPane.INFORMATION_MESSAGE);
-			} catch (InvalidCertificate e1) {
-				JOptionPane.showMessageDialog(this, e1.getMessage(), "Atenção", JOptionPane.WARNING_MESSAGE);
+			if (certificateComboBox.getSelectedIndex() == -1) {
+				JOptionPane.showMessageDialog(this, "Para validar um certificado é necessário selecioná-lo primeiro", "Informação", JOptionPane.INFORMATION_MESSAGE);
+			} else {
+				Ref<Certificate> CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
+				try {
+					ValidatePfx.load(CERTIFICADO, passwordTextField.getText());
+					// ValidatePfx.print();
+					customerTextField.setText(ValidatePfx.getCustomer());
+					customerDocumentTextField.setText(ValidatePfx.getCustomerDocument());
+					JOptionPane.showMessageDialog(this, "O certificado foi validado com sucesso.", "Informação",
+							JOptionPane.INFORMATION_MESSAGE);
+				} catch (InvalidCertificate e1) {
+					JOptionPane.showMessageDialog(this, e1.getMessage(), "Atenção", JOptionPane.WARNING_MESSAGE);
+				}
 			}
 		});
 
@@ -896,7 +936,7 @@ public class MainForm extends JFrame {
 		setResizable(false);
 	}
 
-	public void init() throws ErrorSavingSecureFile  {
+	public void init() throws ErrorSavingSecureFile {
 
 		appData = CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,
 				AppData::new);
@@ -909,7 +949,8 @@ public class MainForm extends JFrame {
 
 		// FileUtils.removeCertificatePathChosen();
 
-		screenResolutionTextField.setText(ScreenResolution.getResolution());
+		screenResolutionLabel.setText(ScreenResolution.getDisplayLabel(MainForm.this));
+		screenResolutionTextField.setText(ScreenResolution.getResolution(lastMonitor));
 
 		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
 		selectCertificateComboBoxItem(receitaBx.CERTIFICADO().toString());
@@ -955,23 +996,22 @@ public class MainForm extends JFrame {
 		else
 			SENHA = passwordTextField.getText();
 
-		result.append(ValidatePfx.check(CERTIFICADO, SENHA));
+		if (certificateComboBox.getSelectedIndex() > -1 && !passwordTextField.getText().isBlank())
+			result.append(ValidatePfx.check(CERTIFICADO, SENHA));
 
 		if (customerTextField.getText().isBlank())
-			result.append("Favor informar o nome do cliente clicando no botão 'Validar'.\n");
+			result.append("Favor informar o nome do cliente.\n");
 		else {
 			if (!customerTextField.getText().equals(ValidatePfx.getCustomer())) {
-				result.append(
-						"O nome do cliente esta diferente do encontrado no certificado! Clique no botão 'Validar' para atualizá-lo.\n");
+				result.append("O nome do cliente esta diferente do encontrado no certificado!\n");
 			}
 		}
 
 		if (customerDocumentTextField.getText().isBlank())
-			result.append("Favor informar o cnpj do cliente clicando no botão 'Validar'.\n");
+			result.append("Favor informar o cnpj do cliente.\n");
 		else {
 			if (!customerDocumentTextField.getText().equals(ValidatePfx.getCustomerDocument())) {
-				result.append(
-						"O cnpj do cliente esta diferente do encontrado no certificado! Clique no botão 'Validar' para atualizá-lo.\n");
+				result.append("O cnpj do cliente esta diferente do encontrado no certificado!\n");
 			}
 		}
 
@@ -1027,12 +1067,12 @@ public class MainForm extends JFrame {
 			if (c instanceof JFormattedTextField) {
 				JFormattedTextField formattedTextField = (JFormattedTextField) c;
 				if (formattedTextField.getName().equals(SpedSearchField.DATA_INICIO.getValue())) {
-					DATA_INICIO = formattedTextField.getValue().toString();
+					DATA_INICIO = Objects.requireNonNullElse(formattedTextField.getValue(), "").toString();
 					if (!ValidateDate.isValidDate(DATA_INICIO)) {
 						result.append("Favor informar uma data inicial válida. [" + DATA_INICIO + "]\n");
 					}
 				} else if (formattedTextField.getName().equals(SpedSearchField.DATA_FIM.getValue())) {
-					DATA_FIM = formattedTextField.getValue().toString();
+					DATA_FIM = Objects.requireNonNullElse(formattedTextField.getValue(), "").toString();
 					if (!ValidateDate.isValidDate(DATA_FIM)) {
 						result.append("Favor informar uma data final válida. [" + DATA_FIM + "]\n");
 					} else {
@@ -1041,11 +1081,13 @@ public class MainForm extends JFrame {
 						}
 					}
 				} else if (formattedTextField.getName().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
-					if (!ValidateCpfCnpj.isCnpjValid(formattedTextField.getValue().toString())) {
+					if (formattedTextField.getValue() == null
+							|| !ValidateCpfCnpj.isCnpjValid(formattedTextField.getValue().toString())) {
 						result.append("Favor informar um cnpj válido para a Incorporadora.\n");
 					}
 				} else if (formattedTextField.getName().equals(SpedSearchField.CNPJ_ESTABELECIMENTO.getValue())) {
-					if (!ValidateCpfCnpj.isCnpjValid(formattedTextField.getValue().toString())) {
+					if (formattedTextField.getValue() == null
+							|| !ValidateCpfCnpj.isCnpjValid(formattedTextField.getValue().toString())) {
 						result.append("Favor informar um cnpj válido para o Estabelecimento.\n");
 					}
 				}
@@ -1523,7 +1565,7 @@ public class MainForm extends JFrame {
 		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
 
 		logger.info("Customer data was saved with success.");
-		
+
 		receitaBxList = appData.getLastListAdded(ReceitaBx.class);
 	}
 

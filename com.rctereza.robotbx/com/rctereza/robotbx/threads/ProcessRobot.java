@@ -1,5 +1,6 @@
 package com.rctereza.robotbx.threads;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -40,6 +41,8 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	private static final Logger logger = LoggerFactory.getLogger(ProcessRobot.class);
 
 	private ReceitaBx original;
+	private Dimension monitor;
+	private Robot robot;
 
 	private String ULTIMO_PEDIDO_SOLICITADO = "";
 	private String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
@@ -73,7 +76,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			// *******************************************************************************************
 			// GET ROBOT PARAMETERS
 			// *******************************************************************************************
-			Robot robot = RobotUtils.getRobotBasedOnScreenResolution(original);
+			robot = RobotUtils.getRobotBasedOnScreenResolution(original);
 
 			// *******************************************************************************************
 			// PERFORM THE ACTIONS
@@ -214,10 +217,11 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 				if (ra.MESSAGEBOX()) {
 
-					logger.info("Checking if there's a message box...");
+					logger.info("Checking if there's a window to capture...");
 					ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME);
 					String text = mb.getText();
-					logger.info("Message box text found: [{}]", text);
+					monitor = mb.getMonitorSize();
+					logger.info("Window text found: [{}]\n{}", text, monitor);
 
 					Boolean found = false;
 					Message mtype = Message.NONE;
@@ -450,6 +454,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		if (!text.contains(salvarOsArquivosEm)) {
 			logger.info("01 - Changing 'Salvar os arquivos em' to [{}]", salvarOsArquivosEm);
+//			if (robot.SCREEN_WIDTH() != monitor.width && robot.SCREEN_HEIGHT() != monitor.height)
 			actions.Move(850, 412);
 			actions.Click();
 			actions.Wait(1000);

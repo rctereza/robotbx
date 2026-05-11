@@ -3,20 +3,21 @@ package com.rctereza.robotbx.ocr;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinDef.RECT;
 import com.sun.jna.platform.win32.WinNT.HRESULT;
+import com.sun.jna.platform.win32.WinUser;
+import com.sun.jna.platform.win32.WinUser.HMONITOR;
+import com.sun.jna.platform.win32.WinUser.MONITORINFO;
 
 public class WindowDimensions {
-	
-	private static final Logger logger = LoggerFactory.getLogger(WindowDimensions.class);
 
+//	private static final Logger logger = LoggerFactory.getLogger(WindowDimensions.class);
+
+	private Dimension monitor;
 	private Dimension dimension;
 	private Rectangle rectangle;
 
@@ -30,8 +31,12 @@ public class WindowDimensions {
 
 	public WindowDimensions(String windowTitle) throws Exception {
 		findDimensions(windowTitle);
+		findMonitor(windowTitle);
 	}
 
+	public Dimension getMonitor() {
+		return monitor;
+	}
 	public Dimension getDimension() {
 		return dimension;
 	}
@@ -50,9 +55,9 @@ public class WindowDimensions {
 		HWND hwnd = User32.INSTANCE.FindWindow(null, windowTitle);
 
 		if (hwnd == null || hwnd.getPointer() == null) {
-			
-			logger.warn("Failed to find a window. [" + windowTitle + "]");
-			
+
+			throw new Exception("Failed to find a window. [" + windowTitle + "]");
+
 		} else {
 
 			RECT rect = new RECT();
@@ -80,11 +85,44 @@ public class WindowDimensions {
 					rectangle = new Rectangle(rect.left, rect.top, width, height);
 
 				} else {
-					
-					logger.warn("Failed to get window dimensions. [" + windowTitle + "]");
-					
+
+					throw new Exception("Failed to get window dimensions. [" + windowTitle + "]");
+
 				}
 			}
 		}
+	}
+
+	private void findMonitor(String windowTitle) {
+
+		HWND hwnd = User32.INSTANCE.FindWindow(null, windowTitle);
+
+		if (hwnd == null) {
+			System.out.println("Window not found");
+			return;
+		}
+
+		// Get monitor from window
+		HMONITOR hmonitor = User32.INSTANCE.MonitorFromWindow(hwnd, WinUser.MONITOR_DEFAULTTONEAREST);
+
+		// Retrieve monitor information
+		MONITORINFO monitorInfo = new MONITORINFO();
+
+		User32.INSTANCE.GetMonitorInfo(hmonitor, monitorInfo);
+
+		// Monitor bounds
+//		int x = monitorInfo.rcMonitor.left;
+//		int y = monitorInfo.rcMonitor.top;
+//		boolean primary = (monitorInfo.dwFlags & WinUser.MONITORINFOF_PRIMARY) != 0;
+
+		int width = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+
+		int height = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+
+		monitor = new Dimension(width, height);
+
+//		System.out.println("Monitor position: " + x + "," + y);
+//		System.out.println("Monitor size: " + width + "x" + height);
+//		System.out.println("Primary monitor: " + primary);
 	}
 }

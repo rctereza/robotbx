@@ -35,6 +35,8 @@ import net.sourceforge.tess4j.Tesseract;
 public class TessUtils {
 
 	private static final Logger logger = LoggerFactory.getLogger(TessUtils.class);
+	
+	private static Dimension monitorSize;
 
 	public static Path prepareTessData() throws IOException {
 
@@ -95,6 +97,7 @@ public class TessUtils {
 			try {
 				WindowDimensions wd = new WindowDimensions(windowTitle);
 				captureRect = wd.getRectangle();
+				monitorSize = wd.getMonitor();
 				logger.info("Found [{}] {}", windowTitle, captureRect);
 			} catch (Exception e) {
 				logger.error("Not found [{}], using full screen instead.\n{}", windowTitle, e.getMessage(), e);
@@ -158,8 +161,9 @@ public class TessUtils {
 		
 		WindowDimensions wd = new WindowDimensions(windowTitle);
 		Rectangle captureRect = wd.getRectangle();
+		monitorSize = wd.getMonitor();
 		
-		logger.info("Found [{}] {} - Scale {}", windowTitle, captureRect, imageScale);
+		logger.info("Found [{}] {}/{} - Scale {}", windowTitle, monitorSize, captureRect, imageScale);
 
 		Robot robot = new Robot();
 
@@ -176,11 +180,15 @@ public class TessUtils {
 		File file = new File(dir, Constants.OCR_IMAGE_NAME);
 		ImageIO.write(imageBigger, "PNG", file);
 
-		logger.info("Screen2 captured and saved at: [{}].",file.getAbsolutePath());
+		logger.info("Window captured and saved at: [{}].",file.getAbsolutePath());
 		
 		return imageBigger;
 	}
 
+	public static Dimension getMonitorSize() {
+		return monitorSize;
+	}
+	
 	private static BufferedImage toGray(BufferedImage img) {
 
 		BufferedImage gray = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
@@ -252,4 +260,5 @@ public class TessUtils {
 
 		return bestRect;
 	}
+
 }
