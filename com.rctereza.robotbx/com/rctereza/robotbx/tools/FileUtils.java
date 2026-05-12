@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 
 import com.rctereza.robotbx.Constants;
@@ -35,6 +36,36 @@ public class FileUtils {
 	public static void removeCertificatePathChosen() {
 		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
 		prefs.remove(Constants.CERTIFICATE_PATH);
+	}
+
+	public static DefaultComboBoxModel<Certificate> getModelOfCertificates() {
+		return getModelOfCertificates(getCertificatePathSaved());
+	}
+
+	public static DefaultComboBoxModel<Certificate> getModelOfCertificates(String path) {
+		DefaultComboBoxModel<Certificate> model = null;
+		List<Certificate> list = getListOfCertificates(path);
+		if (list.size() > 0) {
+			saveCertificatePathChosen(path);
+			model = new DefaultComboBoxModel<>();
+			model.addAll(list);
+		}
+		return model;
+	}
+
+	public static int getCertificateIndex(String valueToFind) {
+		int result = -1;
+		List<Certificate> list = getListOfCertificates(getCertificatePathSaved());
+		if (list.size() > 0) {
+			for (int i = 0; i < list.size(); i++) {
+				Certificate cert = list.get(i);
+				if (cert.toString().equals(valueToFind)) {
+					result = i;
+					break; // stop once found
+				}
+			}
+		}
+		return result;
 	}
 
 	public static List<Certificate> getListOfCertificates(String path) {

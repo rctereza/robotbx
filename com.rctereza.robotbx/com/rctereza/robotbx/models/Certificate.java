@@ -16,8 +16,6 @@ public record Certificate(
 ) 
 implements Serializable {
 	
-	private static final long serialVersionUID = 1L;
-	
 	public Certificate() {
 		this(null,null,null,null,null,null,null,null,null);
 	}

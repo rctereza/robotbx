@@ -55,4 +55,27 @@ public class ValidateDate {
 		return result;
 	}
 
+	public static boolean isGraterThanToday(String dateStr) {
+		boolean result = true;
+
+		LocalDate today = LocalDate.now();
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+		try {
+			// Parse strings into LocalDate objects
+			LocalDate date = LocalDate.parse(dateStr, formatter);
+
+			// Compare dates
+			if (date.isBefore(today)) {
+				result = false;
+			}
+
+		} catch (DateTimeParseException e) {
+			result = false;
+		}
+
+		return result;
+	}
+
 }

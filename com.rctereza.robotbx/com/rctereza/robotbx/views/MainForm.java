@@ -288,8 +288,8 @@ public class MainForm extends JFrame {
 
 			int result = chooser.showOpenDialog(this);
 			if (result == JFileChooser.APPROVE_OPTION) {
-				File selectedFolder = chooser.getSelectedFile();
-				loadCertificateComboBox(selectedFolder.getAbsolutePath());
+				certificateComboBox.removeAllItems();
+				certificateComboBox.setModel(FileUtils.getModelOfCertificates(chooser.getSelectedFile().getAbsolutePath()));
 			}
 		});
 
@@ -300,7 +300,8 @@ public class MainForm extends JFrame {
 		passwordCheckButton.setPreferredSize(new Dimension(80, 20));
 		passwordCheckButton.addActionListener(e -> {
 			if (certificateComboBox.getSelectedIndex() == -1) {
-				JOptionPane.showMessageDialog(this, "Para validar um certificado é necessário selecioná-lo primeiro", "Informação", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(this, "Para validar um certificado é necessário selecioná-lo primeiro",
+						"Informação", JOptionPane.INFORMATION_MESSAGE);
 			} else {
 				Ref<Certificate> CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
 				try {
@@ -827,45 +828,55 @@ public class MainForm extends JFrame {
 					return;
 				}
 
-				try {
-					Ref<List<ReceitaBx>> list = new Ref<>(getListOfFiles());
+				startButton.setEnabled(false);
 
-					startButton.setEnabled(false);
+				Ref<List<ReceitaBx>> list = null;
+
+				try {
+					
+					list = new Ref<>(getListOfFiles());
 
 					controller.startRobot(list);
 
-					updateGridStatusColumn(list.get());
-
-					saveListOfFiles(list.get());
-
 					StringBuilder message = new StringBuilder("O processo foi concluido. Veja o resultado abaixo.\n\n");
 
-					if (list.get().size() > 0) {
-						for (ReceitaBx entry : list.get()) {
-							message.append(entry.SISTEMA()).append("/").append(entry.TIPO_ARQUIVO()).append("/")
-									.append(entry.TIPO_PESQUISA()).append("\n")
-									.append(entry.MENSAGEM_CONCLUSAO_PROCESSAMENTO()).append("\n");
+					for (ReceitaBx entry : list.get()) {
+						message.append(entry.SISTEMA()).append("/").append(entry.TIPO_ARQUIVO()).append("/")
+								.append(entry.TIPO_PESQUISA()).append("\n")
+								.append(entry.MENSAGEM_CONCLUSAO_PROCESSAMENTO()).append("\n");
 
-							if (entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO() != null
-									&& entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO().length() > 0) {
+						if (entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO() != null
+								&& entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO().length() > 0) {
 
-								if (entry.TOTAL_PERIODOS_FALTANDO() == 0)
-									message.append(" [Nenhum período esta faltando]").append("\n\n");
-								else {
-									message.append(" [" + entry.TOTAL_PERIODOS_FALTANDO() + "] período(s) faltando.\n");
-									message.append(" [" + entry.PERIODOS_FALTANDO() + "]").append("\n\n");
-								}
+							if (entry.TOTAL_PERIODOS_FALTANDO() == 0)
+								message.append(" [Nenhum período esta faltando]").append("\n\n");
+							else {
+								message.append(" [" + entry.TOTAL_PERIODOS_FALTANDO() + "] período(s) faltando.\n");
+								message.append(" [" + entry.PERIODOS_FALTANDO() + "]").append("\n\n");
 							}
 						}
 					}
 
-					JOptionPane.showMessageDialog(MainForm.this, message.toString(), "Information",
+					logger.info(message.toString());
+					JOptionPane.showMessageDialog(MainForm.this, message.toString(), "Informação",
 							JOptionPane.INFORMATION_MESSAGE);
 
-				} catch (ErrorSavingSecureFile | InvalidKeyException | InvalidAlgorithmParameterException
-						| NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException
-						| InvalidCertificate | IOException | InterruptedException | ExecutionException e1) {
-					JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
+						| NoSuchPaddingException | InvalidKeySpecException | InvalidCertificate | IOException
+						| InterruptedException | ExecutionException e1) {
+					logger.error(e1.getMessage(), e1);
+					JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+				} finally {
+					if (list != null) {
+						try {
+							saveListOfFiles(list.get());
+							updateGridStatusColumn(list.get());
+						} catch (ErrorSavingSecureFile e2) {
+							logger.error(e2.getMessage(), e2);
+							JOptionPane.showMessageDialog(MainForm.this, e2.getMessage(), "Erro",
+									JOptionPane.ERROR_MESSAGE);
+						}
+					}
 				}
 
 				startButton.setEnabled(true);
@@ -952,8 +963,9 @@ public class MainForm extends JFrame {
 		screenResolutionLabel.setText(ScreenResolution.getDisplayLabel(MainForm.this));
 		screenResolutionTextField.setText(ScreenResolution.getResolution(lastMonitor));
 
-		loadCertificateComboBox(FileUtils.getCertificatePathSaved());
-		selectCertificateComboBoxItem(receitaBx.CERTIFICADO().toString());
+		certificateComboBox.removeAllItems();
+		certificateComboBox.setModel(FileUtils.getModelOfCertificates());
+		certificateComboBox.setSelectedIndex(FileUtils.getCertificateIndex(receitaBx.CERTIFICADO().toString()));
 
 		passwordTextField.setText(receitaBx.CERTIFICADO().PASS());
 		customerTextField.setText(receitaBx.NOME_CLIENTE());
@@ -1644,7 +1656,10 @@ public class MainForm extends JFrame {
 				form.addObjectListener(new Listenable() {
 					@Override
 					public void value(Object... objs) {
-						// performActions(form, objs);
+						String action = (String) objs[0];
+						if (action.equals(Menu.CLOSE.getValue())) {
+							form.close();
+						}
 					}
 				});
 				form.load();
@@ -1702,28 +1717,15 @@ public class MainForm extends JFrame {
 		return menuBar;
 	}
 
-	private void loadCertificateComboBox(String path) {
-		if (path != null && !path.trim().isEmpty()) {
-			List<Certificate> list = FileUtils.getListOfCertificates(path);
-			if (list.size() > 0) {
-				FileUtils.saveCertificatePathChosen(path);
-				DefaultComboBoxModel<Certificate> model = new DefaultComboBoxModel<>();
-				model.addAll(list);
-				certificateComboBox.removeAllItems();
-				certificateComboBox.setModel(model);
-			}
-		}
-	}
-
-	public void selectCertificateComboBoxItem(String valueToFind) {
-		for (int i = 0; i < certificateComboBox.getItemCount(); i++) {
-			Certificate cert = certificateComboBox.getItemAt(i);
-			if (cert.toString().equals(valueToFind)) {
-				certificateComboBox.setSelectedIndex(i);
-				break; // stop once found
-			}
-		}
-	}
+//	public void selectCertificateComboBoxItem(String valueToFind) {
+//		for (int i = 0; i < certificateComboBox.getItemCount(); i++) {
+//			Certificate cert = certificateComboBox.getItemAt(i);
+//			if (cert.toString().equals(valueToFind)) {
+//				certificateComboBox.setSelectedIndex(i);
+//				break; // stop once found
+//			}
+//		}
+//	}
 
 	private void changeThemes(boolean dark) {
 		if (FlatLaf.isLafDark() != dark) {
