@@ -42,7 +42,6 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 	private ReceitaBx original;
 	private Dimension monitor;
-	private Robot robot;
 
 	private String ULTIMO_PEDIDO_SOLICITADO = "";
 	private String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
@@ -76,7 +75,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			// *******************************************************************************************
 			// GET ROBOT PARAMETERS
 			// *******************************************************************************************
-			robot = RobotUtils.getRobotBasedOnScreenResolution(original);
+			Robot robot = RobotUtils.getRobotBasedOnScreenResolution(original);
 
 			// *******************************************************************************************
 			// PERFORM THE ACTIONS
@@ -406,11 +405,11 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 							
 							ProcessRobot obj = constructor.newInstance(original);
 
-							Method method = clazz.getDeclaredMethod(rmg.MESSAGE(), Actions.class);
+							Method method = clazz.getDeclaredMethod(rmg.MESSAGE(), Robot.class, Actions.class);
 
 							method.setAccessible(true);
 
-							method.invoke(obj, actions);
+							method.invoke(obj, robot, actions);
 							
 						}
 					}
@@ -431,7 +430,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	}
 
 	@SuppressWarnings("unused")
-	private void CheckTOMenu(Actions actions) throws Exception {
+	private void CheckTOMenu(Robot robot, Actions actions) throws Exception {
 
 		logger.info("Checking the parameters of the menu Tools / Options");
 		
@@ -450,76 +449,116 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 3.0);
 		String text = mb.getText();
+		Dimension monitor = mb.getMonitorSize();
 		logger.info("This is the current values: {}", text);
 
 		if (!text.contains(salvarOsArquivosEm)) {
 			logger.info("01 - Changing 'Salvar os arquivos em' to [{}]", salvarOsArquivosEm);
-//			if (robot.SCREEN_WIDTH() != monitor.width && robot.SCREEN_HEIGHT() != monitor.height)
-			actions.Move(850, 412);
-			actions.Click();
-			actions.Wait(1000);
+			//moveMousePointer(850, 412, monitor, robot, actions);
+			//actions.Click();
+			//actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste(salvarOsArquivosEm);
+			actions.Wait(1000);
 			changed = true;
 
 		}
+		
+		actions.Tab();
+		actions.Tab();
+		
 		if (!text.contains(criarSubDiretorio)) {
 			logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
-			System.out.println("criarSubDiretorio");
-			actions.Move(788, 453);
-			actions.Click();
+			//moveMousePointer(788, 453, monitor, robot, actions);
+			actions.SpaceBar();
 			actions.Wait(1000);
 			changed = true;
 
 		}
+
+		actions.Tab();
+		actions.Tab();
+		
 		if (!text.contains(numeroDownloads)) {
 			logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
-			System.out.println("numeroDownloads");
-			actions.Move(967, 512);
-			actions.Click();
-			actions.Wait(1000);
+			//moveMousePointer(967, 512, monitor, robot, actions);
+			//actions.Click();
+			//actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste("5");
+			actions.Wait(1000);
 			changed = true;
 
 		}
+
+		actions.Tab();
+		actions.Tab();
+
 		if (!text.contains(salvarLog)) {
 			logger.info("04 - Selecting 'Salvar log para depuração.");
-			actions.Move(788, 613);
-			actions.Click();
+			//moveMousePointer(788, 620, monitor, robot, actions);
+			//actions.Click();
+			actions.SpaceBar();
 			actions.Wait(1000);
+			actions.Tab();
+			
 			logger.info("05 - Changing the path to [{}].", salvarOsArquivosEm + "\\receitanetbx.log");
-			actions.Move(810, 640);
-			actions.Click();
-			actions.Wait(1000);
+			//moveMousePointer(810, 642, monitor, robot, actions);
+			//actions.Click();
+			//actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste(salvarOsArquivosEm + "\\receitanetbx.log");
+			actions.Wait(1000);
 			changed = true;
 		}
 		if (changed) {
 			// Save
-			actions.Move(992, 669);
-			actions.Click();
-
-			actions.Wait(2000);
+			//moveMousePointer(990, 672, monitor, robot, actions);
+			//actions.Click();
+			actions.Tab();
+			actions.Tab();
+			actions.Tab();
+			actions.SpaceBar();
+			actions.Wait(1000);
 
 			//OK
-			actions.Move(956, 542);
-			actions.Click();
-			
+			//moveMousePointer(960, 550, monitor, robot, actions);
+			//actions.Click();
+			actions.SpaceBar();
 			logger.info("Parameters fixed with success.");
 
 		} else {
 			System.out.println("Cancelar");
-			actions.Move(1100, 669);
-			actions.Wait(1000);
-			actions.Click();
+			//moveMousePointer(1100, 672, monitor, robot, actions);
+			//actions.Wait(1000);
+			//actions.Click();
+			actions.Tab();
+			actions.Tab();
+			actions.Tab();
+			actions.Tab();
+			actions.SpaceBar();
 			
 			logger.info("Parameters already fixed. No change needed.");
 		}
 
 	}
 	
+//	private void moveMousePointer(int x, int y, Dimension monitor, Robot robot, Actions actions) {
+//		logger.debug("moveMousePointer 1 {}/{}, {}/{}",robot.SCREEN_WIDTH(),robot.SCREEN_HEIGHT(),monitor.width,monitor.height);
+//		if (robot.SCREEN_WIDTH() != monitor.width || robot.SCREEN_HEIGHT() != monitor.height) {
+//			float relativeX = ((float) x / robot.SCREEN_WIDTH());
+//			float relativeY = ((float) y  / robot.SCREEN_HEIGHT());
+//			logger.debug("moveMousePointer 2 {}/{}={}, {}/{}={}",x, robot.SCREEN_WIDTH(), relativeX, y, robot.SCREEN_HEIGHT(), relativeY);
+//			int newX = (int) (relativeX * monitor.width);
+//			int newY = (int) (relativeY * monitor.height);
+//			logger.debug("moveMousePointer 3 {}*{}={}, {}*{}={}",relativeX, monitor.width,newX,relativeY,monitor.height,newY);
+//			actions.Move(newX, newY);
+//		}
+//		else {
+//			actions.Move(x, y);
+//		}
+//	}
+
 	private String getDateTimeOfConclusion() {
 		LocalDateTime currentDateTime = LocalDateTime.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
