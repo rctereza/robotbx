@@ -78,18 +78,17 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.rctereza.robotbx.Constants;
+import com.rctereza.robotbx.Main;
 import com.rctereza.robotbx.components.DarkLightSwitchIcon;
 import com.rctereza.robotbx.controllers.Controller;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.enums.Sped;
 import com.rctereza.robotbx.enums.SpedSearchField;
 import com.rctereza.robotbx.enums.Status;
-import com.rctereza.robotbx.exceptions.ErrorSavingSecureFile;
 import com.rctereza.robotbx.exceptions.InvalidCertificate;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.ReceitaBx;
-import com.rctereza.robotbx.tools.CryptoUtils;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
@@ -97,7 +96,6 @@ import com.rctereza.robotbx.tools.SpedUtils;
 import com.rctereza.robotbx.tools.ValidateCpfCnpj;
 import com.rctereza.robotbx.tools.ValidateDate;
 import com.rctereza.robotbx.tools.ValidatePfx;
-import com.rctereza.robotbx.wrappers.AppData;
 import com.rctereza.robotbx.wrappers.Ref;
 
 import net.miginfocom.swing.MigLayout;
@@ -177,15 +175,13 @@ public class MainForm extends JFrame {
 	// Stores the map of dynamic field names -> values for each row
 	private final List<Map<String, String>> rowDynamicData = new ArrayList<>();
 
-	private AppData appData = null;
-
-	private List<ReceitaBx> receitaBxList = null;
-
 	private ReceitaBx receitaBx = new ReceitaBx();
 
-	private Controller controller = null;
+	private List<ReceitaBx> receitaBxList;
 
-	private Listenable listener = null;
+	private Controller controller;
+
+	private Listenable listener;
 
 	private Timer monitorTimer;
 
@@ -289,7 +285,8 @@ public class MainForm extends JFrame {
 			int result = chooser.showOpenDialog(this);
 			if (result == JFileChooser.APPROVE_OPTION) {
 				certificateComboBox.removeAllItems();
-				certificateComboBox.setModel(FileUtils.getModelOfCertificates(chooser.getSelectedFile().getAbsolutePath()));
+				certificateComboBox
+						.setModel(FileUtils.getModelOfCertificates(chooser.getSelectedFile().getAbsolutePath()));
 			}
 		});
 
@@ -833,7 +830,7 @@ public class MainForm extends JFrame {
 				Ref<List<ReceitaBx>> list = null;
 
 				try {
-					
+
 					list = new Ref<>(getListOfFiles());
 
 					controller.startRobot(list);
@@ -868,14 +865,8 @@ public class MainForm extends JFrame {
 					JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
 				} finally {
 					if (list != null) {
-						try {
-							saveListOfFiles(list.get());
-							updateGridStatusColumn(list.get());
-						} catch (ErrorSavingSecureFile e2) {
-							logger.error(e2.getMessage(), e2);
-							JOptionPane.showMessageDialog(MainForm.this, e2.getMessage(), "Erro",
-									JOptionPane.ERROR_MESSAGE);
-						}
+						saveListOfFiles(list.get());
+						updateGridStatusColumn(list.get());
 					}
 				}
 
@@ -947,12 +938,9 @@ public class MainForm extends JFrame {
 		setResizable(false);
 	}
 
-	public void init() throws ErrorSavingSecureFile {
+	public void init() {
 
-		appData = CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE, AppData.class,
-				AppData::new);
-
-		receitaBxList = appData.getLastListAdded(ReceitaBx.class);
+		receitaBxList = Main.getAppData().getLastListAdded(ReceitaBx.class);
 
 		if (receitaBxList.size() > 0) {
 			receitaBx = receitaBxList.get(0);
@@ -1441,7 +1429,7 @@ public class MainForm extends JFrame {
 	private boolean confirmDeletion() {
 		boolean result = false;
 		String[] options = { "Sim", "Não" };
-		int choice = JOptionPane.showOptionDialog(this, // Parent component
+		int choice = JOptionPane.showOptionDialog(MainForm.this, // Parent component
 				"Deseja remover este item?", // Message
 				"Confirmação", // Title
 				JOptionPane.YES_NO_OPTION, // Option type
@@ -1564,21 +1552,21 @@ public class MainForm extends JFrame {
 		return result;
 	}
 
-	private void saveListOfFiles(List<ReceitaBx> list) throws ErrorSavingSecureFile {
+	private void saveListOfFiles(List<ReceitaBx> list) {
 
 		logger.info("Saving customer data...");
 
-		if (appData.getSequence(ReceitaBx.class) == 0) {
-			appData.setSequence(ReceitaBx.class, appData.nextSequence(ReceitaBx.class));
+		if (Main.getAppData().getSequence(ReceitaBx.class) == 0) {
+			Main.getAppData().setSequence(ReceitaBx.class, Main.getAppData().nextSequence(ReceitaBx.class));
 		}
 
-		appData.addList(ReceitaBx.class, appData.getSequence(ReceitaBx.class), list);
+		Main.getAppData().addList(ReceitaBx.class, Main.getAppData().getSequence(ReceitaBx.class), list);
 
-		CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+		Main.saveAppData();
 
 		logger.info("Customer data was saved with success.");
 
-		receitaBxList = appData.getLastListAdded(ReceitaBx.class);
+		receitaBxList = Main.getAppData().getLastListAdded(ReceitaBx.class);
 	}
 
 	private JMenuBar createMenuBar() {
@@ -1620,11 +1608,12 @@ public class MainForm extends JFrame {
 
 				emptyGrid();
 
-				appData.setSequence(ReceitaBx.class, appData.nextSequence(ReceitaBx.class));
+				Main.getAppData().setSequence(ReceitaBx.class, Main.getAppData().nextSequence(ReceitaBx.class));
 
-				appData.addList(ReceitaBx.class, appData.getSequence(ReceitaBx.class), new ArrayList<>());
+				Main.getAppData().addList(ReceitaBx.class, Main.getAppData().getSequence(ReceitaBx.class),
+						new ArrayList<>());
 
-				receitaBxList = appData.getLastListAdded(ReceitaBx.class);
+				receitaBxList = Main.getAppData().getLastListAdded(ReceitaBx.class);
 
 				receitaBx = new ReceitaBx();
 

@@ -1,11 +1,10 @@
 package com.rctereza.robotbx.models;
 
 import java.io.Serializable;
-import java.util.Date;
 
 import com.rctereza.robotbx.interfaces.Wrappable;
 
-public record Procurator(String CERTIFICATE_NAME, String CUSTOMER_NAME, String CUSTOMER_DOC, Date EXPIRE_DATE)
+public record Procurator(String CERTIFICATE_NAME, String CUSTOMER_NAME, String CUSTOMER_DOC, String EXPIRE_DATE)
 		implements Serializable, Cloneable, Wrappable {
 
 	public Procurator() {

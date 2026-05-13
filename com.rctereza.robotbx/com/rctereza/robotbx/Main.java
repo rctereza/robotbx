@@ -17,8 +17,10 @@ import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.exceptions.ErrorSavingSecureFile;
 import com.rctereza.robotbx.interfaces.Listenable;
+import com.rctereza.robotbx.tools.CryptoUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.views.MainForm;
+import com.rctereza.robotbx.wrappers.AppData;
 
 public class Main {
 
@@ -26,12 +28,14 @@ public class Main {
 
 	private static final Main instance = new Main();
 
+	private static AppData appData;
+
 	private MainForm mainForm;
 
 	private Main() {
 	}
 
-	public static Main getInstance() {
+	private static Main getInstance() {
 		return instance;
 	}
 
@@ -101,6 +105,36 @@ public class Main {
 			}
 		});
 
+	}
+	
+	public static AppData getAppData() {
+		if (appData == null) {
+			try {
+				appData = CryptoUtils.loadEncryptedGCM(Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE,
+						AppData.class, AppData::new);
+			} catch (ErrorSavingSecureFile e) {
+				logger.error("1-Fatal Error: {}", e.getMessage(), e);
+				JOptionPane.showMessageDialog(null,
+						"1-Um erro fatal ocorreu e a aplicação não pode prosseguir.\n\nFavor contactar o suporte do sistema.",
+						"Erro", JOptionPane.ERROR_MESSAGE);
+				System.gc();
+				System.exit(0);
+			}
+		}
+		return appData;
+	}
+	
+	public static void saveAppData() {
+		try {
+			CryptoUtils.saveEncryptedGCM(appData, Constants.SOFTWARE_SECRET, Constants.SOFTWARE_SECURE_FILE);
+		} catch (ErrorSavingSecureFile e) {
+			logger.error("2-Fatal Error: {}", e.getMessage(), e);
+			JOptionPane.showMessageDialog(null,
+					"2-Um erro fatal ocorreu e a aplicação não pode prosseguir.\n\nFavor contactar o suporte do sistema.",
+					"Erro", JOptionPane.ERROR_MESSAGE);
+			System.gc();
+			System.exit(0);
+		}
 	}
 
 	public static void main(String[] args) throws Exception {

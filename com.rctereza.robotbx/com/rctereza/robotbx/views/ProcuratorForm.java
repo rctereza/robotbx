@@ -7,8 +7,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.ParseException;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -29,6 +30,7 @@ import javax.swing.text.MaskFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rctereza.robotbx.Main;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
@@ -68,6 +70,7 @@ public class ProcuratorForm extends JDialog {
 	private JScrollPane tableScrollPane;
 
 	private JButton closeButton;
+	private JButton saveButton;
 
 	private Listenable listener;
 
@@ -139,10 +142,10 @@ public class ProcuratorForm extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				String result = validateFormFields();
 				if (result.equals("")) {
-					String CERTIFICATE_NAME = ((Certificate) certificateComboBox.getSelectedItem()).NAME();
+					String CERTIFICATE_NAME = ((Certificate) certificateComboBox.getSelectedItem()).toString();
 					String CUSTOMER_NAME = customerTextField.getText();
 					String CUSTOMER_DOC = customerDocumentTextField.getValue().toString();
-					Date EXPIRATION_DATE = (Date) expirationDateTextField.getValue();
+					String EXPIRATION_DATE = expirationDateTextField.getValue().toString();
 					model.addObject(new Procurator(CERTIFICATE_NAME, CUSTOMER_NAME, CUSTOMER_DOC, EXPIRATION_DATE));
 				} else {
 					JOptionPane.showMessageDialog(ProcuratorForm.this, result, "Atenção", JOptionPane.WARNING_MESSAGE);
@@ -157,12 +160,24 @@ public class ProcuratorForm extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 				int selectedRow = table.getSelectedRow();
 				if (selectedRow >= 0) {
-					model.removeObject(selectedRow);
+					String[] options = { "Sim", "Não" };
+					int choice = JOptionPane.showOptionDialog(ProcuratorForm.this, // Parent component
+							"Deseja remover este item?", // Message
+							"Confirmação", // Title
+							JOptionPane.YES_NO_OPTION, // Option type
+							JOptionPane.QUESTION_MESSAGE, // Message type
+							null, // Icon (null for default)
+							options, // Custom button labels
+							options[1] // Default button focused
+					);
+					if (choice == 0) { // Sim
+						model.removeObject(selectedRow);
+					}
 				}
 			}
 		});
 
-		model = new JModel(null);
+		model = new JModel(getList());
 
 		table = new JTable(model);
 		table.setRowHeight(24); // important for icons
@@ -175,11 +190,49 @@ public class ProcuratorForm extends JDialog {
 		tableScrollPane = new JScrollPane(table);
 		tableScrollPane.setPreferredSize(new java.awt.Dimension(0, 300));
 
+		saveButton = new JButton("Salvar");
+		saveButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				logger.info("Saving procurator data...");
+
+				if (Main.getAppData().getSequence(Procurator.class) == 0) {
+					Main.getAppData().setSequence(Procurator.class, Main.getAppData().nextSequence(Procurator.class));
+				}
+
+				Main.getAppData().addList(Procurator.class, Main.getAppData().getSequence(Procurator.class), model.getList());
+
+				Main.saveAppData();
+
+				model.resetModifiedFlag();
+				
+				JOptionPane.showMessageDialog(ProcuratorForm.this, "Os dados foram salvos com sucesso.", "informação", JOptionPane.INFORMATION_MESSAGE);
+
+				logger.info("Procurator data was saved with success.");
+			}
+		});
+
 		closeButton = new JButton("Fechar");
 		closeButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				listener.value(Menu.CLOSE.getValue());
+				if (model.isModified()) {
+					String[] options = { "Sim", "Não" };
+					int choice = JOptionPane.showOptionDialog(ProcuratorForm.this, // Parent component
+							"Houveram modificações. Deseja sair sem salvá-las?", // Message
+							"Confirmação", // Title
+							JOptionPane.YES_NO_OPTION, // Option type
+							JOptionPane.QUESTION_MESSAGE, // Message type
+							null, // Icon (null for default)
+							options, // Custom button labels
+							options[1] // Default button focused
+					);
+					if (choice == 0) { // Sim
+						listener.value(Menu.CLOSE.getValue());
+					}
+				} else {
+					listener.value(Menu.CLOSE.getValue());
+				}
 			}
 		});
 
@@ -198,9 +251,11 @@ public class ProcuratorForm extends JDialog {
 		panelMain.add(expirationDateLabel, "left, sg 1");
 		panelMain.add(expirationDateTextField, "wrap");
 
-		panelMain.add(addButton, "wrap");
+		panelMain.add(addButton, "left");
+		panelMain.add(delButton, "span2, right, wrap");
 		panelMain.add(tableScrollPane, "span3, grow, wrap");
-		panelMain.add(closeButton, "span3, right, wrap");
+		panelMain.add(saveButton, "left");
+		panelMain.add(closeButton, "span2, right, wrap");
 
 		this.add(panelMain);
 
@@ -210,7 +265,18 @@ public class ProcuratorForm extends JDialog {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 
-	protected String validateFormFields() {
+	private List<Procurator> getList() {
+		List<Procurator> list = Main.getAppData().getLastListAdded(Procurator.class);
+		
+		List<Procurator> deepCopy = list.stream()
+			    .map(p -> new Procurator(p.CERTIFICATE_NAME(), p.CUSTOMER_NAME(), p.CUSTOMER_DOC(), p.EXPIRE_DATE()))
+			    .collect(Collectors.toCollection(ArrayList::new)); //collect() generates a list that can be changed (mutable) 
+			    // .toList(); // toList() generates a list that cannot be changed (immutable)
+		
+		return deepCopy;
+	}
+	
+	private String validateFormFields() {
 		StringBuilder result = new StringBuilder("");
 
 		if (certificateComboBox.getSelectedIndex() == -1)
@@ -252,9 +318,11 @@ public class ProcuratorForm extends JDialog {
 
 		private static final long serialVersionUID = 5508898942706645608L;
 
-		private final String[] columns = { "Cliente", "CNPJ", "Data de Validade" };
+		private final String[] columns = { "Procurador", "Cliente", "CNPJ", "Data de Validade" };
 
-		private final List<Procurator> list;
+		private List<Procurator> list;
+
+		private boolean modified = false;
 
 		public JModel(List<Procurator> list) {
 			this.list = list;
@@ -283,12 +351,15 @@ public class ProcuratorForm extends JDialog {
 			switch (columnIndex) {
 
 			case 0:
-				return obj.CUSTOMER_NAME();
+				return obj.CERTIFICATE_NAME();
 
 			case 1:
-				return obj.CUSTOMER_DOC();
+				return obj.CUSTOMER_NAME();
 
 			case 2:
+				return obj.CUSTOMER_DOC();
+
+			case 3:
 				return obj.EXPIRE_DATE();
 
 			default:
@@ -304,19 +375,16 @@ public class ProcuratorForm extends JDialog {
 
 		// Add new row
 		public void addObject(Procurator obj) {
-
+			modified = true;
 			list.add(obj);
-
 			int lastRow = list.size() - 1;
-
 			fireTableRowsInserted(lastRow, lastRow);
 		}
 
 		// Remove row
 		public void removeObject(int rowIndex) {
-
+			modified = true;
 			list.remove(rowIndex);
-
 			fireTableRowsDeleted(rowIndex, rowIndex);
 		}
 
@@ -324,6 +392,17 @@ public class ProcuratorForm extends JDialog {
 		public Procurator getObject(int rowIndex) {
 			return list.get(rowIndex);
 		}
-	}
 
+		public List<Procurator> getList() {
+			return this.list;
+		}
+		
+		public boolean isModified() {
+			return modified;
+		}
+		
+		public void resetModifiedFlag() {
+			modified = false;
+		}
+	}
 }
