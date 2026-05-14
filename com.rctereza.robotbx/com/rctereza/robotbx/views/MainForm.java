@@ -678,9 +678,6 @@ public class MainForm extends JFrame {
 		JMenuItem deleteItem = new JMenuItem("Remover");
 		deleteItem.addActionListener(e -> {
 			int row = itemsTable.getSelectedRow();
-			if (row != -1) {
-				row = itemsTable.convertRowIndexToModel(row);
-			}
 			if (confirmDeletion()) {
 				tableModel.removeRow(row);
 				if (row < rowDynamicData.size()) {
@@ -747,9 +744,6 @@ public class MainForm extends JFrame {
 		itemsTable.getSelectionModel().addListSelectionListener(e -> {
 			if (!e.getValueIsAdjusting()) {
 				int row = itemsTable.getSelectedRow();
-				if (row != -1) {
-					row = itemsTable.convertRowIndexToModel(row);
-				}
 				if (row != -1) {
 					int colCount = itemsTable.getColumnCount();
 					for (int col = 0; col < colCount; col++) {
@@ -1705,16 +1699,6 @@ public class MainForm extends JFrame {
 
 		return menuBar;
 	}
-
-//	public void selectCertificateComboBoxItem(String valueToFind) {
-//		for (int i = 0; i < certificateComboBox.getItemCount(); i++) {
-//			Certificate cert = certificateComboBox.getItemAt(i);
-//			if (cert.toString().equals(valueToFind)) {
-//				certificateComboBox.setSelectedIndex(i);
-//				break; // stop once found
-//			}
-//		}
-//	}
 
 	private void changeThemes(boolean dark) {
 		if (FlatLaf.isLafDark() != dark) {
