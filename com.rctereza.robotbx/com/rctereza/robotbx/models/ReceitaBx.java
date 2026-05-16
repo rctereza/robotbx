@@ -12,7 +12,7 @@ public record ReceitaBx(String RESOLUCAO_TELA, Certificate CERTIFICADO, String N
 		String BAIXAR_ARQUIVO_ASSINADO, String CNPJ_ESTABELECIMENTO, Boolean BUSCAR_TODOS_ESTABLECIMENTOS,
 		String INSCRICAO_ESTADUAL, Boolean ULTIMO_ARQUIVO_TRANSMITIDO, String ULTIMO_PEDIDO_SOLICITADO,
 		String DATA_HORA_CONCLUSAO_PROCESSAMENTO, String MENSAGEM_CONCLUSAO_PROCESSAMENTO, String PERIODOS_FALTANDO,
-		Integer TOTAL_PERIODOS_FALTANDO, Status STATUS) implements Serializable, Cloneable, Wrappable {
+		Integer TOTAL_PERIODOS_FALTANDO, Status STATUS) implements Serializable, Wrappable {
 
 	public ReceitaBx() {
 		this(null, new Certificate(), null, null, null, null, null, null, null, null, null, null, null, null, null,
@@ -24,12 +24,4 @@ public record ReceitaBx(String RESOLUCAO_TELA, Certificate CERTIFICADO, String N
 		return null;
 	}
 
-	@Override
-	public ReceitaBx clone() {
-		try {
-			return (ReceitaBx) super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new AssertionError();
-		}
-	}
 }

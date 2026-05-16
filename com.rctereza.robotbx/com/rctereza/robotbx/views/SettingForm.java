@@ -1,41 +1,409 @@
 package com.rctereza.robotbx.views;
 
+import java.awt.Dimension;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSeparator;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerListModel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.rctereza.robotbx.Constants;
+import com.rctereza.robotbx.Main;
 import com.rctereza.robotbx.enums.Menu;
 import com.rctereza.robotbx.interfaces.Listenable;
+import com.rctereza.robotbx.models.Setting;
+import com.rctereza.robotbx.models.Setting.KeepWhichFiles;
+import com.rctereza.robotbx.tools.FileUtils;
+
+import net.miginfocom.swing.MigLayout;
 
 public class SettingForm extends JDialog {
 
 	private static final long serialVersionUID = -8935336038076796989L;
 
+	private static final String FOLDER_TOOLTIP = "Clique duas vezes sobre este campo para acessar o diretório informado nele.";
+
+	private static final Logger logger = LoggerFactory.getLogger(SettingForm.class);
+
+	private JPanel panelMain;
+
+	private JLabel softwareNameLabel;
+	private JTextField softwareNameTextField;
+
+	private JLabel softwareLocationLabel;
+	private JTextField softwareLocationTextField;
+	private JButton softwareLocationSelectButton;
+
+	private JLabel softwareLocationJarLabel;
+	private JComboBox<String> softwareLocationJarComboBox;
+
+	private JLabel filesDownloadedLocationLabel;
+	private JTextField filesDownloadedLocationTextField;
+	private JButton filesDownloadedLocationButton;
+
+	private JLabel makeSubFolderForEachFileTypeLabel;
+	private JCheckBox makeSubFolderForEachFileTypeCheckBox;
+
+	private JLabel downloadFilesAutomaticallyLabel;
+	private JCheckBox downloadFilesAutomaticallyCheckBox;
+
+	private JLabel numberOfSimultaneousDownloadsLabel;
+	private JSpinner numberOfSimultaneousDownloadsSpinner;
+
+	private JLabel orderUpdatesPerMinuteLabel;
+	private JSpinner orderUpdatesPerMinuteSpinner;
+
+	private JLabel saveLogForDebuggingLabel;
+	private JTextField saveLogForDebuggingTextField;
+
+	private JLabel moveFileToNewLocationAfterConclusionLabel;
+	private JTextField moveFileToNewLocationAfterConclusionTextField;
+	private JButton moveFileToNewLocationAfterConclusionButton;
+
+	private JLabel filesToKeepAfterConclusionLabel;
+	private JRadioButton filesToKeepAfterConclusionAll;
+	private JRadioButton filesToKeepAfterConclusionLastRectification;
+
+	private JButton closeButton;
+	private JButton saveButton;
+
+	private Setting originalSetting;
+
 	private Listenable listener;
 
 	public SettingForm(Window parent, Menu menu) {
 		super(parent, menu.getValue(), ModalityType.APPLICATION_MODAL);
-		
-		//setIconImage(Resources.getImage(Constants.SOFTWARE_ICON, null));
+
+		// setIconImage(Resources.getImage(Constants.SOFTWARE_ICON, null));
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 				listener.value(Menu.CLOSE.getValue());
 			}
 		});
-		
-		
-		
-		
-		setSize(1200, 550);
+
+		originalSetting = loadSetting();
+
+		softwareNameLabel = new JLabel("Nome do Software:");
+		softwareNameTextField = new JTextField();
+		softwareNameTextField.setText(originalSetting.SOFTWARE_NAME());
+		softwareNameTextField.setEnabled(false);
+
+		softwareLocationLabel = new JLabel("Diretório de Instalação:");
+
+		softwareLocationTextField = new JTextField();
+		softwareLocationTextField.setText(originalSetting.SOFTWARE_PATH());
+		softwareLocationTextField.setEnabled(false);
+		softwareLocationTextField.setToolTipText(FOLDER_TOOLTIP);
+		softwareLocationTextField.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					if (!softwareLocationTextField.getText().isEmpty()) {
+						FileUtils.openFolderWithExplorer(softwareLocationTextField.getText());
+					}
+				}
+			}
+		});
+
+		softwareLocationSelectButton = new JButton("Selecionar");
+		softwareLocationSelectButton.setPreferredSize(new Dimension(80, 20));
+		softwareLocationSelectButton.addActionListener(e -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle("Selecione o diretório de instalação do software");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+
+			int result = chooser.showOpenDialog(this);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				softwareLocationTextField.setText(chooser.getSelectedFile().getAbsolutePath());
+
+				softwareLocationJarComboBox.removeAllItems();
+				softwareLocationJarComboBox
+						.setModel(FileUtils.getModelOfSoftwares(softwareLocationTextField.getText()));
+				if (softwareLocationJarComboBox.getModel().getSize() > 0) {
+					softwareLocationJarComboBox.setSelectedIndex(0);
+				}
+			}
+		});
+
+		softwareLocationJarLabel = new JLabel("Arquivo de Inicialização:");
+		softwareLocationJarComboBox = new JComboBox<>();
+		softwareLocationJarComboBox.setModel(FileUtils.getModelOfSoftwares());
+		softwareLocationJarComboBox.setSelectedItem(originalSetting.SOFTWARE_PROGRAM());
+
+		filesDownloadedLocationLabel = new JLabel("Diretório do Download:");
+
+		filesDownloadedLocationTextField = new JTextField();
+		filesDownloadedLocationTextField.setText(originalSetting.DOWNLOAD_FOLDER());
+		filesDownloadedLocationTextField.setEnabled(false);
+		filesDownloadedLocationTextField.setToolTipText(FOLDER_TOOLTIP);
+		filesDownloadedLocationTextField.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					if (!filesDownloadedLocationTextField.getText().isEmpty()) {
+						FileUtils.openFolderWithExplorer(filesDownloadedLocationTextField.getText());
+					}
+				}
+			}
+		});
+
+		filesDownloadedLocationButton = new JButton("Selecionar");
+		filesDownloadedLocationButton.addActionListener(e -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle("Selecione o diretório que os arquivos serão baixados");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+
+			int result = chooser.showOpenDialog(this);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				filesDownloadedLocationTextField.setText(chooser.getSelectedFile().getAbsolutePath());
+				saveLogForDebuggingTextField.setText(filesDownloadedLocationTextField.getText() + "\\receitanetbx.log");
+			}
+		});
+
+		makeSubFolderForEachFileTypeLabel = new JLabel("");
+		makeSubFolderForEachFileTypeCheckBox = new JCheckBox("Criar sub-diretório para cada tipo de arquivo.");
+		makeSubFolderForEachFileTypeCheckBox.setSelected(originalSetting.MAKE_SUBFOLDER());
+		makeSubFolderForEachFileTypeCheckBox.setEnabled(false);
+
+		downloadFilesAutomaticallyLabel = new JLabel("");
+		downloadFilesAutomaticallyCheckBox = new JCheckBox("Baixar arquivos automaticamente.");
+		downloadFilesAutomaticallyCheckBox.setSelected(originalSetting.AUTO_DOWNLOAD());
+		downloadFilesAutomaticallyCheckBox.setEnabled(false);
+
+		numberOfSimultaneousDownloadsLabel = new JLabel(" Quantos arquivos baixar simultaneamente?");
+		numberOfSimultaneousDownloadsLabel.setEnabled(false);
+		numberOfSimultaneousDownloadsSpinner = new JSpinner(new SpinnerListModel(new Integer[] { 1, 2, 3, 4, 5 }));
+		numberOfSimultaneousDownloadsSpinner.setValue(originalSetting.NUMBER_DOWNLOAD_SIMULTANEOUS());
+		numberOfSimultaneousDownloadsSpinner.setEnabled(false);
+
+		orderUpdatesPerMinuteLabel = new JLabel(" Quantos minutos esperar para a próxima atualização dos pedidos?");
+
+		orderUpdatesPerMinuteLabel.setEnabled(false);
+		orderUpdatesPerMinuteSpinner = new JSpinner(
+				new SpinnerListModel(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }));
+		orderUpdatesPerMinuteSpinner.setValue(originalSetting.MINUTES_FOR_NEXT_ORDER_UPDATE());
+		orderUpdatesPerMinuteSpinner.setEnabled(false);
+
+		saveLogForDebuggingLabel = new JLabel("Diretório do Log:");
+		saveLogForDebuggingTextField = new JTextField();
+		saveLogForDebuggingTextField.setText(originalSetting.LOG_FOLDER());
+		saveLogForDebuggingTextField.setEnabled(false);
+
+		moveFileToNewLocationAfterConclusionLabel = new JLabel("Diretório do Resultado:");
+		moveFileToNewLocationAfterConclusionTextField = new JTextField();
+		moveFileToNewLocationAfterConclusionTextField.setText(originalSetting.SAVE_FOLDER());
+		moveFileToNewLocationAfterConclusionTextField.setEnabled(false);
+		moveFileToNewLocationAfterConclusionTextField.setToolTipText(FOLDER_TOOLTIP);
+		moveFileToNewLocationAfterConclusionTextField.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					if (!moveFileToNewLocationAfterConclusionTextField.getText().isEmpty()) {
+						FileUtils.openFolderWithExplorer(moveFileToNewLocationAfterConclusionTextField.getText());
+					}
+				}
+			}
+		});
+
+		moveFileToNewLocationAfterConclusionButton = new JButton("Selecionar");
+		moveFileToNewLocationAfterConclusionButton.addActionListener(e -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle(
+					"Selecione o diretório que os arquivos serão movidos após a conslusão do processamento");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+
+			int result = chooser.showOpenDialog(this);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				moveFileToNewLocationAfterConclusionTextField.setText(chooser.getSelectedFile().getAbsolutePath());
+			}
+		});
+
+		filesToKeepAfterConclusionLabel = new JLabel("Quais arquivos manter?");
+		filesToKeepAfterConclusionAll = new JRadioButton("Todos", true);
+		filesToKeepAfterConclusionLastRectification = new JRadioButton("Ultima retificação");
+
+		if (originalSetting.KEEP_WHICH_FILES() != null) {
+			switch (originalSetting.KEEP_WHICH_FILES()) {
+			case ALL:
+				filesToKeepAfterConclusionAll.setSelected(true);
+				filesToKeepAfterConclusionLastRectification.setSelected(false);
+				break;
+			case ONLY_AMEND:
+				filesToKeepAfterConclusionAll.setSelected(false);
+				filesToKeepAfterConclusionLastRectification.setSelected(true);
+				break;
+			default:
+				break;
+			}
+		}
+
+		ButtonGroup filesToKeepAfterConclusionGroup = new ButtonGroup();
+		filesToKeepAfterConclusionGroup.add(filesToKeepAfterConclusionAll);
+		filesToKeepAfterConclusionGroup.add(filesToKeepAfterConclusionLastRectification);
+
+		saveButton = new JButton("Salvar");
+		saveButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				boolean foundChanges = false;
+
+				Setting setting = getList().getFirst();
+
+				if (!originalSetting.equals(setting)) {
+					foundChanges = true;
+					// logger.debug("Original.: {}" , originalSetting);
+					// logger.debug("NewObject: {}" , setting);
+				}
+
+				if (!foundChanges) {
+
+					JOptionPane.showMessageDialog(SettingForm.this,
+							"Não há a necessidade de salvar os dados. Nenhuma configuração foi alterada.", "Atenção",
+							JOptionPane.WARNING_MESSAGE);
+
+				} else {
+
+					logger.info("Saving setting data...");
+
+					if (Main.getAppData().getSequence(Setting.class) == 0) {
+						Main.getAppData().setSequence(Setting.class, Main.getAppData().nextSequence(Setting.class));
+					}
+
+					Main.getAppData().addList(Setting.class, Main.getAppData().getSequence(Setting.class), getList());
+
+					Main.saveAppData();
+
+					logger.info("Setting data was saved with success.");
+
+					JOptionPane.showMessageDialog(SettingForm.this, "Os dados foram salvos com sucesso.", "informação",
+							JOptionPane.INFORMATION_MESSAGE);
+
+					listener.value(Menu.CLOSE.getValue());
+				}
+			}
+		});
+
+		closeButton = new JButton("Fechar");
+		closeButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				boolean foundChanges = false;
+
+				Setting setting = getList().getFirst();
+
+				if (!originalSetting.equals(setting)) {
+					foundChanges = true;
+//					logger.debug("Original.: {}" , originalSetting);
+//					logger.debug("NewObject: {}" , setting);
+				}
+
+				if (foundChanges) {
+					String[] options = { "Sim", "Não" };
+					int choice = JOptionPane.showOptionDialog(SettingForm.this, // Parent component
+							"Houveram alterações. Deseja sair sem salvá-las?", // Message
+							"Confirmação", // Title
+							JOptionPane.YES_NO_OPTION, // Option type
+							JOptionPane.QUESTION_MESSAGE, // Message type
+							null, // Icon (null for default)
+							options, // Custom button labels
+							options[1] // Default button focused
+					);
+					if (choice == 0) { // Sim
+						listener.value(Menu.CLOSE.getValue());
+					}
+				} else {
+					listener.value(Menu.CLOSE.getValue());
+				}
+			}
+		});
+
+		// panelMain = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]",
+		// "[]10[]10[]"));
+		panelMain = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
+
+		panelMain.add(softwareNameLabel, "left, sg 1");
+		panelMain.add(softwareNameTextField, "pushx, growx, wrap");
+
+		panelMain.add(softwareLocationLabel, "left, sg 1");
+		panelMain.add(softwareLocationTextField, "pushx, growx");
+		panelMain.add(softwareLocationSelectButton, "left, wrap");
+
+		panelMain.add(softwareLocationJarLabel, "left, sg 1");
+		panelMain.add(softwareLocationJarComboBox, "pushx, growx, wrap");
+
+		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
+
+		panelMain.add(filesDownloadedLocationLabel, "left, sg 1");
+		panelMain.add(filesDownloadedLocationTextField, "pushx, growx");
+		panelMain.add(filesDownloadedLocationButton, "left, wrap");
+
+		panelMain.add(saveLogForDebuggingLabel, "left, sg 1");
+		panelMain.add(saveLogForDebuggingTextField, "pushx, growx, wrap");
+
+		panelMain.add(moveFileToNewLocationAfterConclusionLabel, "left, sg 1");
+		panelMain.add(moveFileToNewLocationAfterConclusionTextField, "pushx, growx");
+		panelMain.add(moveFileToNewLocationAfterConclusionButton, "left, wrap");
+
+		panelMain.add(filesToKeepAfterConclusionLabel, "left, sg 1");
+		panelMain.add(filesToKeepAfterConclusionAll, "split");
+		panelMain.add(filesToKeepAfterConclusionLastRectification, "wrap");
+
+		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
+
+		panelMain.add(makeSubFolderForEachFileTypeLabel, "left, sg 1");
+		panelMain.add(makeSubFolderForEachFileTypeCheckBox, "wrap");
+
+		panelMain.add(downloadFilesAutomaticallyLabel, "left, sg 1");
+		panelMain.add(downloadFilesAutomaticallyCheckBox, "wrap");
+
+		panelMain.add(new JLabel(""), "left, sg 1");
+		panelMain.add(numberOfSimultaneousDownloadsLabel, "split");
+		panelMain.add(numberOfSimultaneousDownloadsSpinner, "wrap");
+
+		panelMain.add(new JLabel(""), "left, sg 1");
+		panelMain.add(orderUpdatesPerMinuteLabel, "split");
+		panelMain.add(orderUpdatesPerMinuteSpinner, "wrap");
+
+		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
+
+		panelMain.add(saveButton, "left");
+		panelMain.add(closeButton, "span2, right, wrap");
+
+		this.add(panelMain);
+
+		setSize(950, 450);
 		setResizable(false);
 		setLocationRelativeTo(parent);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
-	
+
 	public void addObjectListener(Listenable listener) {
 		this.listener = listener;
 	}
@@ -48,4 +416,43 @@ public class SettingForm extends JDialog {
 		this.setVisible(false);
 		this.dispose();
 	}
+
+	private Setting loadSetting() {
+		List<Setting> list = Main.getAppData().getLastListAdded(Setting.class);
+		if (list.size() > 0) {
+			List<Setting> deepCopy = list.stream()
+					.map(p -> new Setting(p.SOFTWARE_NAME(), p.SOFTWARE_PATH(), p.SOFTWARE_PROGRAM(),
+							p.DOWNLOAD_FOLDER(), p.LOG_FOLDER(), p.SAVE_FOLDER(), p.MAKE_SUBFOLDER(), p.AUTO_DOWNLOAD(),
+							p.NUMBER_DOWNLOAD_SIMULTANEOUS(), p.MINUTES_FOR_NEXT_ORDER_UPDATE(), p.KEEP_WHICH_FILES()))
+					.collect(Collectors.toCollection(ArrayList::new)); // collect() generates a list that can be changed
+			// .toList(); // toList() generates a list that cannot be changed (immutable)
+			return deepCopy.getFirst();
+		} else
+			return new Setting(Constants.SOFTWARE_NAME, "", "", "", "", "", true, false, 5, 10, KeepWhichFiles.ALL);
+	}
+
+	private List<Setting> getList() {
+
+		String SOFTWARE_NAME = softwareNameTextField.getText();
+		String SOFTWARE_PATH = softwareLocationTextField.getText();
+		String SOFTWARE_PROGRAM = (softwareLocationJarComboBox.getSelectedItem() != null
+				? softwareLocationJarComboBox.getSelectedItem().toString()
+				: "");
+		String DOWNLOAD_FOLDER = filesDownloadedLocationTextField.getText();
+		String LOG_FOLDER = saveLogForDebuggingTextField.getText();
+		String SAVE_FOLDER = moveFileToNewLocationAfterConclusionTextField.getText();
+		Boolean MAKE_SUBFOLDER = makeSubFolderForEachFileTypeCheckBox.isSelected();
+		Boolean AUTO_DOWNLOAD = downloadFilesAutomaticallyCheckBox.isSelected();
+		Integer NUMBER_DOWNLOAD_SIMULTANEOUS = (Integer) numberOfSimultaneousDownloadsSpinner.getValue();
+		Integer MINUTES_FOR_NEXT_ORDER_UPDATE = (Integer) orderUpdatesPerMinuteSpinner.getValue();
+		KeepWhichFiles KEEP_WHICH_FILES = (filesToKeepAfterConclusionAll.isSelected() ? KeepWhichFiles.ALL
+				: KeepWhichFiles.ONLY_AMEND);
+
+		List<Setting> list = List.of(new Setting(SOFTWARE_NAME, SOFTWARE_PATH, SOFTWARE_PROGRAM, DOWNLOAD_FOLDER,
+				LOG_FOLDER, SAVE_FOLDER, MAKE_SUBFOLDER, AUTO_DOWNLOAD, NUMBER_DOWNLOAD_SIMULTANEOUS,
+				MINUTES_FOR_NEXT_ORDER_UPDATE, KEEP_WHICH_FILES));
+
+		return list;
+	}
+
 }

@@ -115,7 +115,7 @@ public class Main {
 			} catch (ErrorSavingSecureFile e) {
 				logger.error("1-Fatal Error: {}", e.getMessage(), e);
 				JOptionPane.showMessageDialog(null,
-						"1-Um erro fatal ocorreu e a aplicação não pode prosseguir.\n\nFavor contactar o suporte do sistema.",
+						"1-Um erro fatal ocorreu e a aplicação não pode prosseguir.\n\nFavor contactar o suporte do sistema.\n[" + e.getMessage() + "]",
 						"Erro", JOptionPane.ERROR_MESSAGE);
 				System.gc();
 				System.exit(0);
@@ -130,7 +130,7 @@ public class Main {
 		} catch (ErrorSavingSecureFile e) {
 			logger.error("2-Fatal Error: {}", e.getMessage(), e);
 			JOptionPane.showMessageDialog(null,
-					"2-Um erro fatal ocorreu e a aplicação não pode prosseguir.\n\nFavor contactar o suporte do sistema.",
+					"2-Um erro fatal ocorreu e a aplicação não pode prosseguir.\n\nFavor contactar o suporte do sistema.\n[" + e.getMessage() + "]",
 					"Erro", JOptionPane.ERROR_MESSAGE);
 			System.gc();
 			System.exit(0);

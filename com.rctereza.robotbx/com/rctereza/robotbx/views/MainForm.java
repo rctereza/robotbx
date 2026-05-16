@@ -1667,7 +1667,10 @@ public class MainForm extends JFrame {
 				form.addObjectListener(new Listenable() {
 					@Override
 					public void value(Object... objs) {
-						// performActions(form, objs);
+						String action = (String) objs[0];
+						if (action.equals(Menu.CLOSE.getValue())) {
+							form.close();
+						}
 					}
 				});
 				form.load();

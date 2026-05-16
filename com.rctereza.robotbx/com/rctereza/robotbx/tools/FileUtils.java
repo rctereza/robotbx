@@ -23,6 +23,63 @@ public class FileUtils {
 
 //	private static final Logger logger = LoggerFactory.getLogger(FileUtils.class);
 
+	// ----------------------------------------------------------------------------
+	// SOFTWARE
+	public static void saveSoftwarePathChosen(String path) {
+		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
+		prefs.put(Constants.SOFTWARE_PATH, path);
+	}
+
+	public static String getSoftwarePathSaved() {
+		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
+		return prefs.get(Constants.SOFTWARE_PATH, "");
+	}
+
+	public static void removeSoftwarePathChosen() {
+		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
+		prefs.remove(Constants.SOFTWARE_PATH);
+	}
+	
+	public static DefaultComboBoxModel<String> getModelOfSoftwares() {
+		return getModelOfSoftwares(getSoftwarePathSaved());
+	}
+
+	public static DefaultComboBoxModel<String> getModelOfSoftwares(String path) {
+		DefaultComboBoxModel<String> model = null;
+		List<String> list = getListOfSoftwares(path);
+		if (list.size() > 0) {
+			saveSoftwarePathChosen(path);
+			model = new DefaultComboBoxModel<>();
+			model.addAll(list);
+		}
+		return model;
+	}
+
+	public static List<String> getListOfSoftwares(String path) {
+		return getList2(path);
+	}
+
+	public static List<String> getListOfSoftwares() {
+		return getList2(getCertificatePathSaved());
+	}
+
+	private static List<String> getList2(String path) {
+		ArrayList<String> list = new ArrayList<>();
+		Path folder = Paths.get(path);
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(folder, "*.jar")) {
+			for (Path entry : stream) {
+				String filename = entry.getFileName().toString();
+				String filepath = entry.getParent().toString();
+				list.add(filepath + "\\" + filename);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+	
+	// ----------------------------------------------------------------------------
+	// CERTIFICATE
 	public static void saveCertificatePathChosen(String path) {
 		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
 		prefs.put(Constants.CERTIFICATE_PATH, path);
@@ -53,27 +110,12 @@ public class FileUtils {
 		return model;
 	}
 
-	public static int getCertificateIndex(String valueToFind) {
-		int result = -1;
-		List<Certificate> list = getListOfCertificates(getCertificatePathSaved());
-		if (list.size() > 0) {
-			for (int i = 0; i < list.size(); i++) {
-				Certificate cert = list.get(i);
-				if (cert.toString().equals(valueToFind)) {
-					result = i;
-					break; // stop once found
-				}
-			}
-		}
-		return result;
-	}
-
 	public static List<Certificate> getListOfCertificates(String path) {
 		return getList(path);
 	}
 
 	public static List<Certificate> getListOfCertificates() {
-		return getList(Constants.PROGRAM_CERTIFICATES);
+		return getList(getCertificatePathSaved());
 	}
 
 	private static List<Certificate> getList(String path) {
@@ -90,6 +132,21 @@ public class FileUtils {
 			e.printStackTrace();
 		}
 		return list;
+	}
+
+	public static int getCertificateIndex(String valueToFind) {
+		int result = -1;
+		List<Certificate> list = getListOfCertificates(getCertificatePathSaved());
+		if (list.size() > 0) {
+			for (int i = 0; i < list.size(); i++) {
+				Certificate cert = list.get(i);
+				if (cert.toString().equals(valueToFind)) {
+					result = i;
+					break; // stop once found
+				}
+			}
+		}
+		return result;
 	}
 
 	public static void openFolderWithExplorer(String folderPath) {

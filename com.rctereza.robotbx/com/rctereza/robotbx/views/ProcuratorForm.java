@@ -314,7 +314,7 @@ public class ProcuratorForm extends JDialog {
 				if (model.isModified()) {
 					String[] options = { "Sim", "Não" };
 					int choice = JOptionPane.showOptionDialog(ProcuratorForm.this, // Parent component
-							"Houveram modificações. Deseja sair sem salvá-las?", // Message
+							"Houveram alterações. Deseja sair sem salvá-las?", // Message
 							"Confirmação", // Title
 							JOptionPane.YES_NO_OPTION, // Option type
 							JOptionPane.QUESTION_MESSAGE, // Message type

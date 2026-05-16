@@ -82,7 +82,7 @@ public class CryptoUtils {
 			cipher = Cipher.getInstance("AES/GCM/NoPadding");
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
 			logger.error("3-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("3-> " + e.getMessage());
+			throw new ErrorSavingSecureFile("3-> " + e.getMessage(), e);
 		}
 		
 		GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH, iv);
@@ -91,7 +91,7 @@ public class CryptoUtils {
 			cipher.init(Cipher.ENCRYPT_MODE, key, spec);
 		} catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
 			logger.error("4-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("4-> " + e.getMessage());
+			throw new ErrorSavingSecureFile("4-> " + e.getMessage(), e);
 		}
 		
 		byte[] versionBytes = VERSION.getBytes(StandardCharsets.UTF_8);
@@ -117,13 +117,13 @@ public class CryptoUtils {
 				oos.flush();
 			}
 			
-		} catch (FileNotFoundException e) {
-			logger.error("5-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("5-> " + e.getMessage());
+		} catch (FileNotFoundException e1) {
+			logger.error("5-> {}", e1.getMessage(), e1);
+			throw new ErrorSavingSecureFile("5-> " + e1.getMessage(), e1);
 			
-		} catch (IOException e) {
-			logger.error("6-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("6-> " + e.getMessage());
+		} catch (IOException e2) {
+			logger.error("6-> {}", e2.getMessage(), e2);
+			throw new ErrorSavingSecureFile("6-> " + e2.getMessage(), e2);
 			
 		}
 	}
@@ -174,7 +174,7 @@ public class CryptoUtils {
 				
 			} catch (ClassNotFoundException e) {
 				logger.error("8-> {}", e.getMessage(), e);
-				throw new ErrorSavingSecureFile("8-> " + e.getMessage());
+				throw new ErrorSavingSecureFile("8-> " + e.getMessage(), e);
 				
 			}
 
@@ -182,27 +182,27 @@ public class CryptoUtils {
 			return defaultSupplier.get();
 			
 		} catch (ErrorSavingSecureFile e) {
-			throw new ErrorSavingSecureFile(e.getMessage());
+			throw new ErrorSavingSecureFile(e.getMessage(), e);
 			
 		} catch (IOException e) {
 			logger.error("3-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("3-> " + e.getMessage());
+			throw new ErrorSavingSecureFile("3-> " + e.getMessage(), e);
 			
 		} catch (NoSuchAlgorithmException e) {
 			logger.error("4-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("4-> " + e.getMessage());
+			throw new ErrorSavingSecureFile("4-> " + e.getMessage(), e);
 			
 		} catch (NoSuchPaddingException e) {
 			logger.error("5-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("5-> " + e.getMessage());
+			throw new ErrorSavingSecureFile("5-> " + e.getMessage(), e);
 			
 		} catch (InvalidKeyException e) {
 			logger.error("6-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("6-> " + e.getMessage());
+			throw new ErrorSavingSecureFile("6-> " + e.getMessage(), e);
 			
 		} catch (InvalidAlgorithmParameterException e) {
 			logger.error("7-> {}", e.getMessage(), e);
-			throw new ErrorSavingSecureFile("7-> " + e.getMessage());
+			throw new ErrorSavingSecureFile("7-> " + e.getMessage(), e);
 			
 		}
 	}
