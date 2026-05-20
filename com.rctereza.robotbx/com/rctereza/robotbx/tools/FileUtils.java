@@ -45,11 +45,10 @@ public class FileUtils {
 	}
 
 	public static DefaultComboBoxModel<String> getModelOfSoftwares(String path) {
-		DefaultComboBoxModel<String> model = null;
+		DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
 		List<String> list = getListOfSoftwares(path);
 		if (list.size() > 0) {
 			saveSoftwarePathChosen(path);
-			model = new DefaultComboBoxModel<>();
 			model.addAll(list);
 		}
 		return model;
