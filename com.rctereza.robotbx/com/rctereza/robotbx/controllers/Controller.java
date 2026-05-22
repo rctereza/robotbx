@@ -31,7 +31,7 @@ public class Controller {
 
 				if (i == 0) {
 					sourceFolder = params.PASTA_ORIGEM_ARQUIVOS_BAIXADOS();
-					targetFolder = params.PASTA_DESTINO_ARQUIVOS_BAIXADOS() + "\\" + params.NOME_CLIENTE();
+					targetFolder = params.PASTA_DESTINO_ARQUIVOS_BAIXADOS() + "\\" + params.PROCURADOR().CLIENTE();
 					
 					logger.info("Deleting all files/folders in the directory ({}) before the downloading starts....", sourceFolder);
 					FileUtils.deleteDirectory(sourceFolder);
@@ -61,7 +61,7 @@ public class Controller {
 			}
 			
 			logger.info("Moving all files/folders downloaded to this new location at ({})....", targetFolder);
-			FileUtils.moveDirectory(sourceFolder,targetFolder);
+			FileUtils.copyDirectory(sourceFolder,targetFolder);
 		}
 
 		logger.info("-------------------------------------------------------------------------------");

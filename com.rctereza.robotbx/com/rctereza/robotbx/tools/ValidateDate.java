@@ -16,6 +16,10 @@ public class ValidateDate {
 
 	private static final Logger logger = LoggerFactory.getLogger(ValidateDate.class);
 
+	private static final SimpleDateFormat SDF = new SimpleDateFormat("dd/MM/yyyy");
+	
+	private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
 	public static boolean isValidDate(String dateStr) {
 		boolean result = true;
 
@@ -32,7 +36,7 @@ public class ValidateDate {
 			try {
 				LocalDate.parse(dateStr, formatter);
 			} catch (DateTimeParseException e) {
-				logger.error(e.getMessage(), e);
+				//logger.error(e.getMessage(), e);
 				result = false;
 			}
 		}
@@ -44,12 +48,10 @@ public class ValidateDate {
 
 		boolean result = true;
 
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
 		try {
 			// Parse strings into LocalDate objects
-			LocalDate startDate = LocalDate.parse(startDateStr, formatter);
-			LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+			LocalDate startDate = LocalDate.parse(startDateStr, DTF);
+			LocalDate endDate = LocalDate.parse(endDateStr, DTF);
 
 			// Compare dates
 			if (!startDate.isBefore(endDate)) {
@@ -57,7 +59,7 @@ public class ValidateDate {
 			}
 
 		} catch (DateTimeParseException e) {
-			logger.error(e.getMessage(), e);
+			//logger.error(e.getMessage(), e);
 			result = false;
 		}
 		
@@ -69,11 +71,9 @@ public class ValidateDate {
 
 		LocalDate today = LocalDate.now();
 
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
 		try {
 			// Parse strings into LocalDate objects
-			LocalDate date = LocalDate.parse(dateStr, formatter);
+			LocalDate date = LocalDate.parse(dateStr, DTF);
 
 			// Compare dates
 			if (date.isBefore(today)) {
@@ -81,7 +81,7 @@ public class ValidateDate {
 			}
 
 		} catch (DateTimeParseException e) {
-			logger.error(e.getMessage(), e);
+			//logger.error(e.getMessage(), e);
 			result = false;
 		}
 
@@ -90,13 +90,15 @@ public class ValidateDate {
 	
 	public static Date convertStringToDate(String dateStr) {
 		Date date = null;
-		SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 		try {
-			date = formatter.parse(dateStr);
+			date = SDF.parse(dateStr);
 		} catch (ParseException e) {
-			logger.error(e.getMessage(), e);
+			logger.error("Error converting String to Date! [{}].", e.getMessage(), e);
 		}
 		return date;
 	}
 
+	public static String convertDateToString(Date date) {
+		return SDF.format(date);
+	}
 }

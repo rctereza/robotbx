@@ -71,8 +71,7 @@ public class ValidatePfx {
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
 				| UnrecoverableKeyException e) {
 
-			result = "Não foi possivel validar o certificado! Verifique se o password esta correto. [" + e.getMessage()
-					+ "]";
+			result = "Não foi possivel validar o certificado! Verifique se a senha esta correta.\nErro: " + e.getMessage();
 
 		} catch (DateTimeException e) {
 

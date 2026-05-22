@@ -60,7 +60,7 @@ public class SettingForm extends JDialog {
 	private JComboBox<String> softwareLocationJarComboBox;
 
 	private JLabel filesDownloadedLocationLabel;
-	private JTextField filesDownloadedLocationTextField;
+	private JTextField filesDownloadLocationTextField;
 	private JButton filesDownloadedLocationButton;
 
 	private JLabel makeSubFolderForEachFileTypeLabel;
@@ -76,7 +76,7 @@ public class SettingForm extends JDialog {
 	private JSpinner orderUpdatesPerMinuteSpinner;
 
 	private JLabel saveLogForDebuggingLabel;
-	private JTextField saveLogForDebuggingTextField;
+	private JTextField fileLogLocationTextField;
 
 	private JLabel moveFileToNewLocationAfterConclusionLabel;
 	private JTextField moveFileToNewLocationAfterConclusionTextField;
@@ -151,21 +151,21 @@ public class SettingForm extends JDialog {
 
 		softwareLocationJarLabel = new JLabel("Arquivo de Inicialização:");
 		softwareLocationJarComboBox = new JComboBox<>();
-		softwareLocationJarComboBox.setModel(FileUtils.getModelOfSoftwares());
+		softwareLocationJarComboBox.setModel(FileUtils.getModelOfSoftwares(originalSetting.SOFTWARE_PATH()));
 		softwareLocationJarComboBox.setSelectedItem(originalSetting.SOFTWARE_PROGRAM());
-
+		
 		filesDownloadedLocationLabel = new JLabel("Diretório do Download:");
 
-		filesDownloadedLocationTextField = new JTextField();
-		filesDownloadedLocationTextField.setText(originalSetting.DOWNLOAD_FOLDER());
-		filesDownloadedLocationTextField.setEnabled(false);
-		filesDownloadedLocationTextField.setToolTipText(FOLDER_TOOLTIP);
-		filesDownloadedLocationTextField.addMouseListener(new java.awt.event.MouseAdapter() {
+		filesDownloadLocationTextField = new JTextField();
+		filesDownloadLocationTextField.setText(originalSetting.DOWNLOAD_FOLDER());
+		filesDownloadLocationTextField.setEnabled(false);
+		filesDownloadLocationTextField.setToolTipText(FOLDER_TOOLTIP);
+		filesDownloadLocationTextField.addMouseListener(new java.awt.event.MouseAdapter() {
 			@Override
 			public void mouseClicked(java.awt.event.MouseEvent e) {
 				if (e.getClickCount() == 2) {
-					if (!filesDownloadedLocationTextField.getText().isEmpty()) {
-						FileUtils.openFolderWithExplorer(filesDownloadedLocationTextField.getText());
+					if (!filesDownloadLocationTextField.getText().isEmpty()) {
+						FileUtils.openFolderWithExplorer(filesDownloadLocationTextField.getText());
 					}
 				}
 			}
@@ -180,8 +180,8 @@ public class SettingForm extends JDialog {
 
 			int result = chooser.showOpenDialog(this);
 			if (result == JFileChooser.APPROVE_OPTION) {
-				filesDownloadedLocationTextField.setText(chooser.getSelectedFile().getAbsolutePath());
-				saveLogForDebuggingTextField.setText(filesDownloadedLocationTextField.getText() + "\\receitanetbx.log");
+				filesDownloadLocationTextField.setText(chooser.getSelectedFile().getAbsolutePath());
+				fileLogLocationTextField.setText(filesDownloadLocationTextField.getText() + "\\receitanetbx.log");
 			}
 		});
 
@@ -210,9 +210,9 @@ public class SettingForm extends JDialog {
 		orderUpdatesPerMinuteSpinner.setEnabled(false);
 
 		saveLogForDebuggingLabel = new JLabel("Diretório do Log:");
-		saveLogForDebuggingTextField = new JTextField();
-		saveLogForDebuggingTextField.setText(originalSetting.LOG_FOLDER());
-		saveLogForDebuggingTextField.setEnabled(false);
+		fileLogLocationTextField = new JTextField();
+		fileLogLocationTextField.setText(originalSetting.LOG_FOLDER());
+		fileLogLocationTextField.setEnabled(false);
 
 		moveFileToNewLocationAfterConclusionLabel = new JLabel("Diretório do Resultado:");
 		moveFileToNewLocationAfterConclusionTextField = new JTextField();
@@ -272,40 +272,48 @@ public class SettingForm extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				boolean foundChanges = false;
-
-				Setting setting = getList().getFirst();
-
-				if (!originalSetting.equals(setting)) {
-					foundChanges = true;
-					// logger.debug("Original.: {}" , originalSetting);
-					// logger.debug("NewObject: {}" , setting);
-				}
-
-				if (!foundChanges) {
-
-					JOptionPane.showMessageDialog(SettingForm.this,
-							"Não há a necessidade de salvar os dados. Nenhuma configuração foi alterada.", "Atenção",
-							JOptionPane.WARNING_MESSAGE);
-
-				} else {
-
-					logger.info("Saving setting data...");
-
-					if (Main.getAppData().getSequence(Setting.class) == 0) {
-						Main.getAppData().setSequence(Setting.class, Main.getAppData().nextSequence(Setting.class));
+				if (AllFieldsArePopulated()) {
+					
+					boolean foundChanges = false;
+	
+					Setting setting = getList().getFirst();
+	
+					if (!originalSetting.equals(setting)) {
+						foundChanges = true;
+						// logger.debug("Original.: {}" , originalSetting);
+						// logger.debug("NewObject: {}" , setting);
 					}
-
-					Main.getAppData().addList(Setting.class, Main.getAppData().getSequence(Setting.class), getList());
-
-					Main.saveAppData();
-
-					logger.info("Setting data was saved with success.");
-
-					JOptionPane.showMessageDialog(SettingForm.this, "Os dados foram salvos com sucesso.", "informação",
-							JOptionPane.INFORMATION_MESSAGE);
-
-					listener.value(Menu.CLOSE.getValue());
+	
+					if (!foundChanges) {
+	
+						JOptionPane.showMessageDialog(SettingForm.this,
+								"Não há a necessidade de salvar os dados. Nenhuma configuração foi alterada.", "Atenção",
+								JOptionPane.WARNING_MESSAGE);
+	
+					} else {
+	
+						logger.info("Saving setting data...");
+	
+						if (Main.getAppData().getSequence(Setting.class) == 0) {
+							Main.getAppData().setSequence(Setting.class, Main.getAppData().nextSequence(Setting.class));
+						}
+	
+						Main.getAppData().addList(Setting.class, Main.getAppData().getSequence(Setting.class), getList());
+	
+						Main.saveAppData();
+	
+						logger.info("Setting data was saved with success.");
+	
+						JOptionPane.showMessageDialog(SettingForm.this, "Todos os dados foram salvos com sucesso.", "informação",
+								JOptionPane.INFORMATION_MESSAGE);
+	
+						listener.value(Menu.CLOSE.getValue());
+					}
+				}
+				else {
+					JOptionPane.showMessageDialog(SettingForm.this,
+							"Você deve preencher todos os campos dessa tela para conseguir salvá-los.", "Atenção",
+							JOptionPane.WARNING_MESSAGE);
 				}
 			}
 		});
@@ -361,11 +369,11 @@ public class SettingForm extends JDialog {
 		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 
 		panelMain.add(filesDownloadedLocationLabel, "left, sg 1");
-		panelMain.add(filesDownloadedLocationTextField, "pushx, growx");
+		panelMain.add(filesDownloadLocationTextField, "pushx, growx");
 		panelMain.add(filesDownloadedLocationButton, "left, wrap");
 
 		panelMain.add(saveLogForDebuggingLabel, "left, sg 1");
-		panelMain.add(saveLogForDebuggingTextField, "pushx, growx, wrap");
+		panelMain.add(fileLogLocationTextField, "pushx, growx, wrap");
 
 		panelMain.add(moveFileToNewLocationAfterConclusionLabel, "left, sg 1");
 		panelMain.add(moveFileToNewLocationAfterConclusionTextField, "pushx, growx");
@@ -404,6 +412,7 @@ public class SettingForm extends JDialog {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 
+
 	public void addObjectListener(Listenable listener) {
 		this.listener = listener;
 	}
@@ -428,7 +437,22 @@ public class SettingForm extends JDialog {
 			// .toList(); // toList() generates a list that cannot be changed (immutable)
 			return deepCopy.getFirst();
 		} else
-			return new Setting(Constants.SOFTWARE_NAME, "", "", "", "", "", true, false, 5, 10, KeepWhichFiles.ALL);
+			return new Setting(Constants.PROGRAM_NAME, Constants.PROGRAM_PATH, Constants.PROGRAM_COMMAND, "", "", "", true, false, 5, 10, KeepWhichFiles.ALL);
+	}
+
+	protected boolean AllFieldsArePopulated() {
+		boolean result = true;
+		
+		if (
+				(softwareLocationTextField.getText() == null || softwareLocationTextField.getText().isBlank())
+				|| (softwareLocationJarComboBox.getSelectedItem() == null || softwareLocationJarComboBox.getSelectedIndex() == -1)
+				|| (filesDownloadLocationTextField.getText() == null || filesDownloadLocationTextField.getText().isBlank())
+				|| (fileLogLocationTextField.getText() == null || fileLogLocationTextField.getText().isBlank())
+				|| (moveFileToNewLocationAfterConclusionTextField.getText() == null || moveFileToNewLocationAfterConclusionTextField.getText().isBlank())
+			)
+			result=false;
+		
+		return result;
 	}
 
 	private List<Setting> getList() {
@@ -438,8 +462,8 @@ public class SettingForm extends JDialog {
 		String SOFTWARE_PROGRAM = (softwareLocationJarComboBox.getSelectedItem() != null
 				? softwareLocationJarComboBox.getSelectedItem().toString()
 				: "");
-		String DOWNLOAD_FOLDER = filesDownloadedLocationTextField.getText();
-		String LOG_FOLDER = saveLogForDebuggingTextField.getText();
+		String DOWNLOAD_FOLDER = filesDownloadLocationTextField.getText();
+		String LOG_FOLDER = fileLogLocationTextField.getText();
 		String SAVE_FOLDER = moveFileToNewLocationAfterConclusionTextField.getText();
 		Boolean MAKE_SUBFOLDER = makeSubFolderForEachFileTypeCheckBox.isSelected();
 		Boolean AUTO_DOWNLOAD = downloadFilesAutomaticallyCheckBox.isSelected();
@@ -454,5 +478,5 @@ public class SettingForm extends JDialog {
 
 		return list;
 	}
-
+	
 }

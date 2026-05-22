@@ -187,7 +187,7 @@ public class FileUtils {
 		});
 	}
 
-	public static void moveDirectory(String sourceFolder, String targetFolder) throws IOException {
+	public static void copyDirectory(String sourceFolder, String targetFolder) throws IOException {
 		Path source = Paths.get(sourceFolder);
 		Path target = Paths.get(targetFolder);
 
@@ -209,9 +209,8 @@ public class FileUtils {
 		});
 
 		// After copying, delete source
-		deleteDirectory(sourceFolder);
+		//deleteDirectory(sourceFolder);
 
-//		logger.info("Directory moved successfully!");
-
+		//logger.info("Directory moved successfully!");
 	}
 }

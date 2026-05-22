@@ -3,13 +3,19 @@ package com.rctereza.robotbx.ztest;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.ocr.ExtractImageText;
+import com.rctereza.robotbx.threads.ProcessRobot;
 import com.rctereza.robotbx.tools.Actions;
 
 public class CheckingToolsOptions {
 
+	private static final Logger logger = LoggerFactory.getLogger(ProcessRobot.class);
+	
 	private static ReceitaBx original;
 	
 	private static String salvarOsArquivosEm = "C:\\Temp\\ReceitanetBX";
@@ -50,73 +56,103 @@ public class CheckingToolsOptions {
 
 		boolean changed = false;
 
-		actions.Wait(2000); // 2 seconds
+		actions.Wait(1000); // 2 seconds
 
 		actions.Alt_F_O();
 
-		actions.Wait(2000); // 2 seconds
+		actions.Wait(1000); // 2 seconds
 
 		ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 3.0);
 		String text = mb.getText();
-		System.out.println(text);
+		logger.info("This is the current values: {}", text);
 
 		if (!text.contains(salvarOsArquivosEm)) {
-			System.out.println("salvarOsArquivosEm");
-			actions.Move(850, 412);
-			actions.Click();
-			actions.Wait(1000);
+			logger.info("01 - Changing 'Salvar os arquivos em' to [{}]", salvarOsArquivosEm);
+			// moveMousePointer(850, 412, monitor, robot, actions);
+			// actions.Click();
+			// actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste(salvarOsArquivosEm);
+			actions.Wait(1000);
 			changed = true;
 
 		}
+
+		actions.Tab();
+		actions.Tab();
+
 		if (!text.contains(criarSubDiretorio)) {
-			System.out.println("criarSubDiretorio");
-			actions.Move(788, 453);
-			actions.Click();
+			logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
+			// moveMousePointer(788, 453, monitor, robot, actions);
+			actions.SpaceBar();
 			actions.Wait(1000);
 			changed = true;
 
 		}
+
+		actions.Tab();
+		actions.Tab();
+
 		if (!text.contains(numeroDownloads)) {
-			System.out.println("numeroDownloads");
-			actions.Move(970, 510);
-			actions.Click();
-			actions.Wait(1000);
+			logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
+			// moveMousePointer(967, 512, monitor, robot, actions);
+			// actions.Click();
+			// actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste("5");
-			actions.Enter();
+			actions.Wait(1000);
 			changed = true;
 
 		}
+
+		actions.Tab();
+		actions.Tab();
+
 		if (!text.contains(salvarLog)) {
-			System.out.println("salvarLog");
-			actions.Move(788, 613);
-			actions.Click();
+			logger.info("04 - Selecting 'Salvar log para depuração.");
+			// moveMousePointer(788, 620, monitor, robot, actions);
+			// actions.Click();
+			actions.SpaceBar();
 			actions.Wait(1000);
-			actions.Move(810, 640);
-			actions.Click();
-			actions.Wait(1000);
+			actions.Tab();
+
+			logger.info("05 - Changing the path to [{}].", salvarOsArquivosEm + "\\receitanetbx.log");
+			// moveMousePointer(810, 642, monitor, robot, actions);
+			// actions.Click();
+			// actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste(salvarOsArquivosEm + "\\receitanetbx.log");
+			actions.Wait(1000);
 			changed = true;
 		}
 		if (changed) {
-			System.out.println("Salvar");
-			actions.Move(992, 669);
-			actions.Click();
+			// Save
+			// moveMousePointer(990, 672, monitor, robot, actions);
+			// actions.Click();
+			actions.Tab();
+			actions.Tab();
+			actions.Tab();
+			actions.SpaceBar();
+			actions.Wait(1000);
 
-			actions.Wait(2000);
-
-			System.out.println("OK");
-			actions.Move(956, 542);
-			actions.Click();
+			// OK
+			// moveMousePointer(960, 550, monitor, robot, actions);
+			// actions.Click();
+			actions.SpaceBar();
+			logger.info("Parameters fixed with success.");
 
 		} else {
 			System.out.println("Cancelar");
-			actions.Move(1100, 669);
-			actions.Wait(1000);
-			actions.Click();
+			// moveMousePointer(1100, 672, monitor, robot, actions);
+			// actions.Wait(1000);
+			// actions.Click();
+			actions.Tab();
+			actions.Tab();
+			actions.Tab();
+			actions.Tab();
+			actions.SpaceBar();
+
+			logger.info("Parameters already fixed. No change needed.");
 		}
 
 	}

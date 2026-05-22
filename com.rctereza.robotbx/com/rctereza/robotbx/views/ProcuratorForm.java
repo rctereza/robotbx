@@ -10,6 +10,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,6 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.text.MaskFormatter;
 
 import org.slf4j.Logger;
@@ -41,6 +41,7 @@ import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.Procurator;
 import com.rctereza.robotbx.tools.FileUtils;
+import com.rctereza.robotbx.tools.TableUtils;
 import com.rctereza.robotbx.tools.ValidateCpfCnpj;
 import com.rctereza.robotbx.tools.ValidateDate;
 
@@ -94,13 +95,13 @@ public class ProcuratorForm extends JDialog {
 		MaskFormatter dateMask = null;
 
 		try {
-
 			cnpjMask = new MaskFormatter("##.###.###/####-##");
+			cnpjMask.setValueContainsLiteralCharacters(false);
 			cnpjMask.setPlaceholderCharacter('_');
 
 			dateMask = new MaskFormatter("##/##/####");
+			//dateMask.setValueContainsLiteralCharacters(false);
 			dateMask.setPlaceholderCharacter('_');
-
 		} catch (ParseException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -149,8 +150,8 @@ public class ProcuratorForm extends JDialog {
 				if (result.equals("")) {
 					String CERTIFICATE_NAME = ((Certificate) certificateComboBox.getSelectedItem()).toString();
 					String CUSTOMER_NAME = customerTextField.getText();
-					String CUSTOMER_DOC = customerDocumentTextField.getValue().toString();
-					String EXPIRATION_DATE = expirationDateTextField.getValue().toString();
+					String CUSTOMER_DOC = (String) customerDocumentTextField.getValue();
+					Date EXPIRATION_DATE = ValidateDate.convertStringToDate(expirationDateTextField.getText());
 
 					if (addButton.getText().equals("Incluir")) {
 						model.addObject(new Procurator(CERTIFICATE_NAME, CUSTOMER_NAME, CUSTOMER_DOC, EXPIRATION_DATE));
@@ -225,7 +226,7 @@ public class ProcuratorForm extends JDialog {
 						customerDocumentTextField.setValue(value);
 					}
 					if (columnName.equals("Validade")) {
-						expirationDateTextField.setValue(value);
+						expirationDateTextField.setValue(ValidateDate.convertDateToString((Date) value));
 					}
 				}
 				addButton.setText("Alterar");
@@ -257,18 +258,16 @@ public class ProcuratorForm extends JDialog {
 			}
 		});
 
-		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-		centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-
 		// CNPJ
 		table.getColumnModel().getColumn(2).setMaxWidth(150);
 		table.getColumnModel().getColumn(2).setMinWidth(150);
-		table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
-		// Data de Validade
+		table.getColumnModel().getColumn(2).setCellRenderer(TableUtils.getDocumentRenderer());
+		
+		// Expire Date
 		table.getColumnModel().getColumn(3).setMaxWidth(100);
 		table.getColumnModel().getColumn(3).setMinWidth(100);
-		table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
-
+		table.getColumnModel().getColumn(3).setCellRenderer(TableUtils.getDateRenderer());
+		
 		tableScrollPane = new JScrollPane(table);
 		tableScrollPane.setPreferredSize(new java.awt.Dimension(0, 300));
 
@@ -364,7 +363,7 @@ public class ProcuratorForm extends JDialog {
 		List<Procurator> list = Main.getAppData().getLastListAdded(Procurator.class);
 
 		List<Procurator> deepCopy = list.stream()
-				.map(p -> new Procurator(p.CERTIFICATE_NAME(), p.CUSTOMER_NAME(), p.CUSTOMER_DOC(), p.EXPIRE_DATE()))
+				.map(p -> new Procurator(p.CERTIFICADO(), p.CLIENTE(), p.DOCUMENTO(), p.VALIDADE()))
 				.collect(Collectors.toCollection(ArrayList::new)); // collect() generates a list that can be changed
 																	// (mutable)
 		// .toList(); // toList() generates a list that cannot be changed (immutable)
@@ -459,16 +458,16 @@ public class ProcuratorForm extends JDialog {
 			switch (columnIndex) {
 
 			case 0:
-				return obj.CERTIFICATE_NAME();
+				return obj.CERTIFICADO();
 
 			case 1:
-				return obj.CUSTOMER_NAME();
+				return obj.CLIENTE();
 
 			case 2:
-				return obj.CUSTOMER_DOC();
+				return obj.DOCUMENTO();
 
 			case 3:
-				return obj.EXPIRE_DATE();
+				return obj.VALIDADE();
 
 			default:
 				return null;

@@ -7,12 +7,13 @@ public enum Command {
     CLICK(3),
     PASTE(4),
     TYPE(5),
-    TAB(6),
-    ENTER(7),
-    SPACEBAR(8),
-    ALTARROWDOWN(9),
-    ARROWDOWN(10),
-    ARROWUP(11);
+    TYPE_ONLY_NUMBERS(6),
+    TAB(7),
+    ENTER(8),
+    SPACEBAR(9),
+    ALT_ARROW_DOWN(10),
+    ARROW_DOWN(11),
+    ARROW_UP(12);
 
     private int type;
 

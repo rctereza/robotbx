@@ -15,11 +15,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -88,7 +84,9 @@ import com.rctereza.robotbx.enums.Status;
 import com.rctereza.robotbx.exceptions.InvalidCertificate;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
+import com.rctereza.robotbx.models.Procurator;
 import com.rctereza.robotbx.models.ReceitaBx;
+import com.rctereza.robotbx.models.Setting;
 import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.Scheme;
 import com.rctereza.robotbx.tools.ScreenResolution;
@@ -132,18 +130,11 @@ public class MainForm extends JFrame {
 	private JButton passwordCheckButton;
 
 	private JLabel customerLabel;
-	private JTextField customerTextField;
+//	private JTextField customerTextField;
+	private JComboBox<Procurator> customerComboBox;
 
 	private JLabel customerDocumentLabel;
 	private JTextField customerDocumentTextField;
-
-	private JLabel sourceFolderDownloadedFilesLabel;
-	private JTextField sourceFolderDownloadedFilesTextField;
-	private JButton sourceFolderDownloadedFilesSelectButton;
-
-	private JLabel targetFolderDownloadedFilesLabel;
-	private JTextField targetFolderDownloadedFilesTextField;
-	private JButton targetFolderDownloadedFilesSelectButton;
 
 	private JLabel profileLabel;
 	private JRadioButton profileContribuinte;
@@ -184,6 +175,8 @@ public class MainForm extends JFrame {
 	private Listenable listener;
 
 	private Timer monitorTimer;
+
+	private JMenuItem setting;
 
 	public MainForm() throws Exception {
 		super(softwareNameAndVersion);
@@ -273,6 +266,18 @@ public class MainForm extends JFrame {
 		// LINE 2
 		certificateLabel = new JLabel("Selecione um certificado");
 		certificateComboBox = new JComboBox<>();
+		certificateComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					passwordTextField.setText("");
+					customerComboBox.removeAllItems();
+					customerDocumentTextField.setText("");
+					profileContribuinte.doClick();
+					// profileTypeComboBox.setSelectedIndex(-1); // CNPJ
+					profileTypeValueTextField.setValue("");
+				}
+			}
+		});
 
 		certificateLoadButton = new JButton("Carregar");
 		certificateLoadButton.setPreferredSize(new Dimension(80, 20));
@@ -299,13 +304,20 @@ public class MainForm extends JFrame {
 			if (certificateComboBox.getSelectedIndex() == -1) {
 				JOptionPane.showMessageDialog(this, "Para validar um certificado é necessário selecioná-lo primeiro",
 						"Informação", JOptionPane.INFORMATION_MESSAGE);
+			} else if (passwordTextField.getText().isBlank()) {
+				JOptionPane.showMessageDialog(this, "Informe a senha do certificado antes de tentar validá-lo",
+						"Informação", JOptionPane.INFORMATION_MESSAGE);
 			} else {
 				Ref<Certificate> CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
 				try {
 					ValidatePfx.load(CERTIFICADO, passwordTextField.getText());
-					// ValidatePfx.print();
-					customerTextField.setText(ValidatePfx.getCustomer());
-					customerDocumentTextField.setText(ValidatePfx.getCustomerDocument());
+					ValidatePfx.print();
+
+					customerComboBox.removeAllItems();
+					customerComboBox.setModel(getProcuratorModel(CERTIFICADO.get(), ValidatePfx.getCustomer(),
+							ValidatePfx.getCustomerDocument()));
+					customerComboBox.setSelectedIndex(0);
+
 					JOptionPane.showMessageDialog(this, "O certificado foi validado com sucesso.", "Informação",
 							JOptionPane.INFORMATION_MESSAGE);
 				} catch (InvalidCertificate e1) {
@@ -319,81 +331,34 @@ public class MainForm extends JFrame {
 
 		// LINE 5
 		customerLabel = new JLabel("Nome do cliente");
-		customerTextField = new JTextField();
+
+//		customerTextField = new JTextField();
 //		customerTextField.setEditable(false);
+
+		customerComboBox = new JComboBox<>();
+		customerComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Procurator obj = (Procurator) customerComboBox.getSelectedItem();
+					customerDocumentTextField.setText(obj.DOCUMENTO());
+					if (obj.VALIDADE() != null) {
+						profileProcurador.doClick();
+						profileTypeComboBox.setSelectedIndex(1); // CNPJ
+						profileTypeValueTextField.setText(obj.DOCUMENTO());
+					}
+				}
+			}
+		});
 
 		// LINE 6
 		customerDocumentLabel = new JLabel("CNPJ do cliente");
 		customerDocumentTextField = new JTextField();
-//		customerDocumentTextField.setEditable(false);
+		customerDocumentTextField.setEditable(false);
 
 		// LINE 7
-		sourceFolderDownloadedFilesLabel = new JLabel("Pasta onde os arquivos serão baixados");
-		sourceFolderDownloadedFilesTextField = new JTextField();
-		sourceFolderDownloadedFilesTextField.setEditable(false);
-		sourceFolderDownloadedFilesTextField
-				.setToolTipText("Clique duas vezes sobre esse campo para abrir a pasta informada nele.");
-		sourceFolderDownloadedFilesTextField.addMouseListener(new java.awt.event.MouseAdapter() {
-			@Override
-			public void mouseClicked(java.awt.event.MouseEvent e) {
-				if (e.getClickCount() == 2) {
-					if (!sourceFolderDownloadedFilesTextField.getText().isEmpty()) {
-						FileUtils.openFolderWithExplorer(sourceFolderDownloadedFilesTextField.getText());
-					}
-				}
-			}
-		});
-
-		sourceFolderDownloadedFilesSelectButton = new JButton("Selecionar");
-		sourceFolderDownloadedFilesSelectButton.setPreferredSize(new Dimension(80, 20));
-		sourceFolderDownloadedFilesSelectButton.addActionListener(e -> {
-			JFileChooser chooser = new JFileChooser();
-			chooser.setDialogTitle("Selecione a pasta aonde os arquivos serão baixados");
-			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			chooser.setAcceptAllFileFilterUsed(false);
-
-			int result = chooser.showOpenDialog(this);
-			if (result == JFileChooser.APPROVE_OPTION) {
-				File selectedFolder = chooser.getSelectedFile();
-				sourceFolderDownloadedFilesTextField.setText(selectedFolder.getAbsolutePath());
-			}
-		});
-
-		// LINE 8
-		targetFolderDownloadedFilesLabel = new JLabel("Pasta destino após processamento");
-		targetFolderDownloadedFilesTextField = new JTextField();
-		targetFolderDownloadedFilesTextField.setEditable(false);
-		targetFolderDownloadedFilesTextField
-				.setToolTipText("Clique duas vezes sobre esse campo para abrir a pasta informada nele.");
-		targetFolderDownloadedFilesTextField.addMouseListener(new java.awt.event.MouseAdapter() {
-			@Override
-			public void mouseClicked(java.awt.event.MouseEvent e) {
-				if (e.getClickCount() == 2) {
-					if (!targetFolderDownloadedFilesTextField.getText().isEmpty()) {
-						FileUtils.openFolderWithExplorer(targetFolderDownloadedFilesTextField.getText());
-					}
-				}
-			}
-		});
-		targetFolderDownloadedFilesSelectButton = new JButton("Selecionar");
-		targetFolderDownloadedFilesSelectButton.setPreferredSize(new Dimension(80, 20));
-		targetFolderDownloadedFilesSelectButton.addActionListener(e -> {
-			JFileChooser chooser = new JFileChooser();
-			chooser.setDialogTitle("Selecione a pasta aonde os arquivos serão copiados após o processamento");
-			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			chooser.setAcceptAllFileFilterUsed(false);
-
-			int result = chooser.showOpenDialog(this);
-			if (result == JFileChooser.APPROVE_OPTION) {
-				File selectedFolder = chooser.getSelectedFile();
-				targetFolderDownloadedFilesTextField.setText(selectedFolder.getAbsolutePath());
-			}
-		});
-
-		// LINE 9
 //		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
 
-		// LINE 10
+		// LINE 8
 		profileLabel = new JLabel("Selecione um perfil");
 		profileContribuinte = new JRadioButton("Contribuinte", true);
 		profileContribuinte.addActionListener(new ActionListener() {
@@ -423,19 +388,32 @@ public class MainForm extends JFrame {
 		profileTypeComboBox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
+
 					profileTypeValueTextField.setValue(null);
-					if (profileTypeComboBox.getSelectedItem().toString().equals("CNPJ"))
+
+					if (profileTypeComboBox.getSelectedItem().toString().equals("CNPJ")) {
 						profileTypeValueTextField.setFormatterFactory(new DefaultFormatterFactory(cnpjMask));
-					else
+						profileTypeValueTextField.setColumns(11);
+					} else {
 						profileTypeValueTextField.setFormatterFactory(new DefaultFormatterFactory(cpfMask));
+						profileTypeValueTextField.setColumns(9);
+					}
+
+					profileTypeValueTextField.revalidate();
+					profileTypeValueTextField.repaint();
+
+					// IMPORTANT:
+					profileTypeValueTextField.getParent().revalidate();
+					profileTypeValueTextField.getParent().repaint();
 				}
 			}
 		});
 
 		profileTypeValueTextField = new JFormattedTextField(cpfMask);
 		profileTypeValueTextField.setVisible(false);
+		profileTypeValueTextField.setColumns(9);
 
-		// LINE 11
+		// LINE 9
 		systemLabel = new JLabel("Selecione um sistema");
 		systemComboBox = new JComboBox<String>(SpedUtils.getSystemList());
 		systemComboBox.setSelectedIndex(-1);
@@ -453,7 +431,7 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		// LINE 12
+		// LINE 10
 		systemFileTypeLabel = new JLabel("Selecione um tipo de arquivo");
 		systemFileTypeComboBox = new JComboBox<String>(SpedUtils.getSystemFileType(Sped.CONTRIBUICOES));
 		systemFileTypeComboBox.setSelectedIndex(-1);
@@ -471,7 +449,7 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		// LINE 13
+		// LINE 11
 		systemSearchTypeLabel = new JLabel("Selecione um tipo de pesquisa");
 		systemSearchTypeComboBox = new JComboBox<String>(SpedUtils.getSystemSearchType(Sped.CONTRIBUICOES, ""));
 		systemSearchTypeComboBox.setSelectedIndex(-1);
@@ -487,7 +465,7 @@ public class MainForm extends JFrame {
 						panelMain.remove(systemSearchFieldsPanel);
 						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, systemSearchType,
 								receitaBx);
-						panelMain.add(systemSearchFieldsPanel, "cell 0 15, span, grow, wrap");
+						panelMain.add(systemSearchFieldsPanel, "cell 0 13, span, grow, wrap");
 						panelMain.revalidate();
 						panelMain.repaint();
 					}
@@ -495,13 +473,13 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		// LINE 14
+		// LINE 12
 //		JSeparator horizontalLine = new JSeparator(JSeparator.HORIZONTAL);
 
-		// LINE 15
+		// LINE 13
 		systemSearchFieldsPanel = SpedUtils.getSearchFields(Sped.CONTRIBUICOES, "", "", receitaBx);
 
-		// LINE 16 - Adicionar button
+		// LINE 14 - Adicionar button
 		addButton = new JButton("Adicionar");
 		addButton.addActionListener(new ActionListener() {
 			@Override
@@ -534,7 +512,7 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		// LINE 17 - Grid (table) to hold the queued documents
+		// LINE 15 - Grid (table) to hold the queued documents
 		TableCellRenderer statusRenderer = new DefaultTableCellRenderer() {
 			private final Icon pendingIcon = loadIcon("/icons/pending.png");
 			private final Icon successIcon = loadIcon("/icons/success.png");
@@ -807,64 +785,72 @@ public class MainForm extends JFrame {
 		startButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (tableModel.getRowCount() == 0) {
-					JOptionPane.showMessageDialog(MainForm.this,
-							"Adicione pelo menos um item à lista antes de iniciar o processamento.", "Atenção",
-							JOptionPane.WARNING_MESSAGE);
-					return;
-				} else if (!isThereItemToBeProcessed()) {
-					JOptionPane.showMessageDialog(MainForm.this,
-							"Não existe items para serem processados. Somente itens com status diferente de 'Sucesso' serão processados. Caso queira reprocessar um item pressione a tecla direita do mouse sobre ele e escolha a opção reprocessar.",
-							"Atenção", JOptionPane.WARNING_MESSAGE);
-					return;
-				}
 
-				startButton.setEnabled(false);
+				if (isConfigurationOkay()) {
 
-				Ref<List<ReceitaBx>> list = null;
+					if (tableModel.getRowCount() == 0) {
+						JOptionPane.showMessageDialog(MainForm.this,
+								"Adicione pelo menos um item à lista antes de iniciar o processamento.", "Atenção",
+								JOptionPane.WARNING_MESSAGE);
+						return;
+					} else if (!isThereItemToBeProcessed()) {
+						JOptionPane.showMessageDialog(MainForm.this,
+								"Não existe items para serem processados. Somente itens com status diferente de 'Sucesso' serão processados. Caso queira reprocessar um item pressione a tecla direita do mouse sobre ele e escolha a opção reprocessar.",
+								"Atenção", JOptionPane.WARNING_MESSAGE);
+						return;
+					}
 
-				try {
+					startButton.setEnabled(false);
 
-					list = new Ref<>(getListOfFiles());
+					Ref<List<ReceitaBx>> list = null;
 
-					controller.startRobot(list);
+					try {
 
-					StringBuilder message = new StringBuilder("O processo foi concluido. Veja o resultado abaixo.\n\n");
+						list = new Ref<>(getListOfFiles());
 
-					for (ReceitaBx entry : list.get()) {
-						message.append(entry.SISTEMA()).append("/").append(entry.TIPO_ARQUIVO()).append("/")
-								.append(entry.TIPO_PESQUISA()).append("\n")
-								.append(entry.MENSAGEM_CONCLUSAO_PROCESSAMENTO()).append("\n");
+						saveListOfFiles(list.get());
 
-						if (entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO() != null
-								&& entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO().length() > 0) {
+						controller.startRobot(list);
 
-							if (entry.TOTAL_PERIODOS_FALTANDO() == 0)
-								message.append(" [Nenhum período esta faltando]").append("\n\n");
-							else {
-								message.append(" [" + entry.TOTAL_PERIODOS_FALTANDO() + "] período(s) faltando.\n");
-								message.append(" [" + entry.PERIODOS_FALTANDO() + "]").append("\n\n");
+						StringBuilder message = new StringBuilder(
+								"O processo foi concluido. Veja o resultado abaixo.\n\n");
+
+						for (ReceitaBx entry : list.get()) {
+							message.append(entry.SISTEMA()).append("/").append(entry.TIPO_ARQUIVO()).append("/")
+									.append(entry.TIPO_PESQUISA()).append("\n")
+									.append(entry.MENSAGEM_CONCLUSAO_PROCESSAMENTO()).append("\n");
+
+							if (entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO() != null
+									&& entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO().length() > 0) {
+
+								if (entry.TOTAL_PERIODOS_FALTANDO() == 0)
+									message.append(" [Nenhum período esta faltando]").append("\n\n");
+								else {
+									message.append(" [" + entry.TOTAL_PERIODOS_FALTANDO() + "] período(s) faltando.\n");
+									message.append(" [" + entry.PERIODOS_FALTANDO() + "]").append("\n\n");
+								}
 							}
+						}
+
+						logger.info(message.toString());
+						JOptionPane.showMessageDialog(MainForm.this, message.toString(), "Informação",
+								JOptionPane.INFORMATION_MESSAGE);
+
+					} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
+							| NoSuchPaddingException | InvalidKeySpecException | InvalidCertificate | IOException
+							| InterruptedException | ExecutionException e1) {
+						logger.error(e1.getMessage(), e1);
+						JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Erro",
+								JOptionPane.ERROR_MESSAGE);
+					} finally {
+						if (list != null) {
+							updateGridStatusColumn(list.get());
+							saveListOfFiles(list.get());
 						}
 					}
 
-					logger.info(message.toString());
-					JOptionPane.showMessageDialog(MainForm.this, message.toString(), "Informação",
-							JOptionPane.INFORMATION_MESSAGE);
-
-				} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
-						| NoSuchPaddingException | InvalidKeySpecException | InvalidCertificate | IOException
-						| InterruptedException | ExecutionException e1) {
-					logger.error(e1.getMessage(), e1);
-					JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-				} finally {
-					if (list != null) {
-						saveListOfFiles(list.get());
-						updateGridStatusColumn(list.get());
-					}
+					startButton.setEnabled(true);
 				}
-
-				startButton.setEnabled(true);
 			}
 		});
 
@@ -890,23 +876,17 @@ public class MainForm extends JFrame {
 		panelMain.add(passwordLabel, "left, sg 1");
 		panelMain.add(passwordTextField, "pushx, growx");
 		panelMain.add(passwordCheckButton, "left, wrap");
-		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap");
+		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 		panelMain.add(customerLabel, "left, sg 1");
-		panelMain.add(customerTextField, "pushx, growx, wrap");
+		panelMain.add(customerComboBox, "pushx, growx, wrap");
 		panelMain.add(customerDocumentLabel, "left, sg 1");
 		panelMain.add(customerDocumentTextField, "pushx, growx, wrap");
-		panelMain.add(sourceFolderDownloadedFilesLabel, "left, sg 1");
-		panelMain.add(sourceFolderDownloadedFilesTextField, "pushx, growx");
-		panelMain.add(sourceFolderDownloadedFilesSelectButton, "left, wrap");
-		panelMain.add(targetFolderDownloadedFilesLabel, "left, sg 1");
-		panelMain.add(targetFolderDownloadedFilesTextField, "pushx, growx");
-		panelMain.add(targetFolderDownloadedFilesSelectButton, "left, wrap");
-		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap");
+		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 		panelMain.add(profileLabel, "left, sg 1");
 		panelMain.add(profileContribuinte, "split");
 		panelMain.add(profileProcurador);
 		panelMain.add(profileTypeComboBox);
-		panelMain.add(profileTypeValueTextField, "pushx, growx, wrap");
+		panelMain.add(profileTypeValueTextField, "wrap");
 		panelMain.add(systemLabel, "left, sg 1");
 		panelMain.add(systemComboBox, "wrap");
 		panelMain.add(systemFileTypeLabel, "left, sg 1");
@@ -914,11 +894,11 @@ public class MainForm extends JFrame {
 		panelMain.add(systemSearchTypeLabel, "left, sg 1");
 		panelMain.add(systemSearchTypeComboBox, "wrap");
 		// panelMain.add(horizontalLine, "span, grow, wrap");
-		panelMain.add(systemSearchFieldsPanel, "cell 0 15, span, grow, wrap");
-		panelMain.add(addButton, "cell 0 16, wrap");
-		panelMain.add(tableScrollPane, "cell 0 17, span, grow, wrap");
-		panelMain.add(startButton, "cell 0 18");
-		panelMain.add(exitButton, "cell 2 18, left, wrap");
+		panelMain.add(systemSearchFieldsPanel, "cell 0 13, span, grow, wrap");
+		panelMain.add(addButton, "cell 0 14, wrap");
+		panelMain.add(tableScrollPane, "cell 0 15, span, grow, wrap");
+		panelMain.add(startButton, "cell 0 16");
+		panelMain.add(exitButton, "cell 2 16, left, wrap");
 
 //		TitledBorder title;
 //		title = BorderFactory.createTitledBorder("Pesquisa de Arquivos");
@@ -926,7 +906,7 @@ public class MainForm extends JFrame {
 
 		this.add(panelMain);
 
-		setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);
+		setSize(1200, 800);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setResizable(false);
@@ -940,7 +920,8 @@ public class MainForm extends JFrame {
 			receitaBx = receitaBxList.get(0);
 		}
 
-		// FileUtils.removeCertificatePathChosen();
+//		logger.debug("ReceitaBx: {}", receitaBx);
+//		FileUtils.removeCertificatePathChosen();
 
 		screenResolutionLabel.setText(ScreenResolution.getDisplayLabel(MainForm.this));
 		screenResolutionTextField.setText(ScreenResolution.getResolution(lastMonitor));
@@ -950,10 +931,14 @@ public class MainForm extends JFrame {
 		certificateComboBox.setSelectedIndex(FileUtils.getCertificateIndex(receitaBx.CERTIFICADO().toString()));
 
 		passwordTextField.setText(receitaBx.CERTIFICADO().PASS());
-		customerTextField.setText(receitaBx.NOME_CLIENTE());
-		customerDocumentTextField.setText(receitaBx.CNPJ_CLIENTE());
-		sourceFolderDownloadedFilesTextField.setText(receitaBx.PASTA_ORIGEM_ARQUIVOS_BAIXADOS());
-		targetFolderDownloadedFilesTextField.setText(receitaBx.PASTA_DESTINO_ARQUIVOS_BAIXADOS());
+
+		customerComboBox.removeAllItems();
+		if (receitaBx.PROCURADOR() != null) {
+			customerComboBox.setModel(getProcuratorModel((Certificate) certificateComboBox.getSelectedItem(),
+					receitaBx.PROCURADOR().CLIENTE(), receitaBx.PROCURADOR().DOCUMENTO()));
+			customerComboBox.setSelectedItem(receitaBx.PROCURADOR());
+			customerDocumentTextField.setText(receitaBx.PROCURADOR().DOCUMENTO());
+		}
 
 		profileTypeValueTextField.setVisible(false);
 
@@ -970,7 +955,84 @@ public class MainForm extends JFrame {
 		systemSearchTypeComboBox.setSelectedItem(receitaBx.TIPO_PESQUISA());
 
 		populateGrid();
+
+		isConfigurationOkay();
 	}
+
+	private boolean isConfigurationOkay() {
+		boolean found = false;
+
+		List<Setting> list = Main.getAppData().getLastListAdded(Setting.class);
+
+		if (list.size() > 0) {
+
+			Setting obj = list.getFirst();
+
+			if ((obj.SOFTWARE_NAME() != null && !obj.SOFTWARE_NAME().isBlank())
+					&& (obj.SOFTWARE_PATH() != null && !obj.SOFTWARE_PATH().isBlank())
+					&& (obj.SOFTWARE_PROGRAM() != null && !obj.SOFTWARE_PROGRAM().isBlank())
+					&& (obj.DOWNLOAD_FOLDER() != null && !obj.DOWNLOAD_FOLDER().isBlank())
+					&& (obj.LOG_FOLDER() != null && !obj.LOG_FOLDER().isBlank())
+					&& (obj.SAVE_FOLDER() != null && !obj.SAVE_FOLDER().isBlank()))
+				found = true;
+		}
+
+		if (!found) {
+			JOptionPane.showMessageDialog(MainForm.this,
+					"Os dados da configuração não foram encontrados.\nFavor informá-los.", "Atenção",
+					JOptionPane.WARNING_MESSAGE);
+			setting.doClick();
+		}
+
+		return found;
+	}
+
+	private DefaultComboBoxModel<Procurator> getProcuratorModel(Certificate certificate, String customer,
+			String document) {
+
+		List<Procurator> result = new ArrayList<>();
+
+		if (certificate != null) {
+
+			List<Procurator> list = Main.getAppData().getLastListAdded(Procurator.class);
+
+			if (list.size() > 0) {
+				for (var obj : list) {
+					if (obj.CERTIFICADO().equals(certificate.NAME())) {
+						result.add(obj);
+					}
+				}
+			}
+
+			if (result.size() == 0) {
+				result.add(new Procurator(certificate.NAME(), customer, document, null));
+			}
+
+		}
+
+		DefaultComboBoxModel<Procurator> model = new DefaultComboBoxModel<>();
+		model.addAll(result);
+
+		return model;
+	}
+
+//	protected String getProcuratorDocument(Procurator procurator) {
+//		String result = "";
+//		List<Procurator> list = Main.getAppData().getLastListAdded(Procurator.class);
+//		if (list.size() > 0) {
+//			for (var obj : list) {
+//				if (
+//						(obj.CERTIFICATE_NAME().equals(procurator.CERTIFICATE_NAME())) 
+//						&& (obj.CUSTOMER_NAME().equals(procurator.CUSTOMER_NAME()))
+//					){
+//					result = obj.CUSTOMER_DOC();
+//					break;
+//				}
+//
+//			}
+//		}
+//		return result;
+//	}
 
 	private String validateFormFields() {
 		StringBuilder result = new StringBuilder("");
@@ -990,50 +1052,20 @@ public class MainForm extends JFrame {
 		else
 			SENHA = passwordTextField.getText();
 
-		if (certificateComboBox.getSelectedIndex() > -1 && !passwordTextField.getText().isBlank())
-			result.append(ValidatePfx.check(CERTIFICADO, SENHA));
+		result.append(ValidatePfx.check(CERTIFICADO, SENHA));
 
-		if (customerTextField.getText().isBlank())
-			result.append("Favor informar o nome do cliente.\n");
+		if (customerComboBox.getSelectedIndex() == -1)
+			result.append("Favor selecionar um cliente.\n");
 		else {
-			if (!customerTextField.getText().equals(ValidatePfx.getCustomer())) {
-				result.append("O nome do cliente esta diferente do encontrado no certificado!\n");
+			Procurator PROCURADOR = (Procurator) customerComboBox.getSelectedItem();
+			if (PROCURADOR.VALIDADE() != null) {
+				if (!ValidateDate.isGraterThanToday(ValidateDate.convertDateToString(PROCURADOR.VALIDADE())))
+					result.append("A procuração para este cliente esta vencida! [" + ValidateDate.convertDateToString(PROCURADOR.VALIDADE()) + "].\n");
 			}
 		}
 
 		if (customerDocumentTextField.getText().isBlank())
 			result.append("Favor informar o cnpj do cliente.\n");
-		else {
-			if (!customerDocumentTextField.getText().equals(ValidatePfx.getCustomerDocument())) {
-				result.append("O cnpj do cliente esta diferente do encontrado no certificado!\n");
-			}
-		}
-
-		if (sourceFolderDownloadedFilesTextField.getText().isBlank())
-			result.append("Favor informar a pasta onde os arquivos serão baixados.\n");
-		else {
-			String folderPath = sourceFolderDownloadedFilesTextField.getText();
-			Path path = Paths.get(folderPath);
-			if (!Files.exists(path) || !Files.isDirectory(path)) {
-				result.append("O caminho informado não existe ou não é um diretorio: " + folderPath + "\n");
-			}
-		}
-
-		if (targetFolderDownloadedFilesTextField.getText().isBlank())
-			result.append("Favor informar a pasta onde os arquivos serão copiados após processamento.\n");
-		else {
-			String folderPath = targetFolderDownloadedFilesTextField.getText();
-			Path path = Paths.get(folderPath);
-			if (!Files.exists(path) || !Files.isDirectory(path)) {
-				result.append("O caminho informado não existe ou não é um diretorio: " + folderPath + "\n");
-			}
-		}
-
-		if (!sourceFolderDownloadedFilesTextField.getText().isBlank()
-				&& !targetFolderDownloadedFilesTextField.getText().isBlank() && sourceFolderDownloadedFilesTextField
-						.getText().equals(targetFolderDownloadedFilesTextField.getText())) {
-			result.append("A pasta onde os arquivos foram baixados e a pasta destino nao podem ser iguais\n");
-		}
 
 		if (profileProcurador.isSelected()) {
 
@@ -1466,10 +1498,17 @@ public class MainForm extends JFrame {
 
 		ValidatePfx.load(CERTIFICADO, SENHA);
 
-		String NOME_CLIENTE = customerTextField.getText();
-		String CNPJ_CLIENTE = customerDocumentTextField.getText();
-		String PASTA_ORIGEM_ARQUIVOS_BAIXADOS = sourceFolderDownloadedFilesTextField.getText();
-		String PASTA_DESTINO_ARQUIVOS_BAIXADOS = targetFolderDownloadedFilesTextField.getText();
+		Procurator PROCURADOR = ((Procurator) customerComboBox.getSelectedItem());
+
+		// ************************************************************************************************
+		// GET THE SETTINGS DATA TO POPULATE THOSE TWO FIELDS BELOW
+		// ************************************************************************************************
+		List<Setting> list = Main.getAppData().getLastListAdded(Setting.class);
+		Setting settingObj = list.getFirst();
+
+		String PASTA_ORIGEM_ARQUIVOS_BAIXADOS = settingObj.DOWNLOAD_FOLDER();
+		String PASTA_DESTINO_ARQUIVOS_BAIXADOS = settingObj.SAVE_FOLDER();
+		// ************************************************************************************************
 
 		String PERFIL = profileContribuinte.getText();
 		String PERFIL_TYPE = "";
@@ -1529,7 +1568,7 @@ public class MainForm extends JFrame {
 					}
 				}
 
-				ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), NOME_CLIENTE, CNPJ_CLIENTE,
+				ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), PROCURADOR,
 						PASTA_ORIGEM_ARQUIVOS_BAIXADOS, PASTA_DESTINO_ARQUIVOS_BAIXADOS, PERFIL, PERFIL_TYPE,
 						PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA,
 						TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS,
@@ -1575,7 +1614,7 @@ public class MainForm extends JFrame {
 
 				certificateComboBox.setSelectedIndex(-1);
 				passwordTextField.setText("");
-				customerTextField.setText("");
+				customerComboBox.removeAllItems();
 				customerDocumentTextField.setText("");
 				profileContribuinte.setSelected(true);
 				systemSearchTypeComboBox.setSelectedIndex(-1);
@@ -1658,7 +1697,7 @@ public class MainForm extends JFrame {
 			}
 		});
 
-		JMenuItem setting = new JMenuItem(Menu.SETTING.getValue());
+		setting = new JMenuItem(Menu.SETTING.getValue());
 		setting.setMnemonic(KeyEvent.VK_C);
 		setting.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
 		setting.addActionListener(new ActionListener() {

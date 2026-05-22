@@ -5,12 +5,22 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.Window;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.rctereza.robotbx.Constants;
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.platform.win32.WinDef.RECT;
+import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.win32.StdCallLibrary;
 
 public class ScreenResolution {
+
+	private static final Logger logger = LoggerFactory.getLogger(ScreenResolution.class);
+	
+	private static Rectangle targetMonitorBounds = null;
 	
     public interface MyUser32 extends StdCallLibrary {
         MyUser32 INSTANCE = Native.load("user32", MyUser32.class);
@@ -97,6 +107,103 @@ public class ScreenResolution {
 		return result;
 	}
 	
+	public static boolean moveAppTo1920x1080Monitor() {
+		boolean result = true;
+		
+		// Detect monitors
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice[] screens = ge.getScreenDevices();
+
+		targetMonitorBounds = null;
+		
+		int count = 0;
+		for (GraphicsDevice screen : screens) {
+		    Rectangle bounds = screen.getDefaultConfiguration().getBounds();
+		    if (bounds.width == 1920 && bounds.height == 1080) {
+		        targetMonitorBounds = bounds;
+		        break;
+		    }
+		    count++;
+		}
+		
+		if (targetMonitorBounds == null) {
+		    logger.warn("1920x1080 screen could not be found!");
+			return false;
+		}
+		
+		// Find window
+		User32 user32 = User32.INSTANCE;
+		HWND hwnd = user32.FindWindow(null, Constants.PROGRAM_NAME);
+
+		if (hwnd == null) {
+		    logger.warn("Window not found: {}", Constants.PROGRAM_NAME);
+		    return false;
+		}
+
+		// Restore if minimized
+		user32.ShowWindow(hwnd, WinUser.SW_RESTORE);
+
+		// Bring to foreground
+		user32.SetForegroundWindow(hwnd);
+
+		// Small delay to allow redraw
+		try {
+			Thread.sleep(300);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		// Get window rectangle
+		RECT rect = new RECT();
+
+		boolean window = user32.GetWindowRect(hwnd, rect);
+
+		if (!window) {
+			logger.warn("Failed to get window rect.");
+		    return false;
+		}
+
+		// Window size
+		int windowWidth = rect.right - rect.left;
+		int windowHeight = rect.bottom - rect.top;
+
+//		System.out.println("Window Width : " + windowWidth);
+//		System.out.println("Window Height: " + windowHeight);
+
+		// Center on second monitor
+		int x = targetMonitorBounds.x + (targetMonitorBounds.width - windowWidth) / 2;
+		int y = targetMonitorBounds.y + (targetMonitorBounds.height - windowHeight) / 2;
+
+		// Move window
+		boolean moved = user32.MoveWindow(
+		        hwnd,
+		        x,
+		        y,
+		        windowWidth,
+		        windowHeight,
+		        true
+		);
+
+		// Restore if minimized
+		user32.ShowWindow(hwnd, WinUser.SW_RESTORE);
+
+		// Bring to foreground
+		user32.SetForegroundWindow(hwnd);
+		
+		if (moved) {
+			logger.info("Window centered on monitor [{}].", count);
+		} else {
+			logger.warn("Failed to move window.");
+			result = false;
+		}
+		
+		return result;
+	}
+
+	public static Rectangle getTargetMonitorBounds() {
+		return targetMonitorBounds;
+	}
+	
 	private static Window getWindow(GraphicsDevice gd) {
 		Window result = null;
 		
@@ -118,4 +225,5 @@ public class ScreenResolution {
 		
 		return result;
 	}
+	
 }

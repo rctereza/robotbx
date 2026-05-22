@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.rctereza.robotbx.enums.Status;
 import com.rctereza.robotbx.interfaces.Wrappable;
 
-public record ReceitaBx(String RESOLUCAO_TELA, Certificate CERTIFICADO, String NOME_CLIENTE, String CNPJ_CLIENTE,
+public record ReceitaBx(String RESOLUCAO_TELA, Certificate CERTIFICADO, Procurator PROCURADOR,
 		String PASTA_ORIGEM_ARQUIVOS_BAIXADOS, String PASTA_DESTINO_ARQUIVOS_BAIXADOS, String PERFIL,
 		String PERFIL_TYPE, String PERFIL_VALUE, String SISTEMA, String TIPO_ARQUIVO, String TIPO_PESQUISA,
 		String DATA_INICIO, String DATA_FIM, String CNPJ_INCORPORADORA, String TIPO_EVENTO,
@@ -16,7 +16,7 @@ public record ReceitaBx(String RESOLUCAO_TELA, Certificate CERTIFICADO, String N
 
 	public ReceitaBx() {
 		this(null, new Certificate(), null, null, null, null, null, null, null, null, null, null, null, null, null,
-				null, null, null, null, null, null, null, null, null, null, null, null);
+				null, null, null, null, null, null, null, null, null, null, null);
 	}
 
 	@Override

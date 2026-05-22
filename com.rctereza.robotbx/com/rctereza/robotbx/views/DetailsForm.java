@@ -59,13 +59,13 @@ public class DetailsForm extends JDialog {
 		// LINE 1
 		JLabel customerLabel = new JLabel("Nome do Cliente");
 		customerTextField = new JTextField();
-		customerTextField.setText(receitaBx.NOME_CLIENTE());
+		customerTextField.setText(receitaBx.PROCURADOR().CLIENTE());
 		customerTextField.setEditable(false);
 
 		// LINE 2
 		JLabel customerDocumentLabel = new JLabel("CNPJ do Cliente");
 		customerDocumentTextField = new JTextField();
-		customerDocumentTextField.setText(receitaBx.CNPJ_CLIENTE());
+		customerDocumentTextField.setText(receitaBx.PROCURADOR().DOCUMENTO());
 		customerDocumentTextField.setEditable(false);
 
 		// LINE 3

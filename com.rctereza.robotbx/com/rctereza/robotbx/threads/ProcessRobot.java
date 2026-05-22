@@ -1,6 +1,7 @@
 package com.rctereza.robotbx.threads;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -34,6 +35,7 @@ import com.rctereza.robotbx.models.RobotMessageBox;
 import com.rctereza.robotbx.ocr.ExtractImageText;
 import com.rctereza.robotbx.tools.Actions;
 import com.rctereza.robotbx.tools.RobotUtils;
+import com.rctereza.robotbx.tools.ScreenResolution;
 import com.rctereza.robotbx.tools.SpedUtils;
 
 public class ProcessRobot implements Callable<ReceitaBx> {
@@ -49,6 +51,8 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	private String PERIODOS_FALTANDO = "";
 	private Integer TOTAL_PERIODOS_FALTANDO = 0;
 	private Status STATUS = Status.PENDING;
+
+	private Rectangle targetMonitorBounds;
 
 	public ProcessRobot(ReceitaBx original) {
 		this.original = original;
@@ -113,13 +117,12 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		logger.info("Thread Terminated!");
 
-		return new ReceitaBx(original.RESOLUCAO_TELA(), original.CERTIFICADO(), original.NOME_CLIENTE(),
-				original.CNPJ_CLIENTE(), original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS(),
-				original.PASTA_DESTINO_ARQUIVOS_BAIXADOS(), original.PERFIL(), original.PERFIL_TYPE(),
-				original.PERFIL_VALUE(), original.SISTEMA(), original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(),
-				original.DATA_INICIO(), original.DATA_FIM(), original.CNPJ_INCORPORADORA(), original.TIPO_EVENTO(),
-				original.BAIXAR_ARQUIVO_ASSINADO(), original.CNPJ_ESTABELECIMENTO(),
-				original.BUSCAR_TODOS_ESTABLECIMENTOS(), original.INSCRICAO_ESTADUAL(),
+		return new ReceitaBx(original.RESOLUCAO_TELA(), original.CERTIFICADO(), original.PROCURADOR(),
+				original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS(), original.PASTA_DESTINO_ARQUIVOS_BAIXADOS(),
+				original.PERFIL(), original.PERFIL_TYPE(), original.PERFIL_VALUE(), original.SISTEMA(),
+				original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(), original.DATA_INICIO(), original.DATA_FIM(),
+				original.CNPJ_INCORPORADORA(), original.TIPO_EVENTO(), original.BAIXAR_ARQUIVO_ASSINADO(),
+				original.CNPJ_ESTABELECIMENTO(), original.BUSCAR_TODOS_ESTABLECIMENTOS(), original.INSCRICAO_ESTADUAL(),
 				original.ULTIMO_ARQUIVO_TRANSMITIDO(), ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO,
 				MENSAGEM_CONCLUSAO_PROCESSAMENTO, PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS);
 	}
@@ -163,7 +166,13 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 								if (ra.CONFIRMATON() && START_ACTIONS_AT > 0) {
 									START_ACTIONS_AT = 0;
 								}
-								actions.Move(rc.VALUEX(), rc.VALUEY());
+								int absoluteX = targetMonitorBounds.x + rc.VALUEX();
+								int absoluteY = targetMonitorBounds.y + rc.VALUEY();
+								logger.debug(
+										"CALCULATION -> boundX {} + relativeX {} = absoluteY {}, boundY {} + relativeY {} = absoluteY {}",
+										targetMonitorBounds.x, rc.VALUEX(), absoluteX, targetMonitorBounds.y,
+										rc.VALUEY(), absoluteY);
+								actions.Move(absoluteX, absoluteY);
 							}
 							break;
 
@@ -184,6 +193,10 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 							actions.Type(rc.TEXT());
 							break;
 
+						case Command.TYPE_ONLY_NUMBERS:
+							actions.TypeOnlyNumbers(rc.TEXT());
+							break;
+
 						case Command.TAB:
 							actions.Tab();
 							break;
@@ -196,15 +209,15 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 							actions.SpaceBar();
 							break;
 
-						case Command.ALTARROWDOWN:
+						case Command.ALT_ARROW_DOWN:
 							actions.AltArrowDown();
 							break;
 
-						case Command.ARROWDOWN:
+						case Command.ARROW_DOWN:
 							actions.ArrowDown();
 							break;
 
-						case Command.ARROWUP:
+						case Command.ARROW_UP:
 							actions.ArrowUp();
 							break;
 
@@ -398,19 +411,42 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 								}
 							}
 						} else if (rmg.TYPE() == Message.FUNCTION) {
-							
-							Class<ProcessRobot> clazz = ProcessRobot.class;
-							
-							Constructor<ProcessRobot> constructor = clazz.getConstructor(ReceitaBx.class);
-							
-							ProcessRobot obj = constructor.newInstance(original);
 
-							Method method = clazz.getDeclaredMethod(rmg.MESSAGE(), Robot.class, Actions.class);
+							if (rmg.MESSAGE() != null && rmg.MESSAGE().equals("CheckMenuOptions")) {
 
-							method.setAccessible(true);
+								Class<ProcessRobot> clazz = ProcessRobot.class;
 
-							method.invoke(obj, robot, actions);
-							
+								Constructor<ProcessRobot> constructor = clazz.getConstructor(ReceitaBx.class);
+
+								ProcessRobot obj = constructor.newInstance(original);
+
+								Method method = clazz.getDeclaredMethod(rmg.MESSAGE(), Robot.class, Actions.class);
+
+								method.setAccessible(true);
+
+								method.invoke(obj, robot, actions);
+
+							} else {
+
+								// Get method reference
+								Method method = ProcessRobot.class.getDeclaredMethod("CheckMonitorResolution",
+										Actions.class);
+
+								// Allow access to private method
+								method.setAccessible(true);
+
+								// Invoke method
+								Object valid = method.invoke(ProcessRobot.this, actions);
+
+								// Convert returned value
+//								boolean found2 = (boolean) valid;
+								if (!((boolean) valid)) {
+									result = "ATTENTION: This application cannot continue running because there's no 1920x1080 monitor resolution.";
+									logger.info(result);
+									RUNNING = false;
+									break;
+								}
+							}
 						}
 					}
 
@@ -430,22 +466,33 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	}
 
 	@SuppressWarnings("unused")
-	private void CheckTOMenu(Robot robot, Actions actions) throws Exception {
+	private boolean CheckMonitorResolution(Actions actions) {
+		if (ScreenResolution.moveAppTo1920x1080Monitor()) {
+			targetMonitorBounds = ScreenResolution.getTargetMonitorBounds();
+			actions.Wait(3000);
+//			logger.debug("Monitor: {}",targetMonitorBounds);
+			return true;
+		}
+		return false;
+	}
+
+	@SuppressWarnings("unused")
+	private void CheckMenuOptions(Robot robot, Actions actions) throws Exception {
 
 		logger.info("Checking the parameters of the menu Tools / Options");
-		
+
 		String salvarOsArquivosEm = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\";
 		String criarSubDiretorio = "EB Criar sub-diretério para cada tipo de arquivo.";
 		String numeroDownloads = "Número de downloads simultâneos: [5H";
 		String salvarLog = "EB Salvar log para depuração.";
-		
+
 		boolean changed = false;
 
-		actions.Wait(2000); // 2 seconds
+		actions.Wait(2000);
 
 		actions.Alt_F_O();
 
-		actions.Wait(2000); // 2 seconds
+		actions.Wait(2000);
 
 		ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 3.0);
 		String text = mb.getText();
@@ -454,22 +501,22 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		if (!text.contains(salvarOsArquivosEm)) {
 			logger.info("01 - Changing 'Salvar os arquivos em' to [{}]", salvarOsArquivosEm);
-			//moveMousePointer(850, 412, monitor, robot, actions);
-			//actions.Click();
-			//actions.Wait(1000);
+			// moveMousePointer(850, 412, monitor, robot, actions);
+			// actions.Click();
+			// actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste(salvarOsArquivosEm);
 			actions.Wait(1000);
 			changed = true;
 
 		}
-		
+
 		actions.Tab();
 		actions.Tab();
-		
+
 		if (!text.contains(criarSubDiretorio)) {
 			logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
-			//moveMousePointer(788, 453, monitor, robot, actions);
+			// moveMousePointer(788, 453, monitor, robot, actions);
 			actions.SpaceBar();
 			actions.Wait(1000);
 			changed = true;
@@ -478,12 +525,12 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		actions.Tab();
 		actions.Tab();
-		
+
 		if (!text.contains(numeroDownloads)) {
 			logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
-			//moveMousePointer(967, 512, monitor, robot, actions);
-			//actions.Click();
-			//actions.Wait(1000);
+			// moveMousePointer(967, 512, monitor, robot, actions);
+			// actions.Click();
+			// actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste("5");
 			actions.Wait(1000);
@@ -496,16 +543,16 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		if (!text.contains(salvarLog)) {
 			logger.info("04 - Selecting 'Salvar log para depuração.");
-			//moveMousePointer(788, 620, monitor, robot, actions);
-			//actions.Click();
+			// moveMousePointer(788, 620, monitor, robot, actions);
+			// actions.Click();
 			actions.SpaceBar();
 			actions.Wait(1000);
 			actions.Tab();
-			
+
 			logger.info("05 - Changing the path to [{}].", salvarOsArquivosEm + "\\receitanetbx.log");
-			//moveMousePointer(810, 642, monitor, robot, actions);
-			//actions.Click();
-			//actions.Wait(1000);
+			// moveMousePointer(810, 642, monitor, robot, actions);
+			// actions.Click();
+			// actions.Wait(1000);
 			actions.Ctrl_A();
 			actions.Paste(salvarOsArquivosEm + "\\receitanetbx.log");
 			actions.Wait(1000);
@@ -513,51 +560,35 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 		}
 		if (changed) {
 			// Save
-			//moveMousePointer(990, 672, monitor, robot, actions);
-			//actions.Click();
+			// moveMousePointer(990, 672, monitor, robot, actions);
+			// actions.Click();
 			actions.Tab();
 			actions.Tab();
 			actions.Tab();
 			actions.SpaceBar();
 			actions.Wait(1000);
 
-			//OK
-			//moveMousePointer(960, 550, monitor, robot, actions);
-			//actions.Click();
+			// OK
+			// moveMousePointer(960, 550, monitor, robot, actions);
+			// actions.Click();
 			actions.SpaceBar();
 			logger.info("Parameters fixed with success.");
 
 		} else {
 			System.out.println("Cancelar");
-			//moveMousePointer(1100, 672, monitor, robot, actions);
-			//actions.Wait(1000);
-			//actions.Click();
+			// moveMousePointer(1100, 672, monitor, robot, actions);
+			// actions.Wait(1000);
+			// actions.Click();
 			actions.Tab();
 			actions.Tab();
 			actions.Tab();
 			actions.Tab();
 			actions.SpaceBar();
-			
+
 			logger.info("Parameters already fixed. No change needed.");
 		}
 
 	}
-	
-//	private void moveMousePointer(int x, int y, Dimension monitor, Robot robot, Actions actions) {
-//		logger.debug("moveMousePointer 1 {}/{}, {}/{}",robot.SCREEN_WIDTH(),robot.SCREEN_HEIGHT(),monitor.width,monitor.height);
-//		if (robot.SCREEN_WIDTH() != monitor.width || robot.SCREEN_HEIGHT() != monitor.height) {
-//			float relativeX = ((float) x / robot.SCREEN_WIDTH());
-//			float relativeY = ((float) y  / robot.SCREEN_HEIGHT());
-//			logger.debug("moveMousePointer 2 {}/{}={}, {}/{}={}",x, robot.SCREEN_WIDTH(), relativeX, y, robot.SCREEN_HEIGHT(), relativeY);
-//			int newX = (int) (relativeX * monitor.width);
-//			int newY = (int) (relativeY * monitor.height);
-//			logger.debug("moveMousePointer 3 {}*{}={}, {}*{}={}",relativeX, monitor.width,newX,relativeY,monitor.height,newY);
-//			actions.Move(newX, newY);
-//		}
-//		else {
-//			actions.Move(x, y);
-//		}
-//	}
 
 	private String getDateTimeOfConclusion() {
 		LocalDateTime currentDateTime = LocalDateTime.now();
@@ -617,13 +648,12 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			endYear = Integer.parseInt(values[2]);
 			endMonth = Integer.parseInt(values[1]);
 
-			fileNameBegins = original.CNPJ_CLIENTE(); // "07214419000195";
+			fileNameBegins = original.PROCURADOR().DOCUMENTO(); // "07214419000195";
 			fileFolderPath = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\Escrituração Fiscal Digital";
 			fileFolderIndex = 1;
 
 			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
 					fileFolderIndex);
-
 		}
 
 		else if (original.SISTEMA().equals(Sped.ECF.getValue())
@@ -664,59 +694,63 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		Path folderPath = Paths.get(fileFolder);
 
-		List<String> periods = new ArrayList<>();
+		if (Files.exists(folderPath)) {
 
-		try (Stream<Path> paths = Files.list(folderPath)) {
+			List<String> periods = new ArrayList<>();
 
-			paths.filter(Files::isRegularFile).filter(p -> p.toString().endsWith(".txt")) // filter by extension
-					.forEach(p -> {
-						String fileName = p.getFileName().toString();
+			try (Stream<Path> paths = Files.list(folderPath)) {
 
-						if (fileName.startsWith(fileNameBegins)) {
+				paths.filter(Files::isRegularFile).filter(p -> p.toString().endsWith(".txt")) // filter by extension
+						.forEach(p -> {
+							String fileName = p.getFileName().toString();
 
-							String extracted = extractPart(fileName, fileFolderIndex);
+							if (fileName.startsWith(fileNameBegins)) {
+
+								String extracted = extractPart(fileName, fileFolderIndex);
 
 //							System.out.println("File: " + fileName);
 //							System.out.println("Extracted: " + extracted);
 
-							periods.add(extracted);
-						}
+								periods.add(extracted);
+							}
 
-					});
+						});
 
-			Set<YearMonth> existingMonths = new HashSet<>();
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+				Set<YearMonth> existingMonths = new HashSet<>();
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-			for (String period : periods) {
-				String startDateStr = period.split("_")[0];
-				LocalDate startDate = LocalDate.parse(startDateStr, formatter);
-				existingMonths.add(YearMonth.from(startDate));
-			}
-
-			// Define full range
-			YearMonth start = YearMonth.of(startYear, startMonth);
-			YearMonth end = YearMonth.of(endYear, endMonth);
-
-			List<YearMonth> missingMonths = new ArrayList<>();
-
-			YearMonth current = start;
-			while (!current.isAfter(end)) {
-				if (!existingMonths.contains(current)) {
-					missingMonths.add(current);
+				for (String period : periods) {
+					String startDateStr = period.split("_")[0];
+					LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+					existingMonths.add(YearMonth.from(startDate));
 				}
-				current = current.plusMonths(1);
-			}
 
-			if (missingMonths.size() == 0) {
-				logger.info("Todos os meses existem para o periodo informado.");
-			} else {
-				
-				logger.info("(Existem meses faltando no periodo informado. Quantidade: {}.", missingMonths.size());
-				result = missingMonths.toString();
-			}
+				// Define full range
+				YearMonth start = YearMonth.of(startYear, startMonth);
+				YearMonth end = YearMonth.of(endYear, endMonth);
 
-		} catch (IOException e) {
-			e.printStackTrace();
+				List<YearMonth> missingMonths = new ArrayList<>();
+
+				YearMonth current = start;
+				while (!current.isAfter(end)) {
+					if (!existingMonths.contains(current)) {
+						missingMonths.add(current);
+					}
+					current = current.plusMonths(1);
+				}
+
+				if (missingMonths.size() == 0) {
+					logger.info("Todos os meses existem para o periodo informado.");
+				} else {
+
+					logger.info("(Existem meses faltando no periodo informado. Quantidade: {}.", missingMonths.size());
+					result = missingMonths.toString();
+				}
+
+			} catch (IOException e) {
+				logger.error("getPeriods()-> {} ", e.getMessage(), e);
+			}
+			
 		}
 
 		return result;

@@ -55,17 +55,50 @@ public class RobotUtils {
 		actions.add(new RobotAction(counter += 10, "Informar a senha e pressionar enter", false, null, false, 0, 0,
 				false, false, true, new ArrayList<>(commands)));
 
+		// ************************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+		if (params.PROCURADOR().VALIDADE() != null) {
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.PASTE, null, null, null, params.PROCURADOR().DOCUMENTO(),
+					robotCommandEnabled));
+
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+		} else {
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
+		}
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
 		
 		messages.clear();
-		messages.add(new RobotMessageBox(1, "CheckTOMenu", "", false, Message.FUNCTION, null));
+		messages.add(new RobotMessageBox(1, "CheckMonitorResolution", "", true, Message.FUNCTION, null));
+		messages.add(new RobotMessageBox(1, "Houve um erro",
+				"Serviço indisponível temporariamente. Por favor, tente mais tarde...", true, Message.WARNING,
+				null));	
 		
-		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(messages), false, 0, 0, false, false,
-				true, new ArrayList<>(commands)));
+		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(messages), false,
+				0, 0, false, false, true, new ArrayList<>(commands)));
+		// ************************************************************************************************************************
+		
+//		messages.clear();
+//		messages.add(new RobotMessageBox(1, "CheckMenuOptions", "", false, Message.FUNCTION, null));
+//
+//		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(messages), false,
+//				0, 0, false, false, true, new ArrayList<>(commands)));
 
 		// **********************************************************************************************************************************************
 		commands.clear();
@@ -79,37 +112,37 @@ public class RobotUtils {
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.ALTARROWDOWN, null, null, null, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.ALT_ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 
 		if (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue())) {
 
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 
 		} else if (params.SISTEMA().equals(Sped.CONTABIL.getValue())) {
 
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 
 		} else if (params.SISTEMA().equals(Sped.ECF.getValue())) {
 
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 
 		} else if (params.SISTEMA().equals(Sped.EFD.getValue())) {
 
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 
 		} else if (params.SISTEMA().equals(Sped.FISCAL.getValue())) {
 
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 
 		}
 
@@ -120,13 +153,13 @@ public class RobotUtils {
 		// **********************************************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.ALTARROWDOWN, null, null, null, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.ALT_ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 
 		if (params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue()) || params.SISTEMA().equals(Sped.ECF.getValue())) {
-			
-			commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+
+			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
-			
+
 		} else {
 
 			if ((params.SISTEMA().equals(Sped.CONTABIL.getValue())
@@ -136,7 +169,7 @@ public class RobotUtils {
 					|| (params.SISTEMA().equals(Sped.FISCAL.getValue())
 							&& params.TIPO_ARQUIVO().equals("Escrituração Fiscal Digital"))) {
 
-				commands.add(new RobotCommand(1, Command.ARROWDOWN, 899, 422, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ARROW_DOWN, 899, 422, null, null, robotCommandEnabled));
 
 			} else if (params.SISTEMA().equals(Sped.CONTABIL.getValue())
 					&& params.TIPO_ARQUIVO().equals(SpedUtils.contabilFileTypes[1])) {
@@ -167,18 +200,19 @@ public class RobotUtils {
 
 				commands.clear();
 				commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-				commands.add(new RobotCommand(1, Command.ALTARROWDOWN, null, null, null, null, robotCommandEnabled));
-				commands.add(new RobotCommand(1, Command.ARROWDOWN, null, null, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ALT_ARROW_DOWN, null, null, null, null, robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Selecione um tipo de pesquisa'", false,
 						null, false, 0, 0, false, false, true, new ArrayList<>(commands)));
-				
+
 			} else {
 
 				if (!params.SISTEMA().equals(Sped.CONTABIL.getValue())) {
-					
+
 					commands.clear();
 					commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-					commands.add(new RobotCommand(1, Command.ALTARROWDOWN, null, null, null, null, robotCommandEnabled));
+					commands.add(
+							new RobotCommand(1, Command.ALT_ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 
 					if ((params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue())
 							&& params.TIPO_PESQUISA().equals(SpedUtils.contribuicoesSearchTypes[1]))
@@ -187,13 +221,13 @@ public class RobotUtils {
 
 						commands.add(new RobotCommand(1, Command.MOVE, 900, 465, null, null, robotCommandEnabled));
 						commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
-						
+
 					} else if ((params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue())
 							&& params.TIPO_PESQUISA().equals(SpedUtils.contribuicoesSearchTypes[2]))) {
 
 						commands.add(new RobotCommand(1, Command.MOVE, 900, 476, null, null, robotCommandEnabled));
 						commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
-						
+
 					} else if ((params.SISTEMA().equals(Sped.CONTRIBUICOES.getValue())
 							&& params.TIPO_PESQUISA().equals(SpedUtils.contribuicoesSearchTypes[3]))) {
 
@@ -208,7 +242,8 @@ public class RobotUtils {
 
 			// **********************************************************************************************************************************************
 			commands.clear();
-			commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
+			commands.add(
+					new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 			actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data de Inicio'", false, null, false, 0, 0,
@@ -216,7 +251,7 @@ public class RobotUtils {
 
 			// **********************************************************************************************************************************************
 			commands.clear();
-			commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_FIM(), robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_FIM(), robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 			actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data de Fim'", false, null, false, 0, 0, false,
 					false, true, new ArrayList<>(commands)));
@@ -229,7 +264,7 @@ public class RobotUtils {
 				// **********************************************************************************************************************************************
 				commands.clear();
 				commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-				commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.CNPJ_INCORPORADORA(),
+				commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.CNPJ_INCORPORADORA(),
 						robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				actions.add(new RobotAction(counter += 10, "Clicar no campo 'CNPJ Incorporadora'", false, null, false,
@@ -238,19 +273,26 @@ public class RobotUtils {
 
 			// **********************************************************************************************************************************************
 			commands.clear();
-			
-			if (params.SISTEMA().equals(Sped.CONTABIL.getValue())) 
+
+			if (params.SISTEMA().equals(Sped.CONTABIL.getValue()))
 				commands.add(new RobotCommand(1, Command.MOVE, 1053, 753, null, null, robotCommandEnabled));
-			else			
+			else
 				commands.add(new RobotCommand(1, Command.MOVE, 933, 753, null, null, robotCommandEnabled));
-			
+
 			commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 			// ----------------------------------
 			messages.clear();
+			messages.add(new RobotMessageBox(1, "Nenhum arquivo foi encontrado",
+					"Nenhum arquivo foi encontrado para o critério de pesquisa solicitado.", true, Message.WARNING,
+					null));
+			messages.add(new RobotMessageBox(1, "tente mais tarde",
+					"Serviço indisponível temporariamente. Por favor, tente mais tarde.", true, Message.WARNING,
+					null));
+			messages.add(new RobotMessageBox(1, "Não existe procuração",
+					"Não existe procuração eletrônica para o procurador do certificado digital apresentado.", true, Message.WARNING,
+					null));
 			messages.add(new RobotMessageBox(1, "Pesquisa em andamento,",
 					"Tempo de espera > 1 minuto. O processo deve ser reinicializado.", true, Message.WAITING, null));
-			messages.add(new RobotMessageBox(1, "Nenhum arquivo foi encontrado",
-					"Nenhum arquivo foi encontrado para o critério de pesquisa solicitado.", true, Message.WARNING, null));
 			// ----------------------------------
 			actions.add(new RobotAction(counter += 10, "Clicar no botao 'Pesquisar'", true, new ArrayList<>(messages),
 					true, 2000, 30, false, false, true, new ArrayList<>(commands)));
@@ -294,7 +336,7 @@ public class RobotUtils {
 
 				// **********************************************************************************************************************************************
 				commands.clear();
-				commands.add(new RobotCommand(1, Command.TYPE, null, null, null, params.CNPJ_ESTABELECIMENTO(),
+				commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.CNPJ_ESTABELECIMENTO(),
 						robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
@@ -319,7 +361,7 @@ public class RobotUtils {
 
 				commands.clear();
 				commands.add(
-						new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
+						new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data Inicio'", false, null, false, 0, 0,
@@ -327,7 +369,7 @@ public class RobotUtils {
 
 				commands.clear();
 				commands.add(
-						new RobotCommand(1, Command.TYPE, null, null, null, params.DATA_FIM(), robotCommandEnabled));
+						new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_FIM(), robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data Fim'", false, null, false, 0, 0,
@@ -351,7 +393,8 @@ public class RobotUtils {
 			messages.add(new RobotMessageBox(1, "Pesquisa em andamento,",
 					"Tempo de espera > 1 minuto. O processo deve ser reinicializado.", true, Message.WAITING, null));
 			messages.add(new RobotMessageBox(1, "Nenhum arquivo foi encontrado",
-					"Nenhum arquivo foi encontrado para o critério de pesquisa solicitado.", true, Message.WARNING, null));
+					"Nenhum arquivo foi encontrado para o critério de pesquisa solicitado.", true, Message.WARNING,
+					null));
 			// ----------------------------------
 			actions.add(new RobotAction(counter += 10, "Clicar no botao 'Pesquisar'", true, new ArrayList<>(messages),
 					true, 2000, 30, false, false, true, new ArrayList<>(commands)));
