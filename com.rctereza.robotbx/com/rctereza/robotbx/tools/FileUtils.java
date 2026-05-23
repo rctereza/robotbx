@@ -125,7 +125,7 @@ public class FileUtils {
 			for (Path entry : stream) {
 				String filename = entry.getFileName().toString();
 				String filepath = entry.getParent().toString();
-				list.add(new Certificate(counter++, filename, filepath, null, null, null, null, null, null));
+				list.add(new Certificate(counter++, filename, filepath, null, null, null, null, null, null, null, null));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

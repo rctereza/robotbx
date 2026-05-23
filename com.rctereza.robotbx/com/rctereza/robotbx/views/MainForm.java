@@ -311,11 +311,10 @@ public class MainForm extends JFrame {
 				Ref<Certificate> CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
 				try {
 					ValidatePfx.load(CERTIFICADO, passwordTextField.getText());
-					ValidatePfx.print();
+//					ValidatePfx.print();
 
 					customerComboBox.removeAllItems();
-					customerComboBox.setModel(getProcuratorModel(CERTIFICADO.get(), ValidatePfx.getCustomer(),
-							ValidatePfx.getCustomerDocument()));
+					customerComboBox.setModel(getProcuratorModel(CERTIFICADO.get()));
 					customerComboBox.setSelectedIndex(0);
 
 					JOptionPane.showMessageDialog(this, "O certificado foi validado com sucesso.", "Informação",
@@ -340,11 +339,11 @@ public class MainForm extends JFrame {
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
 					Procurator obj = (Procurator) customerComboBox.getSelectedItem();
-					customerDocumentTextField.setText(obj.DOCUMENTO());
+					customerDocumentTextField.setText(obj.CLIENTE_DOC());
 					if (obj.VALIDADE() != null) {
 						profileProcurador.doClick();
 						profileTypeComboBox.setSelectedIndex(1); // CNPJ
-						profileTypeValueTextField.setText(obj.DOCUMENTO());
+						profileTypeValueTextField.setText(obj.CLIENTE_DOC());
 					}
 				}
 			}
@@ -934,10 +933,9 @@ public class MainForm extends JFrame {
 
 		customerComboBox.removeAllItems();
 		if (receitaBx.PROCURADOR() != null) {
-			customerComboBox.setModel(getProcuratorModel((Certificate) certificateComboBox.getSelectedItem(),
-					receitaBx.PROCURADOR().CLIENTE(), receitaBx.PROCURADOR().DOCUMENTO()));
+			customerComboBox.setModel(getProcuratorModel((Certificate) certificateComboBox.getSelectedItem()));
 			customerComboBox.setSelectedItem(receitaBx.PROCURADOR());
-			customerDocumentTextField.setText(receitaBx.PROCURADOR().DOCUMENTO());
+			customerDocumentTextField.setText(receitaBx.PROCURADOR().CLIENTE_DOC());
 		}
 
 		profileTypeValueTextField.setVisible(false);
@@ -987,8 +985,7 @@ public class MainForm extends JFrame {
 		return found;
 	}
 
-	private DefaultComboBoxModel<Procurator> getProcuratorModel(Certificate certificate, String customer,
-			String document) {
+	private DefaultComboBoxModel<Procurator> getProcuratorModel(Certificate certificate) {
 
 		List<Procurator> result = new ArrayList<>();
 
@@ -1005,7 +1002,7 @@ public class MainForm extends JFrame {
 			}
 
 			if (result.size() == 0) {
-				result.add(new Procurator(certificate.NAME(), customer, document, null));
+				result.add(new Procurator(certificate.NAME(), null, null, certificate.CN(), certificate.CNDOC(), null));
 			}
 
 		}
@@ -1060,7 +1057,8 @@ public class MainForm extends JFrame {
 			Procurator PROCURADOR = (Procurator) customerComboBox.getSelectedItem();
 			if (PROCURADOR.VALIDADE() != null) {
 				if (!ValidateDate.isGraterThanToday(ValidateDate.convertDateToString(PROCURADOR.VALIDADE())))
-					result.append("A procuração para este cliente esta vencida! [" + ValidateDate.convertDateToString(PROCURADOR.VALIDADE()) + "].\n");
+					result.append("A procuração para este cliente esta vencida! ["
+							+ ValidateDate.convertDateToString(PROCURADOR.VALIDADE()) + "].\n");
 			}
 		}
 

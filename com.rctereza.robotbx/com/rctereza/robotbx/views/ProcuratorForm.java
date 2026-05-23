@@ -4,6 +4,8 @@ import java.awt.Dimension;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -14,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -24,11 +27,13 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.text.MaskFormatter;
 
@@ -37,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import com.rctereza.robotbx.Main;
 import com.rctereza.robotbx.enums.Menu;
+import com.rctereza.robotbx.exceptions.InvalidCertificate;
 import com.rctereza.robotbx.interfaces.Listenable;
 import com.rctereza.robotbx.models.Certificate;
 import com.rctereza.robotbx.models.Procurator;
@@ -44,6 +50,8 @@ import com.rctereza.robotbx.tools.FileUtils;
 import com.rctereza.robotbx.tools.TableUtils;
 import com.rctereza.robotbx.tools.ValidateCpfCnpj;
 import com.rctereza.robotbx.tools.ValidateDate;
+import com.rctereza.robotbx.tools.ValidatePfx;
+import com.rctereza.robotbx.wrappers.Ref;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -58,6 +66,12 @@ public class ProcuratorForm extends JDialog {
 	private JLabel certificateLabel;
 	private JComboBox<Certificate> certificateComboBox;
 	private JButton certificateLoadButton;
+
+	private JLabel procuratorLabel;
+	private JTextField procuratorTextField;
+
+	private JLabel procuratorDocumentLabel;
+	private JFormattedTextField procuratorDocumentTextField;
 
 	private JLabel customerLabel;
 	private JTextField customerTextField;
@@ -100,7 +114,7 @@ public class ProcuratorForm extends JDialog {
 			cnpjMask.setPlaceholderCharacter('_');
 
 			dateMask = new MaskFormatter("##/##/####");
-			//dateMask.setValueContainsLiteralCharacters(false);
+			// dateMask.setValueContainsLiteralCharacters(false);
 			dateMask.setPlaceholderCharacter('_');
 		} catch (ParseException e) {
 			logger.error(e.getMessage(), e);
@@ -109,7 +123,26 @@ public class ProcuratorForm extends JDialog {
 		// LINE 1
 		certificateLabel = new JLabel("Selecione um certificado");
 		certificateComboBox = new JComboBox<>();
-		certificateComboBox.setModel(FileUtils.getModelOfCertificates());
+		certificateComboBox.setModel(loadCertificateComboBoxValue());
+		certificateComboBox.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
+					Ref<Certificate> certificate = new Ref<>((Certificate) e.getItem());
+					String PROCURATOR_NAME = certificate.get().CN();
+					String PROCURATOR_DOCUMENT = certificate.get().CNDOC();
+					if (PROCURATOR_NAME == null || PROCURATOR_NAME.equals("")) {
+						if (validateCertificate(certificate)) {
+							PROCURATOR_NAME = certificate.get().CN();
+							PROCURATOR_DOCUMENT = certificate.get().CNDOC();
+							updateCertificateComboBoxValue(certificate.get());
+						}
+					}
+					procuratorTextField.setText(PROCURATOR_NAME);
+					procuratorDocumentTextField.setValue(PROCURATOR_DOCUMENT);
+					customerTextField.requestFocusInWindow();
+				}
+			}
+		});
 
 		certificateLoadButton = new JButton("Carregar");
 		certificateLoadButton.setPreferredSize(new Dimension(80, 20));
@@ -128,20 +161,31 @@ public class ProcuratorForm extends JDialog {
 		});
 
 		// LINE 2
+		procuratorLabel = new JLabel("Nome do procurador");
+		procuratorTextField = new JTextField();
+		procuratorTextField.setEnabled(false);
+
+		// LINE 3
+		procuratorDocumentLabel = new JLabel("CNPJ do procurador");
+		procuratorDocumentTextField = new JFormattedTextField(cnpjMask);
+		procuratorDocumentTextField.setColumns(12);
+		procuratorDocumentTextField.setEnabled(false);
+
+		// LINE 4
 		customerLabel = new JLabel("Nome do cliente *");
 		customerTextField = new JTextField();
 
-		// LINE 3
+		// LINE 5
 		customerDocumentLabel = new JLabel("CNPJ do cliente *");
 		customerDocumentTextField = new JFormattedTextField(cnpjMask);
 		customerDocumentTextField.setColumns(12);
 
-		// LINE 4
+		// LINE 6
 		expirationDateLabel = new JLabel("Data de validade *");
 		expirationDateTextField = new JFormattedTextField(dateMask);
 		expirationDateTextField.setColumns(8);
 
-		// LINE 5
+		// LINE 7
 		addButton = new JButton("Incluir");
 		addButton.addActionListener(new ActionListener() {
 			@Override
@@ -149,24 +193,30 @@ public class ProcuratorForm extends JDialog {
 				String result = validateFormFields();
 				if (result.equals("")) {
 					String CERTIFICATE_NAME = ((Certificate) certificateComboBox.getSelectedItem()).toString();
+					String PROCURATOR_NAME = procuratorTextField.getText();
+					String PROCURATOR_DOC = (String) procuratorDocumentTextField.getValue();
 					String CUSTOMER_NAME = customerTextField.getText();
 					String CUSTOMER_DOC = (String) customerDocumentTextField.getValue();
 					Date EXPIRATION_DATE = ValidateDate.convertStringToDate(expirationDateTextField.getText());
 
 					if (addButton.getText().equals("Incluir")) {
-						model.addObject(new Procurator(CERTIFICATE_NAME, CUSTOMER_NAME, CUSTOMER_DOC, EXPIRATION_DATE));
+						model.addObject(new Procurator(CERTIFICATE_NAME, PROCURATOR_NAME, PROCURATOR_DOC, CUSTOMER_NAME,
+								CUSTOMER_DOC, EXPIRATION_DATE));
 					} else {
-						model.updObject(new Procurator(CERTIFICATE_NAME, CUSTOMER_NAME, CUSTOMER_DOC, EXPIRATION_DATE),
-								table.getSelectedRow());
+						model.updObject(new Procurator(CERTIFICATE_NAME, PROCURATOR_NAME, PROCURATOR_DOC, CUSTOMER_NAME,
+								CUSTOMER_DOC, EXPIRATION_DATE), table.getSelectedRow());
 					}
 					resetFormFields();
 				} else {
-					JOptionPane.showMessageDialog(ProcuratorForm.this, result, "Atenção", JOptionPane.WARNING_MESSAGE);
+					if (!result.equals("PASSWORDOKAY")) {
+						JOptionPane.showMessageDialog(ProcuratorForm.this, result, "Atenção",
+								JOptionPane.WARNING_MESSAGE);
+					}
 				}
 			}
 		});
 
-		// LINE 5
+		// LINE 8
 		delButton = new JButton("Excluir");
 		delButton.addActionListener(new ActionListener() {
 			@Override
@@ -195,7 +245,7 @@ public class ProcuratorForm extends JDialog {
 			}
 		});
 
-		model = new JModel(getList());
+		model = new JModel(getTableList());
 
 		table = new JTable(model);
 		table.setRowHeight(24); // important for icons
@@ -262,12 +312,12 @@ public class ProcuratorForm extends JDialog {
 		table.getColumnModel().getColumn(2).setMaxWidth(150);
 		table.getColumnModel().getColumn(2).setMinWidth(150);
 		table.getColumnModel().getColumn(2).setCellRenderer(TableUtils.getDocumentRenderer());
-		
+
 		// Expire Date
 		table.getColumnModel().getColumn(3).setMaxWidth(100);
 		table.getColumnModel().getColumn(3).setMinWidth(100);
 		table.getColumnModel().getColumn(3).setCellRenderer(TableUtils.getDateRenderer());
-		
+
 		tableScrollPane = new JScrollPane(table);
 		tableScrollPane.setPreferredSize(new java.awt.Dimension(0, 300));
 
@@ -277,9 +327,10 @@ public class ProcuratorForm extends JDialog {
 			public void actionPerformed(ActionEvent e) {
 
 				if (!model.isModified()) {
-					
-					JOptionPane.showMessageDialog(ProcuratorForm.this, "Não há a necessidade de salvar os dados. Nenhuma operação foi executada.",
-							"Atenção", JOptionPane.WARNING_MESSAGE);
+
+					JOptionPane.showMessageDialog(ProcuratorForm.this,
+							"Não há a necessidade de salvar os dados. Nenhuma operação foi executada.", "Atenção",
+							JOptionPane.WARNING_MESSAGE);
 
 				} else {
 
@@ -293,15 +344,23 @@ public class ProcuratorForm extends JDialog {
 					Main.getAppData().addList(Procurator.class, Main.getAppData().getSequence(Procurator.class),
 							model.getList());
 
-					Main.saveAppData();
+					if (Main.getAppData().getSequence(Certificate.class) == 0) {
+						Main.getAppData().setSequence(Certificate.class,
+								Main.getAppData().nextSequence(Certificate.class));
+					}
 
-					model.resetModifiedFlag();
+					Main.getAppData().addList(Certificate.class, Main.getAppData().getSequence(Certificate.class),
+							getCertificateComboBoxListValidated());
+
+					Main.saveAppData();
 
 					logger.info("Procurator data was saved with success.");
 
+					model.resetModifiedFlag();
+
 					JOptionPane.showMessageDialog(ProcuratorForm.this, "Os dados foram salvos com sucesso.",
 							"informação", JOptionPane.INFORMATION_MESSAGE);
-					
+
 				}
 			}
 		});
@@ -336,6 +395,12 @@ public class ProcuratorForm extends JDialog {
 		panelMain.add(certificateComboBox, "pushx, growx");
 		panelMain.add(certificateLoadButton, "left, wrap");
 
+		panelMain.add(procuratorLabel, "left, sg 1");
+		panelMain.add(procuratorTextField, "pushx, growx, wrap");
+
+		panelMain.add(procuratorDocumentLabel, "left, sg 1");
+		panelMain.add(procuratorDocumentTextField, "wrap");
+
 		panelMain.add(customerLabel, "left, sg 1");
 		panelMain.add(customerTextField, "pushx, growx, wrap");
 
@@ -359,15 +424,51 @@ public class ProcuratorForm extends JDialog {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 
-	private List<Procurator> getList() {
+	private boolean validateCertificate(Ref<Certificate> certificate) {
+		boolean result = false;
+
+		JPasswordField passwordField = new JPasswordField();
+
+		SwingUtilities.invokeLater(() -> passwordField.requestFocusInWindow());
+
+		int option = JOptionPane.showConfirmDialog(null, passwordField, "Informe a senha do certificado",
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+		if (option == JOptionPane.OK_OPTION) {
+			String password = new String(passwordField.getPassword());
+			try {
+				ValidatePfx.load(certificate, password);
+				JOptionPane.showMessageDialog(this, "O certificado foi validado com sucesso.", "Informação",
+						JOptionPane.INFORMATION_MESSAGE);
+				result = true;
+			} catch (InvalidCertificate e1) {
+				JOptionPane.showMessageDialog(ProcuratorForm.this, e1.getMessage(), "Atenção",
+						JOptionPane.WARNING_MESSAGE);
+			}
+		}
+		return result;
+	}
+
+	private List<Procurator> getTableList() {
 		List<Procurator> list = Main.getAppData().getLastListAdded(Procurator.class);
 
-		List<Procurator> deepCopy = list.stream()
-				.map(p -> new Procurator(p.CERTIFICADO(), p.CLIENTE(), p.DOCUMENTO(), p.VALIDADE()))
+		List<Procurator> deepCopy = list.stream().map(p -> new Procurator(p.CERTIFICADO(), p.PROCURADOR(),
+				p.PROCURADOR_DOC(), p.CLIENTE(), p.CLIENTE_DOC(), p.VALIDADE()))
 				.collect(Collectors.toCollection(ArrayList::new)); // collect() generates a list that can be changed
 																	// (mutable)
 		// .toList(); // toList() generates a list that cannot be changed (immutable)
+		return deepCopy;
+	}
 
+	private List<Certificate> getCertificateList() {
+		List<Certificate> list = Main.getAppData().getLastListAdded(Certificate.class);
+
+		List<Certificate> deepCopy = list.stream()
+				.map(p -> new Certificate(p.ID(), p.NAME(), p.PATH(), p.PASS(), p.ALIAS(), p.SUBJECT(), p.ISSUER(),
+						p.VALIDFROM(), p.VALIDTO(), p.CN(), p.CNDOC()))
+				.collect(Collectors.toCollection(ArrayList::new)); // collect() generates a list that can be changed
+																	// (mutable)
+		// .toList(); // toList() generates a list that cannot be changed (immutable)
 		return deepCopy;
 	}
 
@@ -392,17 +493,92 @@ public class ProcuratorForm extends JDialog {
 		else if (!ValidateDate.isGraterThanToday(expirationDateTextField.getValue().toString()))
 			result.append("Favor informar um data de validade maior que a data de hoje.\n");
 
+		if (result.toString().equals("")) {
+
+			if (procuratorTextField.getText().isBlank()) {
+
+				JOptionPane.showMessageDialog(ProcuratorForm.this,
+						"Para prosseguir será necessário informar a senha do certificado.", "Atenção",
+						JOptionPane.WARNING_MESSAGE);
+
+				Ref<Certificate> certificate = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
+				if (validateCertificate(certificate)) {
+					procuratorTextField.setText(certificate.get().CN());
+					procuratorDocumentTextField.setValue(certificate.get().CNDOC());
+					updateCertificateComboBoxValue(certificate.get());
+					result.append("PASSWORDOKAY");
+				} else {
+					result.append("Não será possivel prosseguir...\n");
+				}
+			}
+		}
+
 		return result.toString();
+
 	}
 
 	private void resetFormFields() {
 		certificateComboBox.setSelectedIndex(-1);
+		procuratorTextField.setText("");
+		procuratorDocumentTextField.setValue("");
 		customerTextField.setText("");
 		customerDocumentTextField.setValue("");
 		expirationDateTextField.setValue("");
 		addButton.setText("Incluir");
 		delButton.setText("Excluir");
 		table.clearSelection();
+	}
+
+	private DefaultComboBoxModel<Certificate> loadCertificateComboBoxValue() {
+		List<Certificate> result = new ArrayList<>();
+		List<Certificate> list = getCertificateList();
+		DefaultComboBoxModel<Certificate> model = FileUtils.getModelOfCertificates();
+		for (int i = 0; i < model.getSize(); i++) {
+			
+			boolean found = false;
+			
+			for (Certificate obj : list) {
+				if (model.getElementAt(i).NAME().equals(obj.NAME())) {
+					result.add(obj);
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+				result.add(model.getElementAt(i));
+		}
+		
+		model.removeAllElements();
+		model.addAll(result);
+		return model;
+	}
+
+	private void updateCertificateComboBoxValue(Certificate certificate) {
+		int newItemIndex = -1;
+		List<Certificate> list = new ArrayList<>();
+		DefaultComboBoxModel<Certificate> model = (DefaultComboBoxModel<Certificate>) certificateComboBox.getModel();
+		for (int i = 0; i < model.getSize(); i++) {
+			if (model.getElementAt(i).NAME().equals(certificate.NAME())) {
+				list.add(certificate);
+				newItemIndex = i;
+			} else {
+				list.add(model.getElementAt(i));
+			}
+		}
+		certificateComboBox.removeAllItems();
+		model.addAll(list);
+		certificateComboBox.setSelectedIndex(newItemIndex);
+	}
+
+	private List<Certificate> getCertificateComboBoxListValidated() {
+		List<Certificate> list = new ArrayList<>();
+		DefaultComboBoxModel<Certificate> model = (DefaultComboBoxModel<Certificate>) certificateComboBox.getModel();
+		for (int i = 0; i < model.getSize(); i++) {
+			if (model.getElementAt(i).CN() != null && !model.getElementAt(i).CN().equals(""))
+				list.add(model.getElementAt(i));
+		}
+		return list;
 	}
 
 	public void addObjectListener(Listenable listener) {
@@ -464,7 +640,7 @@ public class ProcuratorForm extends JDialog {
 				return obj.CLIENTE();
 
 			case 2:
-				return obj.DOCUMENTO();
+				return obj.CLIENTE_DOC();
 
 			case 3:
 				return obj.VALIDADE();

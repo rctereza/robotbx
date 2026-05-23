@@ -648,7 +648,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			endYear = Integer.parseInt(values[2]);
 			endMonth = Integer.parseInt(values[1]);
 
-			fileNameBegins = original.PROCURADOR().DOCUMENTO(); // "07214419000195";
+			fileNameBegins = original.PROCURADOR().CLIENTE_DOC(); // "07214419000195";
 			fileFolderPath = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\Escrituração Fiscal Digital";
 			fileFolderIndex = 1;
 

@@ -70,7 +70,7 @@ public class RobotUtils {
 			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.ARROW_DOWN, null, null, null, null, robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-			commands.add(new RobotCommand(1, Command.PASTE, null, null, null, params.PROCURADOR().DOCUMENTO(),
+			commands.add(new RobotCommand(1, Command.PASTE, null, null, null, params.PROCURADOR().CLIENTE_DOC(),
 					robotCommandEnabled));
 
 			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
@@ -83,17 +83,16 @@ public class RobotUtils {
 		}
 		commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
-		
+
 		messages.clear();
 		messages.add(new RobotMessageBox(1, "CheckMonitorResolution", "", true, Message.FUNCTION, null));
 		messages.add(new RobotMessageBox(1, "Houve um erro",
-				"Serviço indisponível temporariamente. Por favor, tente mais tarde...", true, Message.WARNING,
-				null));	
-		
+				"Serviço indisponível temporariamente. Por favor, tente mais tarde...", true, Message.WARNING, null));
+
 		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(messages), false,
 				0, 0, false, false, true, new ArrayList<>(commands)));
 		// ************************************************************************************************************************
-		
+
 //		messages.clear();
 //		messages.add(new RobotMessageBox(1, "CheckMenuOptions", "", false, Message.FUNCTION, null));
 //
@@ -242,8 +241,8 @@ public class RobotUtils {
 
 			// **********************************************************************************************************************************************
 			commands.clear();
-			commands.add(
-					new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_INICIO(),
+					robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
 			actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data de Inicio'", false, null, false, 0, 0,
@@ -251,7 +250,8 @@ public class RobotUtils {
 
 			// **********************************************************************************************************************************************
 			commands.clear();
-			commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_FIM(), robotCommandEnabled));
+			commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_FIM(),
+					robotCommandEnabled));
 			commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 			actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data de Fim'", false, null, false, 0, 0, false,
 					false, true, new ArrayList<>(commands)));
@@ -264,8 +264,8 @@ public class RobotUtils {
 				// **********************************************************************************************************************************************
 				commands.clear();
 				commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
-				commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.CNPJ_INCORPORADORA(),
-						robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null,
+						params.CNPJ_INCORPORADORA(), robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				actions.add(new RobotAction(counter += 10, "Clicar no campo 'CNPJ Incorporadora'", false, null, false,
 						0, 0, false, false, true, new ArrayList<>(commands)));
@@ -286,11 +286,16 @@ public class RobotUtils {
 					"Nenhum arquivo foi encontrado para o critério de pesquisa solicitado.", true, Message.WARNING,
 					null));
 			messages.add(new RobotMessageBox(1, "tente mais tarde",
-					"Serviço indisponível temporariamente. Por favor, tente mais tarde.", true, Message.WARNING,
-					null));
-			messages.add(new RobotMessageBox(1, "Não existe procuração",
-					"Não existe procuração eletrônica para o procurador do certificado digital apresentado.", true, Message.WARNING,
-					null));
+					"Serviço indisponível temporariamente. Por favor, tente mais tarde.", true, Message.WARNING, null));
+
+			String msg = "Não existe procuração eletrônica para o procurador do certificado digital apresentado.";
+			if (params.PROCURADOR() != null && params.PROCURADOR().PROCURADOR_DOC() != null
+					&& !params.PROCURADOR().PROCURADOR_DOC().equals("")) {
+				msg = "Não existe procuração eletrônica para o procurador " + params.PROCURADOR().PROCURADOR_DOC()
+						+ " do certificado digital apresentado.";
+			}
+			messages.add(new RobotMessageBox(1, "Não existe procuração", msg, true, Message.WARNING, null));
+			
 			messages.add(new RobotMessageBox(1, "Pesquisa em andamento,",
 					"Tempo de espera > 1 minuto. O processo deve ser reinicializado.", true, Message.WAITING, null));
 			// ----------------------------------
@@ -336,8 +341,8 @@ public class RobotUtils {
 
 				// **********************************************************************************************************************************************
 				commands.clear();
-				commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.CNPJ_ESTABELECIMENTO(),
-						robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null,
+						params.CNPJ_ESTABELECIMENTO(), robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				actions.add(new RobotAction(counter += 10, "Clicar no campo 'CNPJ do Estabelecimento'", false, null,
@@ -360,16 +365,16 @@ public class RobotUtils {
 						0, 0, false, false, true, new ArrayList<>(commands)));
 
 				commands.clear();
-				commands.add(
-						new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_INICIO(), robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_INICIO(),
+						robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data Inicio'", false, null, false, 0, 0,
 						false, false, true, new ArrayList<>(commands)));
 
 				commands.clear();
-				commands.add(
-						new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_FIM(), robotCommandEnabled));
+				commands.add(new RobotCommand(1, Command.TYPE_ONLY_NUMBERS, null, null, null, params.DATA_FIM(),
+						robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				commands.add(new RobotCommand(1, Command.ENTER, null, null, null, null, robotCommandEnabled));
 				actions.add(new RobotAction(counter += 10, "Clicar no campo 'Data Fim'", false, null, false, 0, 0,
@@ -441,26 +446,26 @@ public class RobotUtils {
 
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.MOVE, 790, 410, null, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.MOVE, 689, 420, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Selecionar o pedido", false, null, false, 0, 0, false, false, true,
 				new ArrayList<>(commands)));
 
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.MOVE, 694, 590, null, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.MOVE, 695, 595, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Selecionar os arquivos do pedido", false, null, false, 0, 0, false,
 				false, true, new ArrayList<>(commands)));
 
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.MOVE, 690, 290, null, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.MOVE, 690, 299, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 		// ----------------------------------
 		messageCommands.clear();
 		messageCommands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
-		messageCommands.add(new RobotCommand(1, Command.MOVE, 1147, 297, null, null, robotCommandEnabled));
+		messageCommands.add(new RobotCommand(1, Command.MOVE, 1148, 304, null, null, robotCommandEnabled));
 		messageCommands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 		// ----------------------------------
 		messages.clear();

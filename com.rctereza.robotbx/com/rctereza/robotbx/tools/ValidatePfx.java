@@ -34,17 +34,11 @@ public class ValidatePfx {
 	private static String issuer = "";
 	private static Date validFrom = null;
 	private static Date validTo = null;
-	
+
 	private static String customer = "";
 	private static String customerDocument = "";
 
 	private static Boolean okay = false;
-
-//	public ValidatePfx(Ref<com.rctereza.robotbx.models.Certificate> cert, String password) {
-//		this.cert = cert;
-//		this.filePath = cert.get().getAbsolutePath();
-//		this.password = password;
-//	}
 
 	public static void load(Ref<com.rctereza.robotbx.models.Certificate> certificate, String password)
 			throws InvalidCertificate {
@@ -71,7 +65,8 @@ public class ValidatePfx {
 		} catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException
 				| UnrecoverableKeyException e) {
 
-			result = "Não foi possivel validar o certificado! Verifique se a senha esta correta.\nErro: " + e.getMessage();
+			result = "Não foi possivel validar o certificado! Verifique se a senha esta correta.\nErro: "
+					+ e.getMessage();
 
 		} catch (DateTimeException e) {
 
@@ -102,6 +97,8 @@ public class ValidatePfx {
 			issuer = x509.getIssuerX500Principal().toString();
 			validFrom = x509.getNotBefore();
 			validTo = x509.getNotAfter();
+			customer = "";
+			customerDocument = "";
 
 			if (subject != null && !subject.equals("") && subject.contains("CN=") && subject.indexOf(",") > 0) {
 				String value = subject.substring(3, subject.indexOf(","));
@@ -110,8 +107,13 @@ public class ValidatePfx {
 					customer = values[0];
 					customerDocument = values[1];
 				}
-				else {
-					customer = value;
+			}
+
+			if (customer.equals("")) {
+				if (alias != null && !alias.equals("") && alias.indexOf(":") > 0) {
+					String[] values = alias.split(":");
+					customer = values[0];
+					customerDocument = values[1];
 				}
 			}
 		}
@@ -148,7 +150,7 @@ public class ValidatePfx {
 	private static void updateCertificate() {
 		com.rctereza.robotbx.models.Certificate updCert = new com.rctereza.robotbx.models.Certificate(cert.get().ID(),
 				cert.get().NAME(), cert.get().PATH(), pass, getAlias(), getSubject(), getIssuer(), getValidFrom(),
-				getValidTo());
+				getValidTo(), getCustomer(), getCustomerDocument());
 		cert.set(updCert);
 	}
 
@@ -183,7 +185,7 @@ public class ValidatePfx {
 	public static String getCustomer() {
 		return customer;
 	}
-	
+
 	public static String getCustomerDocument() {
 		return customerDocument;
 	}
