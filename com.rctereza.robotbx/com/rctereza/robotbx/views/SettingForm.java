@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,17 +64,31 @@ public class SettingForm extends JDialog {
 	private JTextField filesDownloadLocationTextField;
 	private JButton filesDownloadedLocationButton;
 
-	private JLabel makeSubFolderForEachFileTypeLabel;
-	private JCheckBox makeSubFolderForEachFileTypeCheckBox;
+	// ---------------------------------------------------------------------------------------
+	// private JLabel makeSubFolderForEachFileTypeDefaultLabel;
+	private JCheckBox makeSubFolderForEachFileTypeDefaultCheckBox;
 
-	private JLabel downloadFilesAutomaticallyLabel;
-	private JCheckBox downloadFilesAutomaticallyCheckBox;
+	// private JLabel downloadFilesAutomaticallyDefaultLabel;
+	private JCheckBox downloadFilesAutomaticallyDefaultCheckBox;
 
-	private JLabel numberOfSimultaneousDownloadsLabel;
-	private JSpinner numberOfSimultaneousDownloadsSpinner;
+	private JLabel numberOfSimultaneousDownloadsDefaultLabel;
+	private JSpinner numberOfSimultaneousDownloadsDefaultSpinner;
 
-	private JLabel orderUpdatesPerMinuteLabel;
-	private JSpinner orderUpdatesPerMinuteSpinner;
+	private JLabel orderUpdatesPerMinuteDefaultLabel;
+	private JSpinner orderUpdatesPerMinuteDefaultSpinner;
+
+	// ---------------------------------------------------------------------------------------
+	// private JLabel makeSubFolderForEachFileTypeRecommendedLabel;
+	private JCheckBox makeSubFolderForEachFileTypeRecommendedCheckBox;
+
+	// private JLabel downloadFilesAutomaticallyRecommendedLabel;
+	private JCheckBox downloadFilesAutomaticallyRecommendedCheckBox;
+
+	private JLabel numberOfSimultaneousDownloadsRecommendedLabel;
+	private JSpinner numberOfSimultaneousDownloadsRecommendedSpinner;
+
+	private JLabel orderUpdatesPerMinuteRecommendedLabel;
+	private JSpinner orderUpdatesPerMinuteRecommendedSpinner;
 
 	private JLabel saveLogForDebuggingLabel;
 	private JTextField fileLogLocationTextField;
@@ -86,10 +101,15 @@ public class SettingForm extends JDialog {
 	private JRadioButton filesToKeepAfterConclusionAll;
 	private JRadioButton filesToKeepAfterConclusionLastRectification;
 
+	private JRadioButton defaultSettingRadio;
+	private JRadioButton recommendedSettingRadio;
+
 	private JButton closeButton;
 	private JButton saveButton;
 
 	private Setting originalSetting;
+
+	private Boolean firstAccess;
 
 	private Listenable listener;
 
@@ -100,7 +120,9 @@ public class SettingForm extends JDialog {
 
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				listener.value(Menu.CLOSE.getValue());
+				if (!firstAccess) {
+					listener.value(Menu.CLOSE.getValue());
+				}
 			}
 		});
 
@@ -153,7 +175,7 @@ public class SettingForm extends JDialog {
 		softwareLocationJarComboBox = new JComboBox<>();
 		softwareLocationJarComboBox.setModel(FileUtils.getModelOfSoftwares(originalSetting.SOFTWARE_PATH()));
 		softwareLocationJarComboBox.setSelectedItem(originalSetting.SOFTWARE_PROGRAM());
-		
+
 		filesDownloadedLocationLabel = new JLabel("Diretório do Download:");
 
 		filesDownloadLocationTextField = new JTextField();
@@ -185,29 +207,56 @@ public class SettingForm extends JDialog {
 			}
 		});
 
-		makeSubFolderForEachFileTypeLabel = new JLabel("");
-		makeSubFolderForEachFileTypeCheckBox = new JCheckBox("Criar sub-diretório para cada tipo de arquivo.");
-		makeSubFolderForEachFileTypeCheckBox.setSelected(originalSetting.MAKE_SUBFOLDER());
-		makeSubFolderForEachFileTypeCheckBox.setEnabled(false);
+		// makeSubFolderForEachFileTypeDefaultLabel = new JLabel("");
+		makeSubFolderForEachFileTypeDefaultCheckBox = new JCheckBox("Criar sub-diretório para cada tipo de arquivo.");
+		makeSubFolderForEachFileTypeDefaultCheckBox.setSelected(false);
+		makeSubFolderForEachFileTypeDefaultCheckBox.setEnabled(false);
 
-		downloadFilesAutomaticallyLabel = new JLabel("");
-		downloadFilesAutomaticallyCheckBox = new JCheckBox("Baixar arquivos automaticamente.");
-		downloadFilesAutomaticallyCheckBox.setSelected(originalSetting.AUTO_DOWNLOAD());
-		downloadFilesAutomaticallyCheckBox.setEnabled(false);
+		// downloadFilesAutomaticallyDefaultLabel = new JLabel("");
+		downloadFilesAutomaticallyDefaultCheckBox = new JCheckBox("Baixar arquivos automaticamente.");
+		downloadFilesAutomaticallyDefaultCheckBox.setSelected(false);
+		downloadFilesAutomaticallyDefaultCheckBox.setEnabled(false);
 
-		numberOfSimultaneousDownloadsLabel = new JLabel(" Quantos arquivos baixar simultaneamente?");
-		numberOfSimultaneousDownloadsLabel.setEnabled(false);
-		numberOfSimultaneousDownloadsSpinner = new JSpinner(new SpinnerListModel(new Integer[] { 1, 2, 3, 4, 5 }));
-		numberOfSimultaneousDownloadsSpinner.setValue(originalSetting.NUMBER_DOWNLOAD_SIMULTANEOUS());
-		numberOfSimultaneousDownloadsSpinner.setEnabled(false);
+		numberOfSimultaneousDownloadsDefaultLabel = new JLabel(" Quantos arquivos baixar simultaneamente?");
+		numberOfSimultaneousDownloadsDefaultLabel.setEnabled(false);
+		numberOfSimultaneousDownloadsDefaultSpinner = new JSpinner(
+				new SpinnerListModel(new Integer[] { 1, 2, 3, 4, 5 }));
+		numberOfSimultaneousDownloadsDefaultSpinner.setValue(1);
+		numberOfSimultaneousDownloadsDefaultSpinner.setEnabled(false);
 
-		orderUpdatesPerMinuteLabel = new JLabel(" Quantos minutos esperar para a próxima atualização dos pedidos?");
-
-		orderUpdatesPerMinuteLabel.setEnabled(false);
-		orderUpdatesPerMinuteSpinner = new JSpinner(
+		orderUpdatesPerMinuteDefaultLabel = new JLabel(" Minutos para esperar a próxima atualização dos pedidos?");
+		orderUpdatesPerMinuteDefaultLabel.setEnabled(false);
+		orderUpdatesPerMinuteDefaultSpinner = new JSpinner(
 				new SpinnerListModel(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }));
-		orderUpdatesPerMinuteSpinner.setValue(originalSetting.MINUTES_FOR_NEXT_ORDER_UPDATE());
-		orderUpdatesPerMinuteSpinner.setEnabled(false);
+		orderUpdatesPerMinuteDefaultSpinner.setValue(10);
+		orderUpdatesPerMinuteDefaultSpinner.setEnabled(false);
+
+		// ---------------------------------------------------------------------------------------------------------------
+		// makeSubFolderForEachFileTypeRecommendedLabel = new JLabel("");
+		makeSubFolderForEachFileTypeRecommendedCheckBox = new JCheckBox(
+				"Criar sub-diretório para cada tipo de arquivo.");
+		makeSubFolderForEachFileTypeRecommendedCheckBox.setSelected(Constants.PROGRAM_MAKE_SUBFOLDER);
+		makeSubFolderForEachFileTypeRecommendedCheckBox.setEnabled(false);
+
+		// downloadFilesAutomaticallyRecommendedLabel = new JLabel("");
+		downloadFilesAutomaticallyRecommendedCheckBox = new JCheckBox("Baixar arquivos automaticamente.");
+		downloadFilesAutomaticallyRecommendedCheckBox.setSelected(Constants.PROGRAM_AUTO_DOWNLOAD);
+		downloadFilesAutomaticallyRecommendedCheckBox.setEnabled(false);
+
+		numberOfSimultaneousDownloadsRecommendedLabel = new JLabel(" Quantos arquivos baixar simultaneamente?");
+		numberOfSimultaneousDownloadsRecommendedLabel.setEnabled(false);
+		numberOfSimultaneousDownloadsRecommendedSpinner = new JSpinner(
+				new SpinnerListModel(new Integer[] { 1, 2, 3, 4, 5 }));
+		numberOfSimultaneousDownloadsRecommendedSpinner.setValue(Constants.PROGRAM_NUMBER_DOWNLOAD_SIMULTANEOUS);
+		numberOfSimultaneousDownloadsRecommendedSpinner.setEnabled(false);
+
+		orderUpdatesPerMinuteRecommendedLabel = new JLabel(" Minutos para esperar a próxima atualização dos pedidos?");
+
+		orderUpdatesPerMinuteRecommendedLabel.setEnabled(false);
+		orderUpdatesPerMinuteRecommendedSpinner = new JSpinner(
+				new SpinnerListModel(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 60 }));
+		orderUpdatesPerMinuteRecommendedSpinner.setValue(Constants.PROGRAM_MINUTES_FOR_NEXT_ORDER_UPDATE);
+		orderUpdatesPerMinuteRecommendedSpinner.setEnabled(false);
 
 		saveLogForDebuggingLabel = new JLabel("Diretório do Log:");
 		fileLogLocationTextField = new JTextField();
@@ -267,50 +316,43 @@ public class SettingForm extends JDialog {
 		filesToKeepAfterConclusionGroup.add(filesToKeepAfterConclusionAll);
 		filesToKeepAfterConclusionGroup.add(filesToKeepAfterConclusionLastRectification);
 
+		defaultSettingRadio = new JRadioButton("Opções Padrão", true);
+		recommendedSettingRadio = new JRadioButton("Opções Recomendadas");
+
+		ButtonGroup defaultSettingGroup = new ButtonGroup();
+		defaultSettingGroup.add(defaultSettingRadio);
+		defaultSettingGroup.add(recommendedSettingRadio);
+
 		saveButton = new JButton("Salvar");
 		saveButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
 				if (AllFieldsArePopulated()) {
-					
+
 					boolean foundChanges = false;
-	
+
 					Setting setting = getList().getFirst();
-	
+
 					if (!originalSetting.equals(setting)) {
 						foundChanges = true;
 						// logger.debug("Original.: {}" , originalSetting);
 						// logger.debug("NewObject: {}" , setting);
 					}
-	
-					if (!foundChanges) {
-	
+
+					if (!firstAccess && !foundChanges) {
+
 						JOptionPane.showMessageDialog(SettingForm.this,
-								"Não há a necessidade de salvar os dados. Nenhuma configuração foi alterada.", "Atenção",
-								JOptionPane.WARNING_MESSAGE);
-	
+								"Não há a necessidade de salvar os dados. Nenhuma configuração foi alterada.",
+								"Atenção", JOptionPane.WARNING_MESSAGE);
+
 					} else {
-	
-						logger.info("Saving setting data...");
-	
-						if (Main.getAppData().getSequence(Setting.class) == 0) {
-							Main.getAppData().setSequence(Setting.class, Main.getAppData().nextSequence(Setting.class));
-						}
-	
-						Main.getAppData().addList(Setting.class, Main.getAppData().getSequence(Setting.class), getList());
-	
-						Main.saveAppData();
-	
-						logger.info("Setting data was saved with success.");
-	
-						JOptionPane.showMessageDialog(SettingForm.this, "Todos os dados foram salvos com sucesso.", "informação",
-								JOptionPane.INFORMATION_MESSAGE);
-	
+
+						saveSetting();
+
 						listener.value(Menu.CLOSE.getValue());
 					}
-				}
-				else {
+				} else {
 					JOptionPane.showMessageDialog(SettingForm.this,
 							"Você deve preencher todos os campos dessa tela para conseguir salvá-los.", "Atenção",
 							JOptionPane.WARNING_MESSAGE);
@@ -332,18 +374,29 @@ public class SettingForm extends JDialog {
 //					logger.debug("NewObject: {}" , setting);
 				}
 
-				if (foundChanges) {
+				if (firstAccess || foundChanges) {
+					String message = "Houveram alterações. Deseja sair sem salvá-las?";
 					String[] options = { "Sim", "Não" };
+					String defaultButton = options[1];
+
+					if (firstAccess) {
+						message = "Para seu primeiro acesso os dados precisam ser salvos. Vamos salvá-los?";
+						defaultButton = options[0];
+					}
+
 					int choice = JOptionPane.showOptionDialog(SettingForm.this, // Parent component
-							"Houveram alterações. Deseja sair sem salvá-las?", // Message
+							message, // Message
 							"Confirmação", // Title
 							JOptionPane.YES_NO_OPTION, // Option type
 							JOptionPane.QUESTION_MESSAGE, // Message type
 							null, // Icon (null for default)
 							options, // Custom button labels
-							options[1] // Default button focused
+							defaultButton // Default button focused
 					);
 					if (choice == 0) { // Sim
+						if (firstAccess) {
+							saveSetting();
+						}
 						listener.value(Menu.CLOSE.getValue());
 					}
 				} else {
@@ -352,66 +405,78 @@ public class SettingForm extends JDialog {
 			}
 		});
 
-		// panelMain = new JPanel(new MigLayout("wrap, insets 10, debug", "[]10[]10[]",
-		// "[]10[]10[]"));
-		panelMain = new JPanel(new MigLayout("", "[]10[]10[]", "[] [] []"));
+		// panelMain = new JPanel(new MigLayout("wrap, insets 10, debug",
+		// "[]10[]10[]10[]", ""));
+		panelMain = new JPanel(new MigLayout("", "[200]10[350]10[350]10[100]", ""));
 
+		/*
+		panelMain.add(new JLabel("1"), "");
+		panelMain.add(new JLabel("2"), "");
+		panelMain.add(new JLabel("3"), "");
+		panelMain.add(new JLabel("4"), "wrap");
+		*
+		*/
+		
 		panelMain.add(softwareNameLabel, "left, sg 1");
-		panelMain.add(softwareNameTextField, "pushx, growx, wrap");
+		panelMain.add(softwareNameTextField, "span 2, pushx, growx, wrap");
 
 		panelMain.add(softwareLocationLabel, "left, sg 1");
-		panelMain.add(softwareLocationTextField, "pushx, growx");
+		panelMain.add(softwareLocationTextField, "span 2, pushx, growx");
 		panelMain.add(softwareLocationSelectButton, "left, wrap");
 
 		panelMain.add(softwareLocationJarLabel, "left, sg 1");
-		panelMain.add(softwareLocationJarComboBox, "pushx, growx, wrap");
+		panelMain.add(softwareLocationJarComboBox, "span 2, pushx, growx, wrap");
 
 		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 
 		panelMain.add(filesDownloadedLocationLabel, "left, sg 1");
-		panelMain.add(filesDownloadLocationTextField, "pushx, growx");
+		panelMain.add(filesDownloadLocationTextField, "span 2, pushx, growx");
 		panelMain.add(filesDownloadedLocationButton, "left, wrap");
 
 		panelMain.add(saveLogForDebuggingLabel, "left, sg 1");
-		panelMain.add(fileLogLocationTextField, "pushx, growx, wrap");
+		panelMain.add(fileLogLocationTextField, "span 2, pushx, growx, wrap");
 
 		panelMain.add(moveFileToNewLocationAfterConclusionLabel, "left, sg 1");
-		panelMain.add(moveFileToNewLocationAfterConclusionTextField, "pushx, growx");
+		panelMain.add(moveFileToNewLocationAfterConclusionTextField, "span 2, pushx, growx");
 		panelMain.add(moveFileToNewLocationAfterConclusionButton, "left, wrap");
 
 		panelMain.add(filesToKeepAfterConclusionLabel, "left, sg 1");
-		panelMain.add(filesToKeepAfterConclusionAll, "split");
+		panelMain.add(filesToKeepAfterConclusionAll, "split, span 3");
 		panelMain.add(filesToKeepAfterConclusionLastRectification, "wrap");
 
 		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 
-		panelMain.add(makeSubFolderForEachFileTypeLabel, "left, sg 1");
-		panelMain.add(makeSubFolderForEachFileTypeCheckBox, "wrap");
+		panelMain.add(defaultSettingRadio, "left, span 2");
+		panelMain.add(recommendedSettingRadio, "left, span 2, wrap");
 
-		panelMain.add(downloadFilesAutomaticallyLabel, "left, sg 1");
-		panelMain.add(downloadFilesAutomaticallyCheckBox, "wrap");
+		panelMain.add(makeSubFolderForEachFileTypeDefaultCheckBox, "left, span 2");
+		panelMain.add(makeSubFolderForEachFileTypeRecommendedCheckBox, "span 2, wrap");
 
-		panelMain.add(new JLabel(""), "left, sg 1");
-		panelMain.add(numberOfSimultaneousDownloadsLabel, "split");
-		panelMain.add(numberOfSimultaneousDownloadsSpinner, "wrap");
+		panelMain.add(downloadFilesAutomaticallyDefaultCheckBox, "left, span 2");
+		panelMain.add(downloadFilesAutomaticallyRecommendedCheckBox, "span 2, wrap");
 
-		panelMain.add(new JLabel(""), "left, sg 1");
-		panelMain.add(orderUpdatesPerMinuteLabel, "split");
-		panelMain.add(orderUpdatesPerMinuteSpinner, "wrap");
+		panelMain.add(numberOfSimultaneousDownloadsDefaultLabel, "left, split 2, span 2");
+		panelMain.add(numberOfSimultaneousDownloadsDefaultSpinner, "");
+		panelMain.add(numberOfSimultaneousDownloadsRecommendedLabel, "left, split 2, span 2");
+		panelMain.add(numberOfSimultaneousDownloadsRecommendedSpinner, "wrap");
+
+		panelMain.add(orderUpdatesPerMinuteDefaultLabel, "left, split 2, span 2");
+		panelMain.add(orderUpdatesPerMinuteDefaultSpinner, "");
+		panelMain.add(orderUpdatesPerMinuteRecommendedLabel, "left, split 2, span 2");
+		panelMain.add(orderUpdatesPerMinuteRecommendedSpinner, "wrap");
 
 		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 
 		panelMain.add(saveButton, "left");
-		panelMain.add(closeButton, "span2, right, wrap");
+		panelMain.add(closeButton, "span 3, right, wrap");
 
 		this.add(panelMain);
 
-		setSize(950, 450);
+		setSize(900, 500);
 		setResizable(false);
 		setLocationRelativeTo(parent);
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 	}
-
 
 	public void addObjectListener(Listenable listener) {
 		this.listener = listener;
@@ -426,9 +491,27 @@ public class SettingForm extends JDialog {
 		this.dispose();
 	}
 
+	private void saveSetting() {
+		logger.info("Saving setting data...");
+
+		if (Main.getAppData().getSequence(Setting.class) == 0) {
+			Main.getAppData().setSequence(Setting.class, Main.getAppData().nextSequence(Setting.class));
+		}
+
+		Main.getAppData().addList(Setting.class, Main.getAppData().getSequence(Setting.class), getList());
+
+		Main.saveAppData();
+
+		logger.info("Setting data was saved with success.");
+
+		JOptionPane.showMessageDialog(SettingForm.this, "Todos os dados foram salvos com sucesso.", "informação",
+				JOptionPane.INFORMATION_MESSAGE);
+	}
+
 	private Setting loadSetting() {
 		List<Setting> list = Main.getAppData().getLastListAdded(Setting.class);
 		if (list.size() > 0) {
+			firstAccess = false;
 			List<Setting> deepCopy = list.stream()
 					.map(p -> new Setting(p.SOFTWARE_NAME(), p.SOFTWARE_PATH(), p.SOFTWARE_PROGRAM(),
 							p.DOWNLOAD_FOLDER(), p.LOG_FOLDER(), p.SAVE_FOLDER(), p.MAKE_SUBFOLDER(), p.AUTO_DOWNLOAD(),
@@ -436,22 +519,34 @@ public class SettingForm extends JDialog {
 					.collect(Collectors.toCollection(ArrayList::new)); // collect() generates a list that can be changed
 			// .toList(); // toList() generates a list that cannot be changed (immutable)
 			return deepCopy.getFirst();
-		} else
-			return new Setting(Constants.PROGRAM_NAME, Constants.PROGRAM_PATH, Constants.PROGRAM_COMMAND, "", "", "", true, false, 5, 10, KeepWhichFiles.ALL);
+		} else {
+			firstAccess = true;
+			try {
+				FileUtils.createDirectory(Constants.PROGRAM_SAVEDFILES_PATH);
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+			}
+			return new Setting(Constants.PROGRAM_NAME, Constants.PROGRAM_PATH, Constants.PROGRAM_COMMAND,
+					Constants.PROGRAM_DOCUMENTS_PATH, Constants.PROGRAM_LOG_PATH, Constants.PROGRAM_SAVEDFILES_PATH,
+					Constants.PROGRAM_MAKE_SUBFOLDER, Constants.PROGRAM_AUTO_DOWNLOAD,
+					Constants.PROGRAM_NUMBER_DOWNLOAD_SIMULTANEOUS, Constants.PROGRAM_MINUTES_FOR_NEXT_ORDER_UPDATE,
+					KeepWhichFiles.ALL);
+		}
 	}
 
 	protected boolean AllFieldsArePopulated() {
 		boolean result = true;
-		
-		if (
-				(softwareLocationTextField.getText() == null || softwareLocationTextField.getText().isBlank())
-				|| (softwareLocationJarComboBox.getSelectedItem() == null || softwareLocationJarComboBox.getSelectedIndex() == -1)
-				|| (filesDownloadLocationTextField.getText() == null || filesDownloadLocationTextField.getText().isBlank())
+
+		if ((softwareLocationTextField.getText() == null || softwareLocationTextField.getText().isBlank())
+				|| (softwareLocationJarComboBox.getSelectedItem() == null
+						|| softwareLocationJarComboBox.getSelectedIndex() == -1)
+				|| (filesDownloadLocationTextField.getText() == null
+						|| filesDownloadLocationTextField.getText().isBlank())
 				|| (fileLogLocationTextField.getText() == null || fileLogLocationTextField.getText().isBlank())
-				|| (moveFileToNewLocationAfterConclusionTextField.getText() == null || moveFileToNewLocationAfterConclusionTextField.getText().isBlank())
-			)
-			result=false;
-		
+				|| (moveFileToNewLocationAfterConclusionTextField.getText() == null
+						|| moveFileToNewLocationAfterConclusionTextField.getText().isBlank()))
+			result = false;
+
 		return result;
 	}
 
@@ -465,12 +560,21 @@ public class SettingForm extends JDialog {
 		String DOWNLOAD_FOLDER = filesDownloadLocationTextField.getText();
 		String LOG_FOLDER = fileLogLocationTextField.getText();
 		String SAVE_FOLDER = moveFileToNewLocationAfterConclusionTextField.getText();
-		Boolean MAKE_SUBFOLDER = makeSubFolderForEachFileTypeCheckBox.isSelected();
-		Boolean AUTO_DOWNLOAD = downloadFilesAutomaticallyCheckBox.isSelected();
-		Integer NUMBER_DOWNLOAD_SIMULTANEOUS = (Integer) numberOfSimultaneousDownloadsSpinner.getValue();
-		Integer MINUTES_FOR_NEXT_ORDER_UPDATE = (Integer) orderUpdatesPerMinuteSpinner.getValue();
 		KeepWhichFiles KEEP_WHICH_FILES = (filesToKeepAfterConclusionAll.isSelected() ? KeepWhichFiles.ALL
 				: KeepWhichFiles.ONLY_AMEND);
+
+		Boolean MAKE_SUBFOLDER = makeSubFolderForEachFileTypeDefaultCheckBox.isSelected();
+		;
+		Boolean AUTO_DOWNLOAD = downloadFilesAutomaticallyDefaultCheckBox.isSelected();
+		Integer NUMBER_DOWNLOAD_SIMULTANEOUS = (Integer) numberOfSimultaneousDownloadsDefaultSpinner.getValue();
+		Integer MINUTES_FOR_NEXT_ORDER_UPDATE = (Integer) orderUpdatesPerMinuteDefaultSpinner.getValue();
+
+		if (recommendedSettingRadio.isSelected()) {
+			MAKE_SUBFOLDER = makeSubFolderForEachFileTypeRecommendedCheckBox.isSelected();
+			AUTO_DOWNLOAD = downloadFilesAutomaticallyRecommendedCheckBox.isSelected();
+			NUMBER_DOWNLOAD_SIMULTANEOUS = (Integer) numberOfSimultaneousDownloadsRecommendedSpinner.getValue();
+			MINUTES_FOR_NEXT_ORDER_UPDATE = (Integer) orderUpdatesPerMinuteRecommendedSpinner.getValue();
+		}
 
 		List<Setting> list = List.of(new Setting(SOFTWARE_NAME, SOFTWARE_PATH, SOFTWARE_PROGRAM, DOWNLOAD_FOLDER,
 				LOG_FOLDER, SAVE_FOLDER, MAKE_SUBFOLDER, AUTO_DOWNLOAD, NUMBER_DOWNLOAD_SIMULTANEOUS,
@@ -478,5 +582,5 @@ public class SettingForm extends JDialog {
 
 		return list;
 	}
-	
+
 }

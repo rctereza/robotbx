@@ -18,6 +18,14 @@ import javax.swing.JOptionPane;
 
 import com.rctereza.robotbx.Constants;
 import com.rctereza.robotbx.models.Certificate;
+import com.sun.jna.Native;
+import com.sun.jna.platform.win32.Guid;
+import com.sun.jna.platform.win32.Ole32;
+import com.sun.jna.platform.win32.Win32Exception;
+import com.sun.jna.platform.win32.WinNT;
+import com.sun.jna.ptr.PointerByReference;
+import com.sun.jna.win32.StdCallLibrary;
+import com.sun.jna.win32.W32APIOptions;
 
 public class FileUtils {
 
@@ -162,6 +170,13 @@ public class FileUtils {
 		}
 	}
 
+	public static void createDirectory(String folder) throws IOException {
+		Path path = Paths.get(folder);
+		if (!Files.exists(path)) {
+			Files.createDirectories(path);
+		}
+	}
+	
 	public static void deleteDirectory(String sourceFolder) throws IOException {
 		Path directory = Paths.get(sourceFolder);
 
@@ -213,4 +228,49 @@ public class FileUtils {
 
 		//logger.info("Directory moved successfully!");
 	}
+	
+	public static String getDocumentsPath() {  
+		
+		String path = "";
+		
+        // Initialize COM (required for SHGetKnownFolderPath)  
+        Ole32.INSTANCE.CoInitializeEx(null, Ole32.COINIT_APARTMENTTHREADED);  
+ 
+        try {  
+        	
+            Guid.GUID folderId = new Guid.GUID("{FDD39AD0-238F-46AF-ADB4-6C85480369C7}");  
+            
+            PointerByReference pPath = new PointerByReference();  
+ 
+            int result = Shell32.INSTANCE.SHGetKnownFolderPath(folderId, 0, null, pPath);  
+            
+            if (result != 0) { // 0 = S_OK  
+                throw new Win32Exception(result);  
+            }  
+ 
+            // Convert the returned wide string to a Java String  
+            path = pPath.getValue().getWideString(0);  
+            
+            // Free the allocated memory  
+            Ole32.INSTANCE.CoTaskMemFree(pPath.getValue());  
+            
+        } finally {  
+            Ole32.INSTANCE.CoUninitialize();  
+        }
+        
+        return path;  
+    }  
+
+	// Define the Shell32 library interface  
+	public interface Shell32 extends StdCallLibrary {  
+	    Shell32 INSTANCE = Native.load("shell32", Shell32.class, W32APIOptions.DEFAULT_OPTIONS);  
+	 
+	    // SHGetKnownFolderPath prototype  
+	    int SHGetKnownFolderPath(  
+	        Guid.GUID rfid,          		// Folder ID (FOLDERID_Documents)  
+	        int dwFlags,             		// Flags (0 for default)  
+	        WinNT.HANDLE hToken,    		// User token (null for current user)  
+	        PointerByReference ppszPath  	// Output: Pointer to the path string  
+	    );  
+	} 
 }
