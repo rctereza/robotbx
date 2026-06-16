@@ -16,18 +16,18 @@ public record Setting(
 		, Integer NUMBER_DOWNLOAD_SIMULTANEOUS
 		, Integer MINUTES_FOR_NEXT_ORDER_UPDATE
 		, KeepWhichFiles KEEP_WHICH_FILES
+		, Boolean DATA_UPDATED
 		)
 		implements Serializable, Wrappable {
 
 	public Setting() {
-		this(null, null, null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null, null);
 	}
 	
 	public enum KeepWhichFiles {
         ALL, ONLY_AMEND
     }
 
-	@Override
 	public Integer getObjectId() {
 		return null;
 	}

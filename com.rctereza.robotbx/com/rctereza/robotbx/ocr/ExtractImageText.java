@@ -74,6 +74,38 @@ public class ExtractImageText {
 		return text;
 	}
 	
+	public String getText(int engineMode, int pageSegMode) throws Exception {
+		
+		String text = "";
+
+		ITesseract instance = TessUtils.getInstance(engineMode, pageSegMode);
+
+		BufferedImage screenshot = TessUtils.captureScreen(this.windowTitle, this.imageScale);
+		
+		monitorSize = TessUtils.getMonitorSize();
+		
+		try {
+			
+//			logger.info("Extracting the text from the window captured...");
+			
+			text = instance.doOCR(screenshot);
+			
+			Path path = Paths.get(Constants.OCR_SYSTEM_PATH + Constants.OCR_FILE_NAME);
+			
+			Files.writeString(path, text, StandardCharsets.UTF_8);
+			
+			logger.info("Text extracted and saved at.: [" + path.toAbsolutePath() + "]");
+			
+		} catch (TesseractException e) {
+			
+			logger.error(e.getMessage(), e);
+			throw new Exception(e.getMessage());
+			
+		}
+		
+		return text;
+	}
+	
 	public Dimension getMonitorSize() {
 		return monitorSize;
 	}

@@ -26,6 +26,7 @@ import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerListModel;
+import javax.swing.UIManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,7 @@ public class SettingForm extends JDialog {
 
 	private JLabel filesDownloadedLocationLabel;
 	private JTextField filesDownloadLocationTextField;
+	private JLabel filesDownloadLocationHelperLabel;
 	private JButton filesDownloadedLocationButton;
 
 	// ---------------------------------------------------------------------------------------
@@ -92,9 +94,12 @@ public class SettingForm extends JDialog {
 
 	private JLabel saveLogForDebuggingLabel;
 	private JTextField fileLogLocationTextField;
+	private JLabel fileLogLocationHelperLabel;
+	private JButton fileLogLocationButton;
 
 	private JLabel moveFileToNewLocationAfterConclusionLabel;
 	private JTextField moveFileToNewLocationAfterConclusionTextField;
+	private JLabel moveFileToNewLocationAfterConclusionHelperLabel;
 	private JButton moveFileToNewLocationAfterConclusionButton;
 
 	private JLabel filesToKeepAfterConclusionLabel;
@@ -106,7 +111,7 @@ public class SettingForm extends JDialog {
 
 	private JButton closeButton;
 	private JButton saveButton;
-
+	
 	private Setting originalSetting;
 
 	private Boolean firstAccess;
@@ -202,8 +207,8 @@ public class SettingForm extends JDialog {
 
 			int result = chooser.showOpenDialog(this);
 			if (result == JFileChooser.APPROVE_OPTION) {
-				filesDownloadLocationTextField.setText(chooser.getSelectedFile().getAbsolutePath());
-				fileLogLocationTextField.setText(filesDownloadLocationTextField.getText() + "\\receitanetbx.log");
+				filesDownloadLocationTextField.setText(chooser.getSelectedFile().getAbsolutePath() + "\\");
+				//fileLogLocationTextField.setText(filesDownloadLocationTextField.getText() + "\\receitanetbx.log");
 			}
 		});
 
@@ -262,6 +267,32 @@ public class SettingForm extends JDialog {
 		fileLogLocationTextField = new JTextField();
 		fileLogLocationTextField.setText(originalSetting.LOG_FOLDER());
 		fileLogLocationTextField.setEnabled(false);
+		fileLogLocationTextField.setToolTipText(FOLDER_TOOLTIP);
+		fileLogLocationTextField.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					if (!fileLogLocationTextField.getText().isEmpty()) {
+						FileUtils.openFolderWithExplorer(fileLogLocationTextField.getText().replace("receitanetbx.log",""));
+					}
+				}
+			}
+		});
+		
+		fileLogLocationButton = new JButton("Selecionar");
+		fileLogLocationButton.addActionListener(e -> {
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle(
+					"Selecione o diretório que o arquivo de log será criado");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+
+			int result = chooser.showOpenDialog(this);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				fileLogLocationTextField.setText(chooser.getSelectedFile().getAbsolutePath() + "\\receitanetbx.log");
+			}
+		});
+
 
 		moveFileToNewLocationAfterConclusionLabel = new JLabel("Diretório do Resultado:");
 		moveFileToNewLocationAfterConclusionTextField = new JTextField();
@@ -289,7 +320,7 @@ public class SettingForm extends JDialog {
 
 			int result = chooser.showOpenDialog(this);
 			if (result == JFileChooser.APPROVE_OPTION) {
-				moveFileToNewLocationAfterConclusionTextField.setText(chooser.getSelectedFile().getAbsolutePath());
+				moveFileToNewLocationAfterConclusionTextField.setText(chooser.getSelectedFile().getAbsolutePath() + "\\");
 			}
 		});
 
@@ -316,8 +347,8 @@ public class SettingForm extends JDialog {
 		filesToKeepAfterConclusionGroup.add(filesToKeepAfterConclusionAll);
 		filesToKeepAfterConclusionGroup.add(filesToKeepAfterConclusionLastRectification);
 
-		defaultSettingRadio = new JRadioButton("Opções Padrão", true);
-		recommendedSettingRadio = new JRadioButton("Opções Recomendadas");
+		defaultSettingRadio = new JRadioButton("Opção Padrão", true);
+		recommendedSettingRadio = new JRadioButton("Opção Recomendada");
 
 		ButtonGroup defaultSettingGroup = new ButtonGroup();
 		defaultSettingGroup.add(defaultSettingRadio);
@@ -405,6 +436,18 @@ public class SettingForm extends JDialog {
 			}
 		});
 
+		filesDownloadLocationHelperLabel = new JLabel("e.g. C:\\Temp\\ReceitanetBX\\Arquivos\\");
+		filesDownloadLocationHelperLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+		filesDownloadLocationHelperLabel.setFont(filesDownloadLocationHelperLabel.getFont().deriveFont(10f));
+		
+		fileLogLocationHelperLabel = new JLabel("e.g. C:\\Temp\\ReceitanetBX\\receitanetbx.log");
+		fileLogLocationHelperLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+		fileLogLocationHelperLabel.setFont(fileLogLocationHelperLabel.getFont().deriveFont(10f));
+		
+		moveFileToNewLocationAfterConclusionHelperLabel = new JLabel("e.g. C:\\Temp\\ReceitanetBX\\Resultado\\");
+		moveFileToNewLocationAfterConclusionHelperLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+		moveFileToNewLocationAfterConclusionHelperLabel.setFont(moveFileToNewLocationAfterConclusionHelperLabel.getFont().deriveFont(10f));
+
 		// panelMain = new JPanel(new MigLayout("wrap, insets 10, debug",
 		// "[]10[]10[]10[]", ""));
 		panelMain = new JPanel(new MigLayout("", "[200]10[350]10[350]10[100]", ""));
@@ -429,16 +472,20 @@ public class SettingForm extends JDialog {
 
 		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 
-		panelMain.add(filesDownloadedLocationLabel, "left, sg 1");
-		panelMain.add(filesDownloadLocationTextField, "span 2, pushx, growx");
-		panelMain.add(filesDownloadedLocationButton, "left, wrap");
+		panelMain.add(filesDownloadedLocationLabel, "top, left, sg 1");
+		panelMain.add(filesDownloadLocationTextField, "top, span 2, split 2, flowy, pushx, growx");
+		panelMain.add(filesDownloadLocationHelperLabel);
+		panelMain.add(filesDownloadedLocationButton, "top, left, wrap");
 
-		panelMain.add(saveLogForDebuggingLabel, "left, sg 1");
-		panelMain.add(fileLogLocationTextField, "span 2, pushx, growx, wrap");
-
-		panelMain.add(moveFileToNewLocationAfterConclusionLabel, "left, sg 1");
-		panelMain.add(moveFileToNewLocationAfterConclusionTextField, "span 2, pushx, growx");
-		panelMain.add(moveFileToNewLocationAfterConclusionButton, "left, wrap");
+		panelMain.add(saveLogForDebuggingLabel, "top, left, sg 1");
+		panelMain.add(fileLogLocationTextField, "top, span 2, split 2, flowy, pushx, growx");
+		panelMain.add(fileLogLocationHelperLabel);
+		panelMain.add(fileLogLocationButton, "top, left, wrap");
+	
+		panelMain.add(moveFileToNewLocationAfterConclusionLabel, "top, left, sg 1");
+		panelMain.add(moveFileToNewLocationAfterConclusionTextField, "top, span 2, split 2, flowy, pushx, growx");
+		panelMain.add(moveFileToNewLocationAfterConclusionHelperLabel);
+		panelMain.add(moveFileToNewLocationAfterConclusionButton, "top, left, wrap");
 
 		panelMain.add(filesToKeepAfterConclusionLabel, "left, sg 1");
 		panelMain.add(filesToKeepAfterConclusionAll, "split, span 3");
@@ -472,7 +519,7 @@ public class SettingForm extends JDialog {
 
 		this.add(panelMain);
 
-		setSize(900, 500);
+		setSize(900, 550);
 		setResizable(false);
 		setLocationRelativeTo(parent);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -515,7 +562,7 @@ public class SettingForm extends JDialog {
 			List<Setting> deepCopy = list.stream()
 					.map(p -> new Setting(p.SOFTWARE_NAME(), p.SOFTWARE_PATH(), p.SOFTWARE_PROGRAM(),
 							p.DOWNLOAD_FOLDER(), p.LOG_FOLDER(), p.SAVE_FOLDER(), p.MAKE_SUBFOLDER(), p.AUTO_DOWNLOAD(),
-							p.NUMBER_DOWNLOAD_SIMULTANEOUS(), p.MINUTES_FOR_NEXT_ORDER_UPDATE(), p.KEEP_WHICH_FILES()))
+							p.NUMBER_DOWNLOAD_SIMULTANEOUS(), p.MINUTES_FOR_NEXT_ORDER_UPDATE(), p.KEEP_WHICH_FILES(), p.DATA_UPDATED()))
 					.collect(Collectors.toCollection(ArrayList::new)); // collect() generates a list that can be changed
 			// .toList(); // toList() generates a list that cannot be changed (immutable)
 			return deepCopy.getFirst();
@@ -530,7 +577,7 @@ public class SettingForm extends JDialog {
 					Constants.PROGRAM_DOCUMENTS_PATH, Constants.PROGRAM_LOG_PATH, Constants.PROGRAM_SAVEDFILES_PATH,
 					Constants.PROGRAM_MAKE_SUBFOLDER, Constants.PROGRAM_AUTO_DOWNLOAD,
 					Constants.PROGRAM_NUMBER_DOWNLOAD_SIMULTANEOUS, Constants.PROGRAM_MINUTES_FOR_NEXT_ORDER_UPDATE,
-					KeepWhichFiles.ALL);
+					KeepWhichFiles.ALL, false);
 		}
 	}
 
@@ -578,7 +625,7 @@ public class SettingForm extends JDialog {
 
 		List<Setting> list = List.of(new Setting(SOFTWARE_NAME, SOFTWARE_PATH, SOFTWARE_PROGRAM, DOWNLOAD_FOLDER,
 				LOG_FOLDER, SAVE_FOLDER, MAKE_SUBFOLDER, AUTO_DOWNLOAD, NUMBER_DOWNLOAD_SIMULTANEOUS,
-				MINUTES_FOR_NEXT_ORDER_UPDATE, KEEP_WHICH_FILES));
+				MINUTES_FOR_NEXT_ORDER_UPDATE, KEEP_WHICH_FILES, true));
 
 		return list;
 	}

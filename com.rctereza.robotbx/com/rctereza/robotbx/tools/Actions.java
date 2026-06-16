@@ -103,7 +103,7 @@ public class Actions {
 		robot.keyPress(KeyEvent.VK_F);
 		robot.keyRelease(KeyEvent.VK_F);
 		robot.keyRelease(KeyEvent.VK_ALT);
-		robot.delay(300);
+		robot.delay(600);
 		robot.keyPress(KeyEvent.VK_O);
 		robot.keyRelease(KeyEvent.VK_O);
 		robot.delay(defaultDelay);

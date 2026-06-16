@@ -32,6 +32,7 @@ import com.rctereza.robotbx.models.Robot;
 import com.rctereza.robotbx.models.RobotAction;
 import com.rctereza.robotbx.models.RobotCommand;
 import com.rctereza.robotbx.models.RobotMessageBox;
+import com.rctereza.robotbx.models.Setting;
 import com.rctereza.robotbx.ocr.ExtractImageText;
 import com.rctereza.robotbx.tools.Actions;
 import com.rctereza.robotbx.tools.RobotUtils;
@@ -51,11 +52,14 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	private String PERIODOS_FALTANDO = "";
 	private Integer TOTAL_PERIODOS_FALTANDO = 0;
 	private Status STATUS = Status.PENDING;
+	
+	private Boolean NOVA_CONFIGURACAO;
 
 	private Rectangle targetMonitorBounds;
 
 	public ProcessRobot(ReceitaBx original) {
 		this.original = original;
+		NOVA_CONFIGURACAO = this.original.CONFIGURACAO().DATA_UPDATED();
 	}
 
 	@Override
@@ -116,13 +120,21 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 		}
 
 		logger.info("Thread Terminated!");
+		
+		Setting CONFIGURACAO = original.CONFIGURACAO();
+		
+		if (CONFIGURACAO.DATA_UPDATED() == true && NOVA_CONFIGURACAO == false) {
+			// This means the current settings were applied to this customer and does not need to do so again. 
+			// Unless a change is done in the settings, so in that case it must be applied again.
+//			CONFIGURACAO = new Setting(original.CONFIGURACAO().)
+		}
 
-		return new ReceitaBx(original.RESOLUCAO_TELA(), original.CERTIFICADO(), original.PROCURADOR(),
-				original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS(), original.PASTA_DESTINO_ARQUIVOS_BAIXADOS(),
-				original.PERFIL(), original.PERFIL_TYPE(), original.PERFIL_VALUE(), original.SISTEMA(),
-				original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(), original.DATA_INICIO(), original.DATA_FIM(),
-				original.CNPJ_INCORPORADORA(), original.TIPO_EVENTO(), original.BAIXAR_ARQUIVO_ASSINADO(),
-				original.CNPJ_ESTABELECIMENTO(), original.BUSCAR_TODOS_ESTABLECIMENTOS(), original.INSCRICAO_ESTADUAL(),
+		return new ReceitaBx(original.RESOLUCAO_TELA(), original.CONFIGURACAO(), original.CERTIFICADO(),
+				original.PROCURADOR(), original.PERFIL(), original.PERFIL_TYPE(), original.PERFIL_VALUE(),
+				original.SISTEMA(), original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(), original.DATA_INICIO(),
+				original.DATA_FIM(), original.CNPJ_INCORPORADORA(), original.TIPO_EVENTO(),
+				original.BAIXAR_ARQUIVO_ASSINADO(), original.CNPJ_ESTABELECIMENTO(),
+				original.BUSCAR_TODOS_ESTABLECIMENTOS(), original.INSCRICAO_ESTADUAL(),
 				original.ULTIMO_ARQUIVO_TRANSMITIDO(), ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO,
 				MENSAGEM_CONCLUSAO_PROCESSAMENTO, PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS);
 	}
@@ -479,115 +491,133 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	@SuppressWarnings("unused")
 	private void CheckMenuOptions(Robot robot, Actions actions) throws Exception {
 
-		logger.info("Checking the parameters of the menu Tools / Options");
+		if (NOVA_CONFIGURACAO) {
+			
+			logger.info("Checking the parameters of the menu Tools / Options");
 
-		String salvarOsArquivosEm = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\";
-		String criarSubDiretorio = "EB Criar sub-diretério para cada tipo de arquivo.";
-		String numeroDownloads = "Número de downloads simultâneos: [5H";
-		String salvarLog = "EB Salvar log para depuração.";
+			String salvarOsArquivosEm = original.CONFIGURACAO().DOWNLOAD_FOLDER();
+			String criarSubDiretorio = "EB Criar sub-diretório para cada tipo de arquivo.";
+			String numeroDownloads = "Numero de downloads simultâneos: |5";
+			String atualizacaoPedidos = "Atualização de pedidos (em minutos): 60";
+			String salvarLogEm = original.CONFIGURACAO().LOG_FOLDER();
+			String salvarLog = "EB Salvar log para depuração.";
+			String errorMsg = "Não foi possivel gerar o arquivo de log";
 
-		boolean changed = false;
+			boolean changed = false;
 
-		actions.Wait(2000);
-
-		actions.Alt_F_O();
-
-		actions.Wait(2000);
-
-		ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 3.0);
-		String text = mb.getText();
-		Dimension monitor = mb.getMonitorSize();
-		logger.info("This is the current values: {}", text);
-
-		if (!text.contains(salvarOsArquivosEm)) {
-			logger.info("01 - Changing 'Salvar os arquivos em' to [{}]", salvarOsArquivosEm);
-			// moveMousePointer(850, 412, monitor, robot, actions);
-			// actions.Click();
-			// actions.Wait(1000);
-			actions.Ctrl_A();
-			actions.Paste(salvarOsArquivosEm);
 			actions.Wait(1000);
-			changed = true;
 
+			actions.Alt_F_O();
+
+			actions.Wait(1000);
+
+			ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 2.0);
+			String text = mb.getText(1, 1);
+			logger.info("This is the current Text values: {}", text);
+
+			mb = new ExtractImageText(Constants.PROGRAM_NAME, 4.0);
+			String text2 = mb.getText(1, 1);
+			logger.info("This is the current Text2 values: {}", text2);
+
+			if (!text.toUpperCase().contains(salvarOsArquivosEm.toUpperCase())) {
+				logger.info("01 - Changing 'Salvar os arquivos em' to [{}]", salvarOsArquivosEm);
+				actions.Ctrl_A();
+				actions.Paste(salvarOsArquivosEm);
+				actions.Wait(1000);
+				changed = true;
+
+			}
+
+			actions.Tab();
+			actions.Tab();
+
+			if (!text2.contains(criarSubDiretorio)) {
+				logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
+				actions.SpaceBar();
+				actions.Wait(1000);
+				changed = true;
+
+			}
+
+			actions.Tab();
+			actions.Tab();
+
+			if (!text2.contains(numeroDownloads)) {
+				logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
+				actions.Ctrl_A();
+				actions.Paste("5");
+				actions.Wait(1000);
+				changed = true;
+
+			}
+
+			actions.Tab();
+
+			if (!text2.contains(atualizacaoPedidos)) {
+				logger.info("04 - Setting 'Atualização de pedidos (em minutos)' to [60].");
+				actions.Ctrl_A();
+				actions.Paste("60");
+				actions.Wait(1000);
+				changed = true;
+
+			}
+
+			actions.Tab();
+
+			if (!text2.contains(salvarLog)) {
+				logger.info("05 - Selecting 'Salvar log para depuração.");
+				actions.SpaceBar();
+				actions.Wait(1000);
+				actions.Tab();
+
+				logger.info("06 - Changing the path to [{}].", salvarLogEm);
+				actions.Ctrl_A();
+				actions.Paste(salvarLogEm);
+				actions.Wait(1000);
+				changed = true;
+			} else {
+				actions.Tab();
+			}
+
+			if (changed) {
+				// System.out.println("Salvar");
+				actions.Tab();
+				actions.Tab();
+				actions.Tab();
+				actions.SpaceBar();
+				actions.Wait(1000);
+
+				mb = new ExtractImageText(Constants.PROGRAM_NAME, 2.0);
+				text2 = mb.getText(1, 1);
+				// logger.info("This is the current Text2 values: {}", text2);
+
+				if (text2.contains(errorMsg)) {
+
+					// actions.SpaceBar();
+					logger.warn("ATTENTION! " + errorMsg + "... [" + salvarLogEm + "]");
+
+				} else {
+
+					actions.SpaceBar();
+					logger.info("Parameters fixed with success.");
+
+				}
+
+			} else {
+				// System.out.println("Cancelar");
+				actions.Tab();
+				actions.Tab();
+				actions.Tab();
+				actions.Tab();
+				actions.SpaceBar();
+
+				logger.info("Parameters already fixed. No change needed.");
+			}
+			
+			// A configuraçao deve ser atualizada apenas uma vez para cada cliente. 
+			// Sera atualizada novamente se houver qualquer alteraçao na tela de configuração.
+			NOVA_CONFIGURACAO = false; 
 		}
-
-		actions.Tab();
-		actions.Tab();
-
-		if (!text.contains(criarSubDiretorio)) {
-			logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
-			// moveMousePointer(788, 453, monitor, robot, actions);
-			actions.SpaceBar();
-			actions.Wait(1000);
-			changed = true;
-
-		}
-
-		actions.Tab();
-		actions.Tab();
-
-		if (!text.contains(numeroDownloads)) {
-			logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
-			// moveMousePointer(967, 512, monitor, robot, actions);
-			// actions.Click();
-			// actions.Wait(1000);
-			actions.Ctrl_A();
-			actions.Paste("5");
-			actions.Wait(1000);
-			changed = true;
-
-		}
-
-		actions.Tab();
-		actions.Tab();
-
-		if (!text.contains(salvarLog)) {
-			logger.info("04 - Selecting 'Salvar log para depuração.");
-			// moveMousePointer(788, 620, monitor, robot, actions);
-			// actions.Click();
-			actions.SpaceBar();
-			actions.Wait(1000);
-			actions.Tab();
-
-			logger.info("05 - Changing the path to [{}].", salvarOsArquivosEm + "\\receitanetbx.log");
-			// moveMousePointer(810, 642, monitor, robot, actions);
-			// actions.Click();
-			// actions.Wait(1000);
-			actions.Ctrl_A();
-			actions.Paste(salvarOsArquivosEm + "\\receitanetbx.log");
-			actions.Wait(1000);
-			changed = true;
-		}
-		if (changed) {
-			// Save
-			// moveMousePointer(990, 672, monitor, robot, actions);
-			// actions.Click();
-			actions.Tab();
-			actions.Tab();
-			actions.Tab();
-			actions.SpaceBar();
-			actions.Wait(1000);
-
-			// OK
-			// moveMousePointer(960, 550, monitor, robot, actions);
-			// actions.Click();
-			actions.SpaceBar();
-			logger.info("Parameters fixed with success.");
-
-		} else {
-			System.out.println("Cancelar");
-			// moveMousePointer(1100, 672, monitor, robot, actions);
-			// actions.Wait(1000);
-			// actions.Click();
-			actions.Tab();
-			actions.Tab();
-			actions.Tab();
-			actions.Tab();
-			actions.SpaceBar();
-
-			logger.info("Parameters already fixed. No change needed.");
-		}
-
 	}
 
 	private String getDateTimeOfConclusion() {
@@ -625,7 +655,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			endMonth = Integer.parseInt(values[1]);
 
 			fileNameBegins = "PISCOFINS";
-			fileFolderPath = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\Escrituração";
+			fileFolderPath = original.CONFIGURACAO().DOWNLOAD_FOLDER() + "\\Escrituração";
 			fileFolderIndex = 0;
 
 			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
@@ -649,7 +679,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			endMonth = Integer.parseInt(values[1]);
 
 			fileNameBegins = original.PROCURADOR().CLIENTE_DOC(); // "07214419000195";
-			fileFolderPath = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\Escrituração Fiscal Digital";
+			fileFolderPath = original.CONFIGURACAO().DOWNLOAD_FOLDER() + "\\Escrituração Fiscal Digital";
 			fileFolderIndex = 1;
 
 			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
@@ -673,7 +703,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			endMonth = Integer.parseInt(values[1]);
 
 			fileNameBegins = "SPEDECF";
-			fileFolderPath = original.PASTA_ORIGEM_ARQUIVOS_BAIXADOS() + "\\Escrituração";
+			fileFolderPath = original.CONFIGURACAO().DOWNLOAD_FOLDER() + "\\Escrituração";
 			fileFolderIndex = 2;
 
 			result = getPeriods(startYear, startMonth, endYear, endMonth, fileNameBegins, fileFolderPath,
@@ -750,7 +780,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			} catch (IOException e) {
 				logger.error("getPeriods()-> {} ", e.getMessage(), e);
 			}
-			
+
 		}
 
 		return result;

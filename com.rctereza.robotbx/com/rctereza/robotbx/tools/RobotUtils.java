@@ -85,20 +85,15 @@ public class RobotUtils {
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
 
 		messages.clear();
-		messages.add(new RobotMessageBox(1, "CheckMonitorResolution", "", true, Message.FUNCTION, null));
 		messages.add(new RobotMessageBox(1, "Houve um erro",
 				"Serviço indisponível temporariamente. Por favor, tente mais tarde...", true, Message.WARNING, null));
+		messages.add(new RobotMessageBox(1, "CheckMonitorResolution", "", true, Message.FUNCTION, null));
+		messages.add(new RobotMessageBox(1, "CheckMenuOptions", "", false, Message.FUNCTION, null));
 
 		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(messages), false,
 				0, 0, false, false, true, new ArrayList<>(commands)));
-		// ************************************************************************************************************************
 
-//		messages.clear();
-//		messages.add(new RobotMessageBox(1, "CheckMenuOptions", "", false, Message.FUNCTION, null));
-//
-//		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(messages), false,
-//				0, 0, false, false, true, new ArrayList<>(commands)));
-
+		
 		// **********************************************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));

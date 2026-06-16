@@ -30,8 +30,8 @@ public class Controller {
 				ReceitaBx params = list.get().get(i);
 
 				if (i == 0) {
-					sourceFolder = params.PASTA_ORIGEM_ARQUIVOS_BAIXADOS();
-					targetFolder = params.PASTA_DESTINO_ARQUIVOS_BAIXADOS() + "\\" + params.PROCURADOR().CLIENTE();
+					sourceFolder = params.CONFIGURACAO().DOWNLOAD_FOLDER();
+					targetFolder = params.CONFIGURACAO().SAVE_FOLDER() + "\\" + params.PROCURADOR().CLIENTE();
 					
 					logger.info("Deleting all files/folders in the directory ({}) before the downloading starts....", sourceFolder);
 					FileUtils.deleteDirectory(sourceFolder);

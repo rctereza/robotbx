@@ -40,8 +40,6 @@ public class TessUtils {
 
 	public static Path prepareTessData() throws IOException {
 
-//		String userDir = System.getProperty(Constants.OCR_SYSTEM_PATH);
-
 		Path dir = Paths.get(Constants.OCR_SYSTEM_PATH, "tessdata");
 
 		if (!Files.exists(dir)) {
@@ -56,6 +54,9 @@ public class TessUtils {
 				Files.copy(in, tessdataDir.resolve("por.traineddata"));
 			}
 
+			try (InputStream in = TessUtils.class.getResourceAsStream("/tessdata/osd.traineddata")) {
+				Files.copy(in, tessdataDir.resolve("osd.traineddata"));
+			}
 		}
 
 		return dir;
@@ -84,8 +85,28 @@ public class TessUtils {
 		return instance;
 
 	}
+	
+	public static ITesseract getInstance(int engineMode, int pageSegMode) throws IOException {
 
-	public static BufferedImage captureScreen(String windowTitle) throws IOException, AWTException {
+		Path dir = prepareTessData();
+
+		ITesseract instance = new Tesseract();
+
+		instance.setDatapath(dir.toString());
+
+		instance.setLanguage("eng+por");
+
+		instance.setOcrEngineMode(engineMode);
+
+		instance.setPageSegMode(pageSegMode);
+
+		instance.setVariable("user_defined_dpi", "300");
+
+		return instance;
+	}
+
+
+	public static BufferedImage captureScreen(String windowTitle, Double imageScale) throws IOException, AWTException {
 		
 		BufferedImage result = null;
 
@@ -129,7 +150,7 @@ public class TessUtils {
 			BufferedImage imageRepainted = toGray(cropped);
 
 			// 7. Make image a 2x its size
-			BufferedImage imageBigger = scaleImage(imageRepainted, 2.0);
+			BufferedImage imageBigger = scaleImage(imageRepainted, imageScale);
 
 			//String userDir = System.getProperty(Constants.OCR_SYSTEM_PATH);
 			File dir = new File(Constants.OCR_SYSTEM_PATH);

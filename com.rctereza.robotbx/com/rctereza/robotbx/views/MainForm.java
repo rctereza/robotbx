@@ -1490,6 +1490,9 @@ public class MainForm extends JFrame {
 		List<ReceitaBx> result = new ArrayList<>();
 
 		String SCREEN = screenResolutionTextField.getText();
+		
+		List<Setting> list = Main.getAppData().getLastListAdded(Setting.class);
+		Setting CONFIGURACAO = list.getFirst();
 
 		Ref<Certificate> CERTIFICADO = new Ref<>((Certificate) certificateComboBox.getSelectedItem());
 		String SENHA = passwordTextField.getText();
@@ -1497,16 +1500,6 @@ public class MainForm extends JFrame {
 		ValidatePfx.load(CERTIFICADO, SENHA);
 
 		Procurator PROCURADOR = ((Procurator) customerComboBox.getSelectedItem());
-
-		// ************************************************************************************************
-		// GET THE SETTINGS DATA TO POPULATE THOSE TWO FIELDS BELOW
-		// ************************************************************************************************
-		List<Setting> list = Main.getAppData().getLastListAdded(Setting.class);
-		Setting settingObj = list.getFirst();
-
-		String PASTA_ORIGEM_ARQUIVOS_BAIXADOS = settingObj.DOWNLOAD_FOLDER();
-		String PASTA_DESTINO_ARQUIVOS_BAIXADOS = settingObj.SAVE_FOLDER();
-		// ************************************************************************************************
 
 		String PERFIL = profileContribuinte.getText();
 		String PERFIL_TYPE = "";
@@ -1566,13 +1559,12 @@ public class MainForm extends JFrame {
 					}
 				}
 
-				ReceitaBx receitaBx = new ReceitaBx(SCREEN, CERTIFICADO.get(), PROCURADOR,
-						PASTA_ORIGEM_ARQUIVOS_BAIXADOS, PASTA_DESTINO_ARQUIVOS_BAIXADOS, PERFIL, PERFIL_TYPE,
-						PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA,
-						TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS,
-						INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO,
-						DATA_HORA_CONCLUSAO_PROCESSAMENTO, MENSAGEM_CONCLUSAO_PROCESSAMENTO, PERIODOS_FALTANDO,
-						TOTAL_PERIODOS_FALTANDO, STATUS);
+				ReceitaBx receitaBx = new ReceitaBx(SCREEN, CONFIGURACAO, CERTIFICADO.get(), PROCURADOR,
+						PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM,
+						CNPJ_INCORPORADORA, TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO,
+						BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO,
+						ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO, MENSAGEM_CONCLUSAO_PROCESSAMENTO,
+						PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS);
 
 				result.add(receitaBx);
 			}

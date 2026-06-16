@@ -67,7 +67,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/ocr/tess4j-5.18.0.jar">
+	<classpathentry kind="lib" path="libs/ocr/tess4j-5.18.0.jar" sourcepath="C:/Users/renato.PINATTI/Downloads/tess4j-5.19.0-javadoc.jar">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
