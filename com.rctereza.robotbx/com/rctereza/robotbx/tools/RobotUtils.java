@@ -87,14 +87,15 @@ public class RobotUtils {
 		messages.clear();
 		messages.add(new RobotMessageBox(1, "Houve um erro",
 				"Serviço indisponível temporariamente. Por favor, tente mais tarde...", true, Message.WARNING, null));
+		messages.add(new RobotMessageBox(1, "A atualização dos sistemas disponíveis falhou",
+				"Serviço indisponível temporariamente. Por favor, tente mais tarde...", true, Message.WARNING, null));
 		messages.add(new RobotMessageBox(1, "CheckMonitorResolution", "", true, Message.FUNCTION, null));
 		messages.add(new RobotMessageBox(1, "CheckMenuOptions", "", false, Message.FUNCTION, null));
 
 		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Entrar'", true, new ArrayList<>(messages), false,
 				0, 0, false, false, true, new ArrayList<>(commands)));
 
-		
-		// **********************************************************************************************************************************************
+		// **********************************************************************************************************************************************		
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.TAB, null, null, null, null, robotCommandEnabled));
@@ -280,7 +281,11 @@ public class RobotUtils {
 			messages.add(new RobotMessageBox(1, "Nenhum arquivo foi encontrado",
 					"Nenhum arquivo foi encontrado para o critério de pesquisa solicitado.", true, Message.WARNING,
 					null));
+
 			messages.add(new RobotMessageBox(1, "tente mais tarde",
+					"Serviço indisponível temporariamente. Por favor, tente mais tarde.", true, Message.WARNING, null));
+
+			messages.add(new RobotMessageBox(1, "Falha no sistema servidor",
 					"Serviço indisponível temporariamente. Por favor, tente mais tarde.", true, Message.WARNING, null));
 
 			String msg = "Não existe procuração eletrônica para o procurador do certificado digital apresentado.";
@@ -290,7 +295,7 @@ public class RobotUtils {
 						+ " do certificado digital apresentado.";
 			}
 			messages.add(new RobotMessageBox(1, "Não existe procuração", msg, true, Message.WARNING, null));
-			
+
 			messages.add(new RobotMessageBox(1, "Pesquisa em andamento,",
 					"Tempo de espera > 1 minuto. O processo deve ser reinicializado.", true, Message.WAITING, null));
 			// ----------------------------------
@@ -410,28 +415,26 @@ public class RobotUtils {
 				false, false, true, new ArrayList<>(commands)));
 
 		// *****************************************************************************************************************
+		messageCommands.clear();
+		messageCommands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
+		messageCommands.add(new RobotCommand(1, Command.MOVE, 957, 565, null, null, robotCommandEnabled));
+		messageCommands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+		// ----------------------------------
+		messages.clear();
+		messages.add(new RobotMessageBox(1, "Seus arquivos estão sendo solicitados",
+				"Tempo de espera > 1 minuto. O processo deve ser reinicializado.", true, Message.WAITING, null));
+		messages.add(new RobotMessageBox(1, "O pedido número", "", false, Message.CONFIRMATION,
+				new ArrayList<>(messageCommands)));
+		// ----------------------------------
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.MOVE, 1052, 760, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 
-		// ----------------------------------
-		messages.clear();
-		messages.add(new RobotMessageBox(1, "Seus arquivos estão sendo solicitados",
-				"Tempo de espera > 1 minuto. O processo deve ser reinicializado.", true, Message.WAITING, null));
-
-		messageCommands.clear();
-		messageCommands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
-		messageCommands.add(new RobotCommand(1, Command.MOVE, 957, 565, null, null, robotCommandEnabled));
-		messageCommands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
-		messages.add(new RobotMessageBox(1, "O pedido número", "", false, Message.CONFIRMATION,
-				new ArrayList<>(messageCommands)));
-		// ----------------------------------
-
 		actions.add(new RobotAction(counter += 10, "Clicar no botao 'Solicitar arquivos marcados acima'", true,
 				new ArrayList<>(messages), true, 2000, 30, false, false, true, new ArrayList<>(commands)));
-		// *****************************************************************************************************************
 
+		// *****************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.MOVE, 562, 310, null, null, robotCommandEnabled));
@@ -439,13 +442,19 @@ public class RobotUtils {
 		actions.add(new RobotAction(counter += 10, "Clicar no link 'Acompanhamento'", false, null, false, 0, 0, false,
 				false, true, new ArrayList<>(commands)));
 
+		// *****************************************************************************************************************
+		messages.clear();
+		messages.add(new RobotMessageBox(1, "Não há pedidos para o usuário",
+				"Serviço indisponível temporariamente. Por favor, tente mais tarde...", true, Message.WARNING, null));
+
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.MOVE, 689, 420, null, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
-		actions.add(new RobotAction(counter += 10, "Selecionar o pedido", false, null, false, 0, 0, false, false, true,
-				new ArrayList<>(commands)));
+		actions.add(new RobotAction(counter += 10, "Selecionar o pedido", true, new ArrayList<>(messages), false, 0, 0,
+				false, false, true, new ArrayList<>(commands)));
 
+		// *****************************************************************************************************************
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.MOVE, 695, 595, null, null, robotCommandEnabled));
@@ -453,11 +462,7 @@ public class RobotUtils {
 		actions.add(new RobotAction(counter += 10, "Selecionar os arquivos do pedido", false, null, false, 0, 0, false,
 				false, true, new ArrayList<>(commands)));
 
-		commands.clear();
-		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.MOVE, 690, 299, null, null, robotCommandEnabled));
-		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
-		// ----------------------------------
+		// *****************************************************************************************************************
 		messageCommands.clear();
 		messageCommands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
 		messageCommands.add(new RobotCommand(1, Command.MOVE, 1148, 304, null, null, robotCommandEnabled));
@@ -467,6 +472,11 @@ public class RobotUtils {
 		messages.add(new RobotMessageBox(1, "Não ha arquivos na fila de download", "Clicar no Botão 'Sair'", true,
 				Message.CONCLUSION, new ArrayList<>(messageCommands)));
 		// ----------------------------------
+		commands.clear();
+		commands.add(new RobotCommand(1, Command.WAIT, null, null, 1000, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.MOVE, 690, 299, null, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
+
 		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Baixar'", true, new ArrayList<>(messages), true,
 				6000, 50, true, true, true, new ArrayList<>(commands)));
 

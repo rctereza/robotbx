@@ -10,6 +10,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -47,7 +48,7 @@ public class FileUtils {
 		Preferences prefs = Preferences.userNodeForPackage(FileUtils.class);
 		prefs.remove(Constants.SOFTWARE_PATH);
 	}
-	
+
 	public static DefaultComboBoxModel<String> getModelOfSoftwares() {
 		return getModelOfSoftwares(getSoftwarePathSaved());
 	}
@@ -84,7 +85,7 @@ public class FileUtils {
 		}
 		return list;
 	}
-	
+
 	// ----------------------------------------------------------------------------
 	// CERTIFICATE
 	public static void saveCertificatePathChosen(String path) {
@@ -133,7 +134,8 @@ public class FileUtils {
 			for (Path entry : stream) {
 				String filename = entry.getFileName().toString();
 				String filepath = entry.getParent().toString();
-				list.add(new Certificate(counter++, filename, filepath, null, null, null, null, null, null, null, null));
+				list.add(
+						new Certificate(counter++, filename, filepath, null, null, null, null, null, null, null, null));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -176,7 +178,23 @@ public class FileUtils {
 			Files.createDirectories(path);
 		}
 	}
-	
+
+	public static void removeDirectory(String sourceFolder) throws IOException {
+		Path directory = Paths.get(sourceFolder);
+
+		if (Files.notExists(directory)) {
+			return;
+		}
+
+		try (var paths = Files.walk(directory)) {
+
+			for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+
+				Files.delete(path);
+			}
+		}
+	}
+
 	public static void deleteDirectory(String sourceFolder) throws IOException {
 		Path directory = Paths.get(sourceFolder);
 
@@ -224,53 +242,52 @@ public class FileUtils {
 		});
 
 		// After copying, delete source
-		//deleteDirectory(sourceFolder);
+		// deleteDirectory(sourceFolder);
 
-		//logger.info("Directory moved successfully!");
+		// logger.info("Directory moved successfully!");
 	}
-	
-	public static String getDocumentsPath() {  
-		
-		String path = "";
-		
-        // Initialize COM (required for SHGetKnownFolderPath)  
-        Ole32.INSTANCE.CoInitializeEx(null, Ole32.COINIT_APARTMENTTHREADED);  
- 
-        try {  
-        	
-            Guid.GUID folderId = new Guid.GUID("{FDD39AD0-238F-46AF-ADB4-6C85480369C7}");  
-            
-            PointerByReference pPath = new PointerByReference();  
- 
-            int result = Shell32.INSTANCE.SHGetKnownFolderPath(folderId, 0, null, pPath);  
-            
-            if (result != 0) { // 0 = S_OK  
-                throw new Win32Exception(result);  
-            }  
- 
-            // Convert the returned wide string to a Java String  
-            path = pPath.getValue().getWideString(0);  
-            
-            // Free the allocated memory  
-            Ole32.INSTANCE.CoTaskMemFree(pPath.getValue());  
-            
-        } finally {  
-            Ole32.INSTANCE.CoUninitialize();  
-        }
-        
-        return path;  
-    }  
 
-	// Define the Shell32 library interface  
-	public interface Shell32 extends StdCallLibrary {  
-	    Shell32 INSTANCE = Native.load("shell32", Shell32.class, W32APIOptions.DEFAULT_OPTIONS);  
-	 
-	    // SHGetKnownFolderPath prototype  
-	    int SHGetKnownFolderPath(  
-	        Guid.GUID rfid,          		// Folder ID (FOLDERID_Documents)  
-	        int dwFlags,             		// Flags (0 for default)  
-	        WinNT.HANDLE hToken,    		// User token (null for current user)  
-	        PointerByReference ppszPath  	// Output: Pointer to the path string  
-	    );  
-	} 
+	public static String getDocumentsPath() {
+
+		String path = "";
+
+		// Initialize COM (required for SHGetKnownFolderPath)
+		Ole32.INSTANCE.CoInitializeEx(null, Ole32.COINIT_APARTMENTTHREADED);
+
+		try {
+
+			Guid.GUID folderId = new Guid.GUID("{FDD39AD0-238F-46AF-ADB4-6C85480369C7}");
+
+			PointerByReference pPath = new PointerByReference();
+
+			int result = Shell32.INSTANCE.SHGetKnownFolderPath(folderId, 0, null, pPath);
+
+			if (result != 0) { // 0 = S_OK
+				throw new Win32Exception(result);
+			}
+
+			// Convert the returned wide string to a Java String
+			path = pPath.getValue().getWideString(0);
+
+			// Free the allocated memory
+			Ole32.INSTANCE.CoTaskMemFree(pPath.getValue());
+
+		} finally {
+			Ole32.INSTANCE.CoUninitialize();
+		}
+
+		return path;
+	}
+
+	// Define the Shell32 library interface
+	public interface Shell32 extends StdCallLibrary {
+		Shell32 INSTANCE = Native.load("shell32", Shell32.class, W32APIOptions.DEFAULT_OPTIONS);
+
+		// SHGetKnownFolderPath prototype
+		int SHGetKnownFolderPath(Guid.GUID rfid, // Folder ID (FOLDERID_Documents)
+				int dwFlags, // Flags (0 for default)
+				WinNT.HANDLE hToken, // User token (null for current user)
+				PointerByReference ppszPath // Output: Pointer to the path string
+		);
+	}
 }

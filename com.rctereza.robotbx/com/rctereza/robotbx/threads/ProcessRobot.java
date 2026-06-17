@@ -126,10 +126,23 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 		if (CONFIGURACAO.DATA_UPDATED() == true && NOVA_CONFIGURACAO == false) {
 			// This means the current settings were applied to this customer and does not need to do so again. 
 			// Unless a change is done in the settings, so in that case it must be applied again.
-//			CONFIGURACAO = new Setting(original.CONFIGURACAO().)
+			CONFIGURACAO = new Setting(
+			 original.CONFIGURACAO().SOFTWARE_NAME()
+			,original.CONFIGURACAO().SOFTWARE_PATH()
+			,original.CONFIGURACAO().SOFTWARE_PROGRAM()
+			,original.CONFIGURACAO().DOWNLOAD_FOLDER()
+			,original.CONFIGURACAO().LOG_FOLDER()
+			,original.CONFIGURACAO().SAVE_FOLDER()
+			,original.CONFIGURACAO().MAKE_SUBFOLDER()
+			,original.CONFIGURACAO().AUTO_DOWNLOAD()
+			,original.CONFIGURACAO().NUMBER_DOWNLOAD_SIMULTANEOUS()
+			,original.CONFIGURACAO().MINUTES_FOR_NEXT_ORDER_UPDATE()
+			,original.CONFIGURACAO().KEEP_WHICH_FILES()
+			, false
+			);
 		}
 
-		return new ReceitaBx(original.RESOLUCAO_TELA(), original.CONFIGURACAO(), original.CERTIFICADO(),
+		return new ReceitaBx(original.RESOLUCAO_TELA(), CONFIGURACAO, original.CERTIFICADO(),
 				original.PROCURADOR(), original.PERFIL(), original.PERFIL_TYPE(), original.PERFIL_VALUE(),
 				original.SISTEMA(), original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(), original.DATA_INICIO(),
 				original.DATA_FIM(), original.CNPJ_INCORPORADORA(), original.TIPO_EVENTO(),
@@ -511,10 +524,12 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 			actions.Wait(1000);
 
+			//This first screenshot is used to read the JTextField value
 			ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 2.0);
 			String text = mb.getText(1, 1);
 			logger.info("This is the current Text values: {}", text);
 
+			//This second screenshot is used to read the the value of the other objects 
 			mb = new ExtractImageText(Constants.PROGRAM_NAME, 4.0);
 			String text2 = mb.getText(1, 1);
 			logger.info("This is the current Text2 values: {}", text2);
@@ -525,41 +540,72 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 				actions.Paste(salvarOsArquivosEm);
 				actions.Wait(1000);
 				changed = true;
-
 			}
 
 			actions.Tab();
 			actions.Tab();
 
-			if (!text2.contains(criarSubDiretorio)) {
-				logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
-				actions.SpaceBar();
-				actions.Wait(1000);
-				changed = true;
-
+			if (original.CONFIGURACAO().MAKE_SUBFOLDER()) {
+				if (!text2.contains(criarSubDiretorio)) {
+					logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
+					actions.SpaceBar();
+					actions.Wait(1000);
+					changed = true;
+	
+				}
+			}
+			else {
+				if (text2.contains(criarSubDiretorio)) {
+					logger.info("02 - Deselecting 'Criar sub-diretório para cada tipo de arquivo'.");
+					actions.SpaceBar();
+					actions.Wait(1000);
+					changed = true;
+				}
 			}
 
 			actions.Tab();
 			actions.Tab();
 
-			if (!text2.contains(numeroDownloads)) {
-				logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
-				actions.Ctrl_A();
-				actions.Paste("5");
-				actions.Wait(1000);
-				changed = true;
-
+			
+			if (original.CONFIGURACAO().NUMBER_DOWNLOAD_SIMULTANEOUS() == 5) {
+				if (!text2.contains(numeroDownloads)) {
+					logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
+					actions.Ctrl_A();
+					actions.Paste("5");
+					actions.Wait(1000);
+					changed = true;
+				}
+			}
+			else {
+				if (text2.contains(numeroDownloads)) {
+					logger.info("03 - Setting 'Número de downloads simultâneos:' to [1].");
+					actions.Ctrl_A();
+					actions.Paste("1");
+					actions.Wait(1000);
+					changed = true;
+				}
 			}
 
 			actions.Tab();
 
-			if (!text2.contains(atualizacaoPedidos)) {
-				logger.info("04 - Setting 'Atualização de pedidos (em minutos)' to [60].");
-				actions.Ctrl_A();
-				actions.Paste("60");
-				actions.Wait(1000);
-				changed = true;
-
+			
+			if (original.CONFIGURACAO().MINUTES_FOR_NEXT_ORDER_UPDATE() == 60) {
+				if (!text2.contains(atualizacaoPedidos)) {
+					logger.info("04 - Setting 'Atualização de pedidos (em minutos)' to [60].");
+					actions.Ctrl_A();
+					actions.Paste("60");
+					actions.Wait(1000);
+					changed = true;
+				}
+			}
+			else {
+				if (text2.contains(atualizacaoPedidos)) {
+					logger.info("04 - Setting 'Atualização de pedidos (em minutos)' to [10].");
+					actions.Ctrl_A();
+					actions.Paste("10");
+					actions.Wait(1000);
+					changed = true;
+				}
 			}
 
 			actions.Tab();
@@ -800,4 +846,5 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		return result;
 	}
+	
 }

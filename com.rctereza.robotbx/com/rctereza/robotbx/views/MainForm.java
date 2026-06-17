@@ -786,69 +786,73 @@ public class MainForm extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				if (isConfigurationOkay()) {
+					
+					if (isTheProgramClosed()) {
 
-					if (tableModel.getRowCount() == 0) {
-						JOptionPane.showMessageDialog(MainForm.this,
-								"Adicione pelo menos um item à lista antes de iniciar o processamento.", "Atenção",
-								JOptionPane.WARNING_MESSAGE);
-						return;
-					} else if (!isThereItemToBeProcessed()) {
-						JOptionPane.showMessageDialog(MainForm.this,
-								"Não existe items para serem processados. Somente itens com status diferente de 'Sucesso' serão processados. Caso queira reprocessar um item pressione a tecla direita do mouse sobre ele e escolha a opção reprocessar.",
-								"Atenção", JOptionPane.WARNING_MESSAGE);
-						return;
-					}
+						if (tableModel.getRowCount() == 0) {
+							JOptionPane.showMessageDialog(MainForm.this,
+									"Adicione pelo menos um item à lista antes de iniciar o processamento.", "Atenção",
+									JOptionPane.WARNING_MESSAGE);
+							return;
+						} else if (!isThereItemToBeProcessed()) {
+							JOptionPane.showMessageDialog(MainForm.this,
+									"Não existe items para serem processados. Somente itens com status diferente de 'Sucesso' serão processados. Caso queira reprocessar um item pressione a tecla direita do mouse sobre ele e escolha a opção reprocessar.",
+									"Atenção", JOptionPane.WARNING_MESSAGE);
+							return;
+						}
 
-					startButton.setEnabled(false);
+						startButton.setEnabled(false);
 
-					Ref<List<ReceitaBx>> list = null;
+						Ref<List<ReceitaBx>> list = null;
 
-					try {
+						try {
 
-						list = new Ref<>(getListOfFiles());
+							list = new Ref<>(getListOfFiles());
 
-						saveListOfFiles(list.get());
+							saveListOfFiles(list.get());
 
-						controller.startRobot(list);
+							controller.startRobot(list);
 
-						StringBuilder message = new StringBuilder(
-								"O processo foi concluido. Veja o resultado abaixo.\n\n");
+							StringBuilder message = new StringBuilder(
+									"O processo foi concluido. Veja o resultado abaixo.\n\n");
 
-						for (ReceitaBx entry : list.get()) {
-							message.append(entry.SISTEMA()).append("/").append(entry.TIPO_ARQUIVO()).append("/")
-									.append(entry.TIPO_PESQUISA()).append("\n")
-									.append(entry.MENSAGEM_CONCLUSAO_PROCESSAMENTO()).append("\n");
+							for (ReceitaBx entry : list.get()) {
+								message.append(entry.SISTEMA()).append("/").append(entry.TIPO_ARQUIVO()).append("/")
+										.append(entry.TIPO_PESQUISA()).append("\n")
+										.append(entry.MENSAGEM_CONCLUSAO_PROCESSAMENTO()).append("\n");
 
-							if (entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO() != null
-									&& entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO().length() > 0) {
+								if (entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO() != null
+										&& entry.DATA_HORA_CONCLUSAO_PROCESSAMENTO().length() > 0) {
 
-								if (entry.TOTAL_PERIODOS_FALTANDO() == 0)
-									message.append(" [Nenhum período esta faltando]").append("\n\n");
-								else {
-									message.append(" [" + entry.TOTAL_PERIODOS_FALTANDO() + "] período(s) faltando.\n");
-									message.append(" [" + entry.PERIODOS_FALTANDO() + "]").append("\n\n");
+									if (entry.TOTAL_PERIODOS_FALTANDO() == 0)
+										message.append(" [Nenhum período esta faltando]").append("\n\n");
+									else {
+										message.append(
+												" [" + entry.TOTAL_PERIODOS_FALTANDO() + "] período(s) faltando.\n");
+										message.append(" [" + entry.PERIODOS_FALTANDO() + "]").append("\n\n");
+									}
 								}
+							}
+
+							logger.info(message.toString());
+							JOptionPane.showMessageDialog(MainForm.this, message.toString(), "Informação",
+									JOptionPane.INFORMATION_MESSAGE);
+
+						} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
+								| NoSuchPaddingException | InvalidKeySpecException | InvalidCertificate | IOException
+								| InterruptedException | ExecutionException e1) {
+							logger.error(e1.getMessage(), e1);
+							JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Erro",
+									JOptionPane.ERROR_MESSAGE);
+						} finally {
+							if (list != null) {
+								updateGridStatusColumn(list.get());
+								saveListOfFiles(list.get());
 							}
 						}
 
-						logger.info(message.toString());
-						JOptionPane.showMessageDialog(MainForm.this, message.toString(), "Informação",
-								JOptionPane.INFORMATION_MESSAGE);
-
-					} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException
-							| NoSuchPaddingException | InvalidKeySpecException | InvalidCertificate | IOException
-							| InterruptedException | ExecutionException e1) {
-						logger.error(e1.getMessage(), e1);
-						JOptionPane.showMessageDialog(MainForm.this, e1.getMessage(), "Erro",
-								JOptionPane.ERROR_MESSAGE);
-					} finally {
-						if (list != null) {
-							updateGridStatusColumn(list.get());
-							saveListOfFiles(list.get());
-						}
+						startButton.setEnabled(true);
 					}
-
-					startButton.setEnabled(true);
 				}
 			}
 		});
@@ -983,6 +987,36 @@ public class MainForm extends JFrame {
 		}
 
 		return found;
+	}
+
+	private boolean isTheProgramClosed() {
+		boolean result = true;
+
+		String userHome = System.getProperty("user.home");
+
+		String derbyVisibleFolder = userHome + "\\ReceitanetBX";
+		String derbyHiddenFolder = userHome + "\\.receitanetbx";
+
+		try {
+
+			//logger.info("Deleting folder [{}]",derbyVisibleFolder);
+			FileUtils.removeDirectory(derbyVisibleFolder);
+
+			//logger.info("Deleting folder [{}]",derbyHiddenFolder);
+			FileUtils.removeDirectory(derbyHiddenFolder);
+
+		} catch (IOException e) {
+			logger.warn("{}", e.getMessage());
+			if (e.getMessage().contains("it is being used")) {
+				JOptionPane.showMessageDialog(MainForm.this,
+						"O programa Receitanet BX esta aberto! Feche-o.\nO sistema será reponsável por abrir ele.",
+						"Atenção", JOptionPane.WARNING_MESSAGE);
+				result = false;
+				;
+			}
+		}
+
+		return result;
 	}
 
 	private DefaultComboBoxModel<Procurator> getProcuratorModel(Certificate certificate) {
@@ -1490,7 +1524,7 @@ public class MainForm extends JFrame {
 		List<ReceitaBx> result = new ArrayList<>();
 
 		String SCREEN = screenResolutionTextField.getText();
-		
+
 		List<Setting> list = Main.getAppData().getLastListAdded(Setting.class);
 		Setting CONFIGURACAO = list.getFirst();
 
@@ -1559,8 +1593,8 @@ public class MainForm extends JFrame {
 					}
 				}
 
-				ReceitaBx receitaBx = new ReceitaBx(SCREEN, CONFIGURACAO, CERTIFICADO.get(), PROCURADOR,
-						PERFIL, PERFIL_TYPE, PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM,
+				ReceitaBx receitaBx = new ReceitaBx(SCREEN, CONFIGURACAO, CERTIFICADO.get(), PROCURADOR, PERFIL,
+						PERFIL_TYPE, PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM,
 						CNPJ_INCORPORADORA, TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO,
 						BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO,
 						ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO, MENSAGEM_CONCLUSAO_PROCESSAMENTO,
