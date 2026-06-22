@@ -16,6 +16,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -994,17 +997,16 @@ public class MainForm extends JFrame {
 
 		String userHome = System.getProperty("user.home");
 
-		String derbyVisibleFolder = userHome + "\\ReceitanetBX";
-		String derbyHiddenFolder = userHome + "\\.receitanetbx";
+		String derbyHiddenFolder = userHome + "\\ReceitanetBX\\db.lck";
+		String derbyHiddenFolderRenamed = derbyHiddenFolder + "1";
+		
+		Path source = Paths.get(derbyHiddenFolder);
+		Path target = Paths.get(derbyHiddenFolderRenamed);
 
 		try {
-
-			//logger.info("Deleting folder [{}]",derbyVisibleFolder);
-			FileUtils.removeDirectory(derbyVisibleFolder);
-
-			//logger.info("Deleting folder [{}]",derbyHiddenFolder);
-			FileUtils.removeDirectory(derbyHiddenFolder);
-
+			Files.move(source, target);
+			//If no error happens it means the program is closed, so we must revert it back to the original name
+			Files.move(target, source);
 		} catch (IOException e) {
 			logger.warn("{}", e.getMessage());
 			if (e.getMessage().contains("it is being used")) {
@@ -1046,24 +1048,6 @@ public class MainForm extends JFrame {
 
 		return model;
 	}
-
-//	protected String getProcuratorDocument(Procurator procurator) {
-//		String result = "";
-//		List<Procurator> list = Main.getAppData().getLastListAdded(Procurator.class);
-//		if (list.size() > 0) {
-//			for (var obj : list) {
-//				if (
-//						(obj.CERTIFICATE_NAME().equals(procurator.CERTIFICATE_NAME())) 
-//						&& (obj.CUSTOMER_NAME().equals(procurator.CUSTOMER_NAME()))
-//					){
-//					result = obj.CUSTOMER_DOC();
-//					break;
-//				}
-//
-//			}
-//		}
-//		return result;
-//	}
 
 	private String validateFormFields() {
 		StringBuilder result = new StringBuilder("");

@@ -179,7 +179,7 @@ public class FileUtils {
 		}
 	}
 
-	public static void removeDirectory(String sourceFolder) throws IOException {
+	public static void deleteDirectory(String sourceFolder) throws IOException {
 		Path directory = Paths.get(sourceFolder);
 
 		if (Files.notExists(directory)) {
@@ -195,7 +195,7 @@ public class FileUtils {
 		}
 	}
 
-	public static void deleteDirectory(String sourceFolder) throws IOException {
+	public static void emptyDirectory(String sourceFolder) throws IOException {
 		Path directory = Paths.get(sourceFolder);
 
 		if (!Files.exists(directory) || !Files.isDirectory(directory)) {
@@ -240,13 +240,8 @@ public class FileUtils {
 				return FileVisitResult.CONTINUE;
 			}
 		});
-
-		// After copying, delete source
-		// deleteDirectory(sourceFolder);
-
-		// logger.info("Directory moved successfully!");
 	}
-
+	
 	public static String getDocumentsPath() {
 
 		String path = "";

@@ -53,13 +53,10 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	private Integer TOTAL_PERIODOS_FALTANDO = 0;
 	private Status STATUS = Status.PENDING;
 	
-	private Boolean NOVA_CONFIGURACAO;
-
 	private Rectangle targetMonitorBounds;
 
 	public ProcessRobot(ReceitaBx original) {
 		this.original = original;
-		NOVA_CONFIGURACAO = this.original.CONFIGURACAO().DATA_UPDATED();
 	}
 
 	@Override
@@ -123,25 +120,21 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 		
 		Setting CONFIGURACAO = original.CONFIGURACAO();
 		
-		if (CONFIGURACAO.DATA_UPDATED() == true && NOVA_CONFIGURACAO == false) {
-			// This means the current settings were applied to this customer and does not need to do so again. 
-			// Unless a change is done in the settings, so in that case it must be applied again.
-			CONFIGURACAO = new Setting(
-			 original.CONFIGURACAO().SOFTWARE_NAME()
-			,original.CONFIGURACAO().SOFTWARE_PATH()
-			,original.CONFIGURACAO().SOFTWARE_PROGRAM()
-			,original.CONFIGURACAO().DOWNLOAD_FOLDER()
-			,original.CONFIGURACAO().LOG_FOLDER()
-			,original.CONFIGURACAO().SAVE_FOLDER()
-			,original.CONFIGURACAO().MAKE_SUBFOLDER()
-			,original.CONFIGURACAO().AUTO_DOWNLOAD()
-			,original.CONFIGURACAO().NUMBER_DOWNLOAD_SIMULTANEOUS()
-			,original.CONFIGURACAO().MINUTES_FOR_NEXT_ORDER_UPDATE()
-			,original.CONFIGURACAO().KEEP_WHICH_FILES()
-			, false
-			);
-		}
-
+		CONFIGURACAO = new Setting(
+		 original.CONFIGURACAO().SOFTWARE_NAME()
+		,original.CONFIGURACAO().SOFTWARE_PATH()
+		,original.CONFIGURACAO().SOFTWARE_PROGRAM()
+		,original.CONFIGURACAO().DOWNLOAD_FOLDER()
+		,original.CONFIGURACAO().LOG_FOLDER()
+		,original.CONFIGURACAO().SAVE_FOLDER()
+		,original.CONFIGURACAO().MAKE_SUBFOLDER()
+		,original.CONFIGURACAO().AUTO_DOWNLOAD()
+		,original.CONFIGURACAO().NUMBER_DOWNLOAD_SIMULTANEOUS()
+		,original.CONFIGURACAO().MINUTES_FOR_NEXT_ORDER_UPDATE()
+		,original.CONFIGURACAO().KEEP_WHICH_FILES()
+		, false
+		);
+			
 		return new ReceitaBx(original.RESOLUCAO_TELA(), CONFIGURACAO, original.CERTIFICADO(),
 				original.PROCURADOR(), original.PERFIL(), original.PERFIL_TYPE(), original.PERFIL_VALUE(),
 				original.SISTEMA(), original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(), original.DATA_INICIO(),
@@ -504,7 +497,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	@SuppressWarnings("unused")
 	private void CheckMenuOptions(Robot robot, Actions actions) throws Exception {
 
-		if (NOVA_CONFIGURACAO) {
+		if (original.CONFIGURACAO().DATA_UPDATED()) {
 			
 			logger.info("Checking the parameters of the menu Tools / Options");
 
@@ -659,10 +652,6 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 				logger.info("Parameters already fixed. No change needed.");
 			}
-			
-			// A configuraçao deve ser atualizada apenas uma vez para cada cliente. 
-			// Sera atualizada novamente se houver qualquer alteraçao na tela de configuração.
-			NOVA_CONFIGURACAO = false; 
 		}
 	}
 

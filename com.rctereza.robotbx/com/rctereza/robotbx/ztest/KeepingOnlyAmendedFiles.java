@@ -1,4 +1,4 @@
-package com.rctereza.robotbx.controllers;
+package com.rctereza.robotbx.ztest;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,90 +10,21 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.rctereza.robotbx.Constants;
-import com.rctereza.robotbx.models.ReceitaBx;
 import com.rctereza.robotbx.models.ReceitaFile;
-import com.rctereza.robotbx.models.Setting;
-import com.rctereza.robotbx.threads.ProcessRobot;
 import com.rctereza.robotbx.tools.FileUtils;
-import com.rctereza.robotbx.wrappers.Ref;
 
-public class Controller {
+public class KeepingOnlyAmendedFiles {
 
-	private static final Logger logger = LoggerFactory.getLogger(Controller.class);
-	
-	private static String sourceFolder;
-	private static String targetFolder;
-
-	public void startRobot(Ref<List<ReceitaBx>> list) throws InterruptedException, ExecutionException, IOException {
-
-		try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
-
-			logger.info("Starting...");
-
-			for (int i = 0; i < list.get().size(); i++) {
-
-				ReceitaBx params = list.get().get(i);
-				
-				logger.debug("ReceitaBX: {}",params);
-
-				if (i == 0) {
-					sourceFolder = params.CONFIGURACAO().DOWNLOAD_FOLDER();
-					targetFolder = params.CONFIGURACAO().SAVE_FOLDER() + "\\" + params.PROCURADOR().CLIENTE();
-					
-					logger.info("Deleting all files/folders in the directory ({}) before the downloading starts....", sourceFolder);
-					FileUtils.emptyDirectory(sourceFolder);
-					
-				} else {
-					
-					logger.info("Waiting 5 seconds before starting to process the next item...");
-					Thread.sleep(5000);
-					
-				}
-
-				logger.info("-------------------------------------------------------------------------------");
-
-				logger.info("#{}/{} - {} / {} / {} [{}] [{}] Before...", (i + 1), list.get().size(), params.SISTEMA(),
-						params.TIPO_ARQUIVO(), params.TIPO_PESQUISA(), params.ULTIMO_PEDIDO_SOLICITADO(),
-						params.DATA_HORA_CONCLUSAO_PROCESSAMENTO());
-
-				var future = executor.submit(new ProcessRobot(params));
-
-				ReceitaBx updated = future.get();
-
-				list.get().set(i, updated);
-				
-				logger.debug("ReceitaBX: {}",updated);
-				
-				logger.info("#{}/{} - {} / {} / {} [{}] [{}] After...", (i + 1), list.get().size(), updated.SISTEMA(),
-						updated.TIPO_ARQUIVO(), updated.TIPO_PESQUISA(), updated.ULTIMO_PEDIDO_SOLICITADO(),
-						updated.DATA_HORA_CONCLUSAO_PROCESSAMENTO());
-			}
-			
-			logger.info("Moving all files/folders downloaded to this new location ({})....", targetFolder);
-			
-			FileUtils.copyDirectory(sourceFolder,targetFolder);
-			
-			FileUtils.emptyDirectory(sourceFolder);
-			
-			if (list.get().getFirst().CONFIGURACAO().KEEP_WHICH_FILES().equals(Setting.KeepWhichFiles.ONLY_AMEND)) {
-				logger.info("Keeping only the last file/amended on this new location ({})....", targetFolder);
-				keepOnlyAmendedFiles(targetFolder);
-			}
-		}
-
-		logger.info("-------------------------------------------------------------------------------");
-		logger.info("Done. It was processed [{}] item(s).", list.get().size());
-
+	public static void main(String[] args) {
+		String path = "C:\\Temp\\ReceitanetBX\\Resultado\\STANGHERLIN SUPERMERCADO LTDA\\";
+		keepOnlyAmendedFiles(path);
+		System.out.println("Done!");
 	}
-	
-	private void keepOnlyAmendedFiles(String root) {
-		
+
+	private static void keepOnlyAmendedFiles(String root) {
+
 		List<String> files = new ArrayList<>();
 
 		try (var paths = Files.walk(Paths.get(root))) {
@@ -105,7 +36,9 @@ public class Controller {
 			e.printStackTrace();
 		}
 
-
+//		files.forEach(System.out::println);
+//		System.out.println("-----------------------------------------------------");
+		
 		Map<String, ReceitaFile> objects = new HashMap<>();
 
 		for (String name : files) {
@@ -126,13 +59,30 @@ public class Controller {
 			String DOCUMENT_DATETIME_SENT = values[5];
 			String DOCUMENT_KEY = values[6].substring(0, values[6].lastIndexOf("."));
 
+//			System.out.println("FILE_NAME.............: " + FILE_NAME);
+//			System.out.println("FILE_PATH.............: " + FILE_PATH);
+//			System.out.println("FILE_EXTENSION........: " + FILE_EXTENSION);
+//			System.out.println("FILE_SHORT_NAME.......: " + FILE_SHORT_NAME);
+//			System.out.println("DOCUMENT_NAME.........: " + DOCUMENT_NAME);
+//			System.out.println("DOCUMENT_PERIOD_FROM..: " + DOCUMENT_PERIOD_FROM);
+//			System.out.println("DOCUMENT_PERIOD_TO....: " + DOCUMENT_PERIOD_TO);
+//			System.out.println("DOCUMENT_CODE.........: " + DOCUMENT_CODE);
+//			System.out.println("DOCUMENT_TYPE.........: " + DOCUMENT_TYPE);
+//			System.out.println("DOCUMENT_DATETIME_SENT: " + DOCUMENT_DATETIME_SENT);
+//			System.out.println("DOCUMENT_KEY..........: " + DOCUMENT_KEY);
+
 			objects.put(FILE_SHORT_NAME + DOCUMENT_DATETIME_SENT,
 					new ReceitaFile(FILE_NAME, FILE_PATH, FILE_EXTENSION, FILE_SHORT_NAME + DOCUMENT_DATETIME_SENT,
 							DOCUMENT_NAME, DOCUMENT_PERIOD_FROM, DOCUMENT_PERIOD_TO, DOCUMENT_CODE, DOCUMENT_TYPE,
 							DOCUMENT_DATETIME_SENT, DOCUMENT_KEY));
+
+			// System.out.println(objects);
+			// break;
 		}
-		
-		
+
+//		objects.keySet().stream().sorted().forEach(key -> System.out.println(key + " = " + objects.get(key)));
+//		System.out.println("-----------------------------------------------------");
+
 		Map<String, ReceitaFile> sortedMap =
 				objects.entrySet()
 			           .stream()
@@ -146,43 +96,59 @@ public class Controller {
 			               )
 			           );
 
+
 		List<ReceitaFile> result = new ArrayList<>();
 		Long mostRecentDaTeTimeSent = 0l;
 		String previousPeriod = "";
+		String fileKept = "";
 		ReceitaFile obj = null;
 		Integer total = 0;
 		Integer count = 0;
 		
 		for (ReceitaFile value : sortedMap.values()) {
 			total++;
+			String currentKey = value.DOCUMENT_PERIOD_FROM() + "_" + value.DOCUMENT_PERIOD_TO() + "_" + value.DOCUMENT_DATETIME_SENT();
 			String currentPeriod = value.DOCUMENT_PERIOD_FROM() + "_" + value.DOCUMENT_PERIOD_TO();
 			Long currentDateTimeSent = Long.valueOf(value.DOCUMENT_DATETIME_SENT());
+			String currentFileName = value.FILE_NAME();
 			
 			if (!previousPeriod.isBlank() && !previousPeriod.equals(currentPeriod)) {
 				count++;
 				result.add(obj);
 				mostRecentDaTeTimeSent = 0l;
+				System.out.println("*" + fileKept);
+				System.out.println("-----------------------------------------------------");
 			}
 			
+		    System.out.println(currentKey + " - " + currentFileName);
+		    
 		    previousPeriod = currentPeriod;
 		    
 		    if (currentDateTimeSent > mostRecentDaTeTimeSent) {
 		    	mostRecentDaTeTimeSent = currentDateTimeSent;
+		    	fileKept = currentKey + " - " + currentFileName;
 		    	obj = value;
 		    }
 		    
 		}
 		
-		logger.info("Total files read ({}), and total files selected ({}).",total,count);
+		System.out.println("*" + fileKept);
+		System.out.println("-----------------------------------------------------");
+		System.out.println("total files read....:" + total.toString());
+		System.out.println("-----------------------------------------------------");
+		
+		result.forEach(System.out::println);
+		System.out.println("-----------------------------------------------------");
+		System.out.println("total files selected:" + count.toString());
+		System.out.println("-----------------------------------------------------");
 		
 		Boolean filesNotMoved = true;
 		
 		for (ReceitaFile value : result) {
+			System.out.println(value.FILE_PATH() + value.FILE_PATH());
 			if (filesNotMoved) {
 				try {
 					FileUtils.createDirectory(Constants.SOFTWARE_TEMP_FOLDER);
-					FileUtils.emptyDirectory(Constants.SOFTWARE_TEMP_FOLDER);
-					
 					FileUtils.copyDirectory(value.FILE_PATH(), Constants.SOFTWARE_TEMP_FOLDER);
 					FileUtils.emptyDirectory(value.FILE_PATH());
 					filesNotMoved = false;

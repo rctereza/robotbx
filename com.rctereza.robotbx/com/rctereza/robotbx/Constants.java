@@ -11,6 +11,7 @@ public class Constants {
 	public static final String SOFTWARE_NAME = "Receitanet BX Robô";
 	public static final String SOFTWARE_VERSION = "1.00";
 	public static final String SOFTWARE_WORK_FOLDER = System.getenv("LOCALAPPDATA") + "\\Robotbx"; // C:\Users\UserName\AppData\Local\Robotbx
+	public static final String SOFTWARE_TEMP_FOLDER = SOFTWARE_WORK_FOLDER + "\\temp\\";
 		
 	public static final String SOFTWARE_SECRET = "Z*mon5xuR3c3i7aBx";
 	public static final String SOFTWARE_SECURE_FILE = SOFTWARE_WORK_FOLDER + "\\data.sec";

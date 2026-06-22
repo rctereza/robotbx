@@ -290,7 +290,15 @@ public class SettingForm extends JDialog {
 
 			int result = chooser.showOpenDialog(this);
 			if (result == JFileChooser.APPROVE_OPTION) {
-				fileLogLocationTextField.setText(chooser.getSelectedFile().getAbsolutePath() + "\\receitanetbx.log");
+				String path = chooser.getSelectedFile().getAbsolutePath() + "\\";				
+				if (path.contains(filesDownloadLocationTextField.getText())) {
+					JOptionPane.showMessageDialog(SettingForm.this,
+							"O dirétorio do Log não pode ser o mesmo que o diretório do Download.\nSelecione outro diretório!",
+							"Atenção", JOptionPane.WARNING_MESSAGE);
+				}
+				else {
+					fileLogLocationTextField.setText(path + "receitanetbx.log");
+				}
 			}
 		});
 

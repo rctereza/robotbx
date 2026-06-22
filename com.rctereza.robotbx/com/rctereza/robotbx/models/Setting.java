@@ -31,4 +31,5 @@ public record Setting(
 	public Integer getObjectId() {
 		return null;
 	}
+	
 }

@@ -16,10 +16,10 @@ public class ResetDerbyDB {
 		try {
 			
 			System.out.println("Deleting folder [" + derbyVisibleFolder + "]");
-			FileUtils.removeDirectory(derbyVisibleFolder);
+			FileUtils.deleteDirectory(derbyVisibleFolder);
 
 			System.out.println("Deleting folder [" + derbyHiddenFolder + "]");
-			FileUtils.removeDirectory(derbyHiddenFolder);
+			FileUtils.deleteDirectory(derbyHiddenFolder);
 			
 		} catch (IOException e) {
 			String message = e.getMessage();
