@@ -50,10 +50,8 @@ public class Controller {
 					FileUtils.emptyDirectory(sourceFolder);
 					
 				} else {
-					
 					logger.info("Waiting 5 seconds before starting to process the next item...");
 					Thread.sleep(5000);
-					
 				}
 
 				logger.info("-------------------------------------------------------------------------------");
@@ -73,17 +71,19 @@ public class Controller {
 				logger.info("#{}/{} - {} / {} / {} [{}] [{}] After...", (i + 1), list.get().size(), updated.SISTEMA(),
 						updated.TIPO_ARQUIVO(), updated.TIPO_PESQUISA(), updated.ULTIMO_PEDIDO_SOLICITADO(),
 						updated.DATA_HORA_CONCLUSAO_PROCESSAMENTO());
-			}
-			
-			logger.info("Moving all files/folders downloaded to this new location ({})....", targetFolder);
-			
-			FileUtils.copyDirectory(sourceFolder,targetFolder);
-			
-			FileUtils.emptyDirectory(sourceFolder);
-			
-			if (list.get().getFirst().CONFIGURACAO().KEEP_WHICH_FILES().equals(Setting.KeepWhichFiles.ONLY_AMEND)) {
-				logger.info("Keeping only the last file/amended on this new location ({})....", targetFolder);
-				keepOnlyAmendedFiles(targetFolder);
+
+				logger.info("-------------------------------------------------------------------------------");
+
+				logger.info("Moving all files/folders downloaded to this new location ({})....", targetFolder);
+				
+				FileUtils.copyDirectory(sourceFolder,targetFolder);
+				
+				FileUtils.emptyDirectory(sourceFolder);
+				
+				if (list.get().getFirst().CONFIGURACAO().KEEP_WHICH_FILES().equals(Setting.KeepWhichFiles.ONLY_AMEND)) {
+					logger.info("Keeping only the last file/amended on this new location ({})....", targetFolder);
+					keepOnlyAmendedFiles(targetFolder);
+				}
 			}
 		}
 
@@ -104,7 +104,6 @@ public class Controller {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 
 		Map<String, ReceitaFile> objects = new HashMap<>();
 
