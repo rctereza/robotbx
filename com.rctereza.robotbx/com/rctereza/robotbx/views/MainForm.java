@@ -1113,6 +1113,9 @@ public class MainForm extends JFrame {
 					if (!ValidateDate.isValidDate(DATA_INICIO)) {
 						result.append("Favor informar uma data inicial válida. [" + DATA_INICIO + "]\n");
 					}
+					else if (!ValidateDate.isLessOrEqualThanToday(DATA_INICIO)) {
+						result.append("Favor informar uma data inicial que seja menor ou igual a data atual.\n");
+					}
 				} else if (formattedTextField.getName().equals(SpedSearchField.DATA_FIM.getValue())) {
 					DATA_FIM = Objects.requireNonNullElse(formattedTextField.getValue(), "").toString();
 					if (!ValidateDate.isValidDate(DATA_FIM)) {
@@ -1120,6 +1123,9 @@ public class MainForm extends JFrame {
 					} else {
 						if (!ValidateDate.isValidRange(DATA_INICIO, DATA_FIM)) {
 							result.append("Favor informar uma data inicial que seja anterior a data final.\n");
+						}
+						else if (!ValidateDate.isLessOrEqualThanToday(DATA_FIM)) {
+							result.append("Favor informar uma data final que seja menor ou igual a data atual.\n");
 						}
 					}
 				} else if (formattedTextField.getName().equals(SpedSearchField.CNPJ_INCORPORADORA.getValue())) {
@@ -1577,14 +1583,12 @@ public class MainForm extends JFrame {
 					}
 				}
 
-				ReceitaBx receitaBx = new ReceitaBx(SCREEN, CONFIGURACAO, CERTIFICADO.get(), PROCURADOR, PERFIL,
+				result.add(new ReceitaBx(SCREEN, CONFIGURACAO, CERTIFICADO.get(), PROCURADOR, PERFIL,
 						PERFIL_TYPE, PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM,
 						CNPJ_INCORPORADORA, TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO,
 						BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO,
 						ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO, MENSAGEM_CONCLUSAO_PROCESSAMENTO,
-						PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS);
-
-				result.add(receitaBx);
+						PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS));
 			}
 		}
 
@@ -1606,8 +1610,28 @@ public class MainForm extends JFrame {
 		Main.saveAppData();
 
 		logger.info("Customer data was saved with success.");
-
+		
 		receitaBxList = Main.getAppData().getLastListAdded(ReceitaBx.class);
+		
+		if (receitaBxList.getLast().CONFIGURACAO().DATA_UPDATED() == false) {
+			
+			logger.info("Saving setting data...");
+			
+			List<Setting> settingList = Main.getAppData().getLastListAdded(Setting.class);
+			
+			Setting setting = settingList.getLast();
+			
+			settingList.set(settingList.size() - 1, new Setting(setting.SOFTWARE_NAME(), setting.SOFTWARE_PATH(), setting.SOFTWARE_PROGRAM(), setting.DOWNLOAD_FOLDER(),
+					setting.SAVE_FOLDER(), setting.LOG_FOLDER(), setting.SAVE_LOG(), setting.MAKE_SUBFOLDER(), setting.AUTO_DOWNLOAD(), setting.NUMBER_DOWNLOAD_SIMULTANEOUS(),
+					setting.MINUTES_FOR_NEXT_ORDER_UPDATE(), setting.KEEP_WHICH_FILES(), false));
+			
+			Main.getAppData().addList(Setting.class, Main.getAppData().getSequence(Setting.class), settingList);
+
+			Main.saveAppData();
+			
+			logger.info("Setting data was saved with success.");
+
+		}
 	}
 
 	private JMenuBar createMenuBar() {
@@ -1733,6 +1757,9 @@ public class MainForm extends JFrame {
 			}
 		});
 
+		newCustomer.setEnabled(false);
+		historic.setEnabled(false);
+		
 		JMenu fileMenu = new JMenu("Menu");
 		fileMenu.setMnemonic(KeyEvent.VK_M);
 		fileMenu.add(newCustomer);

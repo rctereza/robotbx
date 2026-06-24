@@ -34,6 +34,7 @@ import com.rctereza.robotbx.models.RobotCommand;
 import com.rctereza.robotbx.models.RobotMessageBox;
 import com.rctereza.robotbx.models.Setting;
 import com.rctereza.robotbx.ocr.ExtractImageText;
+import com.rctereza.robotbx.ocr.TessUtils;
 import com.rctereza.robotbx.tools.Actions;
 import com.rctereza.robotbx.tools.RobotUtils;
 import com.rctereza.robotbx.tools.ScreenResolution;
@@ -52,7 +53,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	private String PERIODOS_FALTANDO = "";
 	private Integer TOTAL_PERIODOS_FALTANDO = 0;
 	private Status STATUS = Status.PENDING;
-	
+
 	private Rectangle targetMonitorBounds;
 
 	public ProcessRobot(ReceitaBx original) {
@@ -117,30 +118,22 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 		}
 
 		logger.info("Thread Terminated!");
-		
+
 		Setting CONFIGURACAO = original.CONFIGURACAO();
-		
-		CONFIGURACAO = new Setting(
-		 original.CONFIGURACAO().SOFTWARE_NAME()
-		,original.CONFIGURACAO().SOFTWARE_PATH()
-		,original.CONFIGURACAO().SOFTWARE_PROGRAM()
-		,original.CONFIGURACAO().DOWNLOAD_FOLDER()
-		,original.CONFIGURACAO().LOG_FOLDER()
-		,original.CONFIGURACAO().SAVE_FOLDER()
-		,original.CONFIGURACAO().MAKE_SUBFOLDER()
-		,original.CONFIGURACAO().AUTO_DOWNLOAD()
-		,original.CONFIGURACAO().NUMBER_DOWNLOAD_SIMULTANEOUS()
-		,original.CONFIGURACAO().MINUTES_FOR_NEXT_ORDER_UPDATE()
-		,original.CONFIGURACAO().KEEP_WHICH_FILES()
-		, false
-		);
-			
-		return new ReceitaBx(original.RESOLUCAO_TELA(), CONFIGURACAO, original.CERTIFICADO(),
-				original.PROCURADOR(), original.PERFIL(), original.PERFIL_TYPE(), original.PERFIL_VALUE(),
-				original.SISTEMA(), original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(), original.DATA_INICIO(),
-				original.DATA_FIM(), original.CNPJ_INCORPORADORA(), original.TIPO_EVENTO(),
-				original.BAIXAR_ARQUIVO_ASSINADO(), original.CNPJ_ESTABELECIMENTO(),
-				original.BUSCAR_TODOS_ESTABLECIMENTOS(), original.INSCRICAO_ESTADUAL(),
+
+		CONFIGURACAO = new Setting(original.CONFIGURACAO().SOFTWARE_NAME(), original.CONFIGURACAO().SOFTWARE_PATH(),
+				original.CONFIGURACAO().SOFTWARE_PROGRAM(), original.CONFIGURACAO().DOWNLOAD_FOLDER(),
+				original.CONFIGURACAO().SAVE_FOLDER(), original.CONFIGURACAO().LOG_FOLDER(),
+				original.CONFIGURACAO().SAVE_LOG(), original.CONFIGURACAO().MAKE_SUBFOLDER(),
+				original.CONFIGURACAO().AUTO_DOWNLOAD(), original.CONFIGURACAO().NUMBER_DOWNLOAD_SIMULTANEOUS(),
+				original.CONFIGURACAO().MINUTES_FOR_NEXT_ORDER_UPDATE(), original.CONFIGURACAO().KEEP_WHICH_FILES(),
+				false);
+
+		return new ReceitaBx(original.RESOLUCAO_TELA(), CONFIGURACAO, original.CERTIFICADO(), original.PROCURADOR(),
+				original.PERFIL(), original.PERFIL_TYPE(), original.PERFIL_VALUE(), original.SISTEMA(),
+				original.TIPO_ARQUIVO(), original.TIPO_PESQUISA(), original.DATA_INICIO(), original.DATA_FIM(),
+				original.CNPJ_INCORPORADORA(), original.TIPO_EVENTO(), original.BAIXAR_ARQUIVO_ASSINADO(),
+				original.CNPJ_ESTABELECIMENTO(), original.BUSCAR_TODOS_ESTABLECIMENTOS(), original.INSCRICAO_ESTADUAL(),
 				original.ULTIMO_ARQUIVO_TRANSMITIDO(), ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO,
 				MENSAGEM_CONCLUSAO_PROCESSAMENTO, PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS);
 	}
@@ -498,36 +491,29 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	private void CheckMenuOptions(Robot robot, Actions actions) throws Exception {
 
 		if (original.CONFIGURACAO().DATA_UPDATED()) {
-			
+
 			logger.info("Checking the parameters of the menu Tools / Options");
 
 			String salvarOsArquivosEm = original.CONFIGURACAO().DOWNLOAD_FOLDER();
-			String criarSubDiretorio = "EB Criar sub-diretório para cada tipo de arquivo.";
-			String numeroDownloads = "Numero de downloads simultâneos: |5";
-			String atualizacaoPedidos = "Atualização de pedidos (em minutos): 60";
+			String numeroDownloads = original.CONFIGURACAO().NUMBER_DOWNLOAD_SIMULTANEOUS().toString();
+			String atualizacaoPedidos = original.CONFIGURACAO().MINUTES_FOR_NEXT_ORDER_UPDATE().toString();
 			String salvarLogEm = original.CONFIGURACAO().LOG_FOLDER();
-			String salvarLog = "EB Salvar log para depuração.";
 			String errorMsg = "Não foi possivel gerar o arquivo de log";
 
 			boolean changed = false;
 
-			actions.Wait(1000);
+			actions.Alt_F();
+			actions.Enter();
 
-			actions.Alt_F_O();
-
-			actions.Wait(1000);
-
-			//This first screenshot is used to read the JTextField value
+			// ------------------------------------------------------------------------------
+			Rectangle rect = new Rectangle(789, // x
+					408, // y
+					241, // width = 1030 - 789 = 241
+					21 // height = 429 - 408 = 21
+			);
 			ExtractImageText mb = new ExtractImageText(Constants.PROGRAM_NAME, 2.0);
-			String text = mb.getText(1, 1);
-			logger.info("This is the current Text values: {}", text);
-
-			//This second screenshot is used to read the the value of the other objects 
-			mb = new ExtractImageText(Constants.PROGRAM_NAME, 4.0);
-			String text2 = mb.getText(1, 1);
-			logger.info("This is the current Text2 values: {}", text2);
-
-			if (!text.toUpperCase().contains(salvarOsArquivosEm.toUpperCase())) {
+			String text = mb.getTextFrom(rect, TessUtils.FIELD_TYPE.TEXT);
+			if (!text.contains(salvarOsArquivosEm)) {
 				logger.info("01 - Changing 'Salvar os arquivos em' to [{}]", salvarOsArquivosEm);
 				actions.Ctrl_A();
 				actions.Paste(salvarOsArquivosEm);
@@ -538,17 +524,24 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			actions.Tab();
 			actions.Tab();
 
+			// ------------------------------------------------------------------------------
+			rect = new Rectangle(784, // x
+					451, // y
+					10, // width = 794 - 784 = 10
+					11 // height = 463 - 451 = 12
+			);
+//			mb = new ExtractImageText(Constants.PROGRAM_NAME, 1.0);
+			int value = mb.countDarkPixels(rect, 100);
 			if (original.CONFIGURACAO().MAKE_SUBFOLDER()) {
-				if (!text2.contains(criarSubDiretorio)) {
+				if (value < 30) {
 					logger.info("02 - Selecting 'Criar sub-diretório para cada tipo de arquivo'.");
 					actions.SpaceBar();
 					actions.Wait(1000);
 					changed = true;
-	
+
 				}
-			}
-			else {
-				if (text2.contains(criarSubDiretorio)) {
+			} else {
+				if (value > 30) {
 					logger.info("02 - Deselecting 'Criar sub-diretório para cada tipo de arquivo'.");
 					actions.SpaceBar();
 					actions.Wait(1000);
@@ -559,18 +552,24 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 			actions.Tab();
 			actions.Tab();
 
-			
+			// ------------------------------------------------------------------------------
+			rect = new Rectangle(963, // x
+					507, // y
+					12, // width = 974 - 963 = 11
+					16 // height = 523 - 507 = 16
+			);
+//			mb = new ExtractImageText(Constants.PROGRAM_NAME, 1.0);
+			text = mb.getTextFrom(rect, TessUtils.FIELD_TYPE.NONE);
 			if (original.CONFIGURACAO().NUMBER_DOWNLOAD_SIMULTANEOUS() == 5) {
-				if (!text2.contains(numeroDownloads)) {
+				if (!text.contains(numeroDownloads)) {
 					logger.info("03 - Setting 'Número de downloads simultâneos:' to [5].");
 					actions.Ctrl_A();
 					actions.Paste("5");
 					actions.Wait(1000);
 					changed = true;
 				}
-			}
-			else {
-				if (text2.contains(numeroDownloads)) {
+			} else {
+				if (text.contains(numeroDownloads)) {
 					logger.info("03 - Setting 'Número de downloads simultâneos:' to [1].");
 					actions.Ctrl_A();
 					actions.Paste("1");
@@ -581,18 +580,24 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 			actions.Tab();
 
-			
+			// ------------------------------------------------------------------------------
+			rect = new Rectangle(973, // x
+					558, // y
+					44, // width = 1017 - 973 = 11
+					16 // height = 575 - 558 = 16
+			);
+//			mb = new ExtractImageText(Constants.PROGRAM_NAME, 1.0);
+			text = mb.getTextFrom(rect, TessUtils.FIELD_TYPE.NONE);
 			if (original.CONFIGURACAO().MINUTES_FOR_NEXT_ORDER_UPDATE() == 60) {
-				if (!text2.contains(atualizacaoPedidos)) {
+				if (!text.contains(atualizacaoPedidos)) {
 					logger.info("04 - Setting 'Atualização de pedidos (em minutos)' to [60].");
 					actions.Ctrl_A();
 					actions.Paste("60");
 					actions.Wait(1000);
 					changed = true;
 				}
-			}
-			else {
-				if (text2.contains(atualizacaoPedidos)) {
+			} else {
+				if (text.contains(atualizacaoPedidos)) {
 					logger.info("04 - Setting 'Atualização de pedidos (em minutos)' to [10].");
 					actions.Ctrl_A();
 					actions.Paste("10");
@@ -603,18 +608,45 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 			actions.Tab();
 
-			if (!text2.contains(salvarLog)) {
-				logger.info("05 - Selecting 'Salvar log para depuração.");
-				actions.SpaceBar();
-				actions.Wait(1000);
-				actions.Tab();
+			// ------------------------------------------------------------------------------
+			rect = new Rectangle(784, // x
+					614, // y
+					10, // width = 795 - 784 = 11
+					11 // height = 626 - 614 = 12
+			);
+//			mb = new ExtractImageText(Constants.PROGRAM_NAME, 1.0);
+			value = mb.countDarkPixels(rect, 100);
+			if (original.CONFIGURACAO().SAVE_LOG()) {
+				if (value < 30) {
+					logger.info("05 - Selecting 'Salvar log para depuração.");
+					actions.SpaceBar();
+					actions.Wait(1000);
+					actions.Tab();
+					changed = true;
+				}
 
-				logger.info("06 - Changing the path to [{}].", salvarLogEm);
-				actions.Ctrl_A();
-				actions.Paste(salvarLogEm);
-				actions.Wait(1000);
-				changed = true;
+				rect = new Rectangle(784, // x
+						632, // y
+						256, // width = 1040 - 783 = 257
+						21 // height = 654 - 632 = 22
+				);
+//				mb = new ExtractImageText(Constants.PROGRAM_NAME, 1.0);
+				text = mb.getTextFrom(rect, TessUtils.FIELD_TYPE.TEXT);
+				if (!text.contains(salvarLogEm)) {
+					logger.info("06 - Changing the path to [{}].", salvarLogEm);
+					actions.Ctrl_A();
+					actions.Paste(salvarLogEm);
+					actions.Wait(1000);
+					changed = true;
+				}
+				actions.Tab();
 			} else {
+				if (value > 30) {
+					logger.info("05 - Deselecting 'Salvar log para depuração.");
+					actions.SpaceBar();
+					actions.Wait(1000);
+					changed = true;
+				}
 				actions.Tab();
 			}
 
@@ -627,21 +659,13 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 				actions.Wait(1000);
 
 				mb = new ExtractImageText(Constants.PROGRAM_NAME, 2.0);
-				text2 = mb.getText(1, 1);
-				// logger.info("This is the current Text2 values: {}", text2);
-
-				if (text2.contains(errorMsg)) {
-
-					// actions.SpaceBar();
+				text = mb.getText();
+				if (text.contains(errorMsg)) {
 					logger.warn("ATTENTION! " + errorMsg + "... [" + salvarLogEm + "]");
-
 				} else {
-
 					actions.SpaceBar();
 					logger.info("Parameters fixed with success.");
-
 				}
-
 			} else {
 				// System.out.println("Cancelar");
 				actions.Tab();
@@ -649,7 +673,6 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 				actions.Tab();
 				actions.Tab();
 				actions.SpaceBar();
-
 				logger.info("Parameters already fixed. No change needed.");
 			}
 		}
@@ -835,5 +858,5 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		return result;
 	}
-	
+
 }

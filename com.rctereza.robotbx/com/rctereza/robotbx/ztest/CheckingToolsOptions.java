@@ -18,7 +18,7 @@ public class CheckingToolsOptions {
 
 	private static ReceitaBx original;
 
-	private static String arquivosPastaRaiz = "C:\\Temp\\ReceitanetBX\\";
+	private static String arquivosPastaRaiz = "C:\\Temp\\receitanet\\";
 
 	private static String salvarOsArquivosEm = arquivosPastaRaiz + "Arquivos\\";
 	private static String criarSubDiretorio = "EB Criar sub-diretório para cada tipo de arquivo.";
@@ -70,7 +70,7 @@ public class CheckingToolsOptions {
 		String text = mb.getText(1, 1);
 		logger.info("This is the current Text values: {}", text);
 
-		mb = new ExtractImageText(Constants.PROGRAM_NAME, 4.0);
+		mb = new ExtractImageText(Constants.PROGRAM_NAME, 6.0);
 		String text2 = mb.getText(1, 1);
 		logger.info("This is the current Text2 values: {}", text2);
 

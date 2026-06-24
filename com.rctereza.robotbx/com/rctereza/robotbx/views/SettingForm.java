@@ -290,13 +290,12 @@ public class SettingForm extends JDialog {
 
 			int result = chooser.showOpenDialog(this);
 			if (result == JFileChooser.APPROVE_OPTION) {
-				String path = chooser.getSelectedFile().getAbsolutePath() + "\\";				
+				String path = chooser.getSelectedFile().getAbsolutePath() + "\\";
 				if (path.contains(filesDownloadLocationTextField.getText())) {
 					JOptionPane.showMessageDialog(SettingForm.this,
 							"O dirétorio do Log não pode ser o mesmo que o diretório do Download.\nSelecione outro diretório!",
 							"Atenção", JOptionPane.WARNING_MESSAGE);
-				}
-				else {
+				} else {
 					fileLogLocationTextField.setText(path + "receitanetbx.log");
 				}
 			}
@@ -574,9 +573,9 @@ public class SettingForm extends JDialog {
 			firstAccess = false;
 			List<Setting> deepCopy = list.stream()
 					.map(p -> new Setting(p.SOFTWARE_NAME(), p.SOFTWARE_PATH(), p.SOFTWARE_PROGRAM(),
-							p.DOWNLOAD_FOLDER(), p.LOG_FOLDER(), p.SAVE_FOLDER(), p.MAKE_SUBFOLDER(), p.AUTO_DOWNLOAD(),
-							p.NUMBER_DOWNLOAD_SIMULTANEOUS(), p.MINUTES_FOR_NEXT_ORDER_UPDATE(), p.KEEP_WHICH_FILES(),
-							p.DATA_UPDATED()))
+							p.DOWNLOAD_FOLDER(), p.SAVE_FOLDER(), p.LOG_FOLDER(), p.SAVE_LOG(), p.MAKE_SUBFOLDER(),
+							p.AUTO_DOWNLOAD(), p.NUMBER_DOWNLOAD_SIMULTANEOUS(), p.MINUTES_FOR_NEXT_ORDER_UPDATE(),
+							p.KEEP_WHICH_FILES(), p.DATA_UPDATED()))
 					.collect(Collectors.toCollection(ArrayList::new)); // collect() generates a list that can be changed
 			// .toList(); // toList() generates a list that cannot be changed (immutable)
 			return deepCopy.getFirst();
@@ -588,8 +587,8 @@ public class SettingForm extends JDialog {
 				logger.error(e.getMessage(), e);
 			}
 			return new Setting(Constants.PROGRAM_NAME, Constants.PROGRAM_PATH, Constants.PROGRAM_COMMAND,
-					Constants.PROGRAM_DOCUMENTS_PATH, Constants.PROGRAM_LOG_PATH, Constants.PROGRAM_SAVEDFILES_PATH,
-					Constants.PROGRAM_MAKE_SUBFOLDER, Constants.PROGRAM_AUTO_DOWNLOAD,
+					Constants.PROGRAM_DOCUMENTS_PATH, Constants.PROGRAM_SAVEDFILES_PATH, Constants.PROGRAM_LOG_PATH,
+					true, Constants.PROGRAM_MAKE_SUBFOLDER, Constants.PROGRAM_AUTO_DOWNLOAD,
 					Constants.PROGRAM_NUMBER_DOWNLOAD_SIMULTANEOUS, Constants.PROGRAM_MINUTES_FOR_NEXT_ORDER_UPDATE,
 					KeepWhichFiles.ALL, false);
 		}
@@ -613,35 +612,38 @@ public class SettingForm extends JDialog {
 
 	private List<Setting> getList() {
 
+		List<Setting> result = new ArrayList<>();
+		
 		String SOFTWARE_NAME = softwareNameTextField.getText();
 		String SOFTWARE_PATH = softwareLocationTextField.getText();
 		String SOFTWARE_PROGRAM = (softwareLocationJarComboBox.getSelectedItem() != null
 				? softwareLocationJarComboBox.getSelectedItem().toString()
 				: "");
 		String DOWNLOAD_FOLDER = filesDownloadLocationTextField.getText();
-		String LOG_FOLDER = fileLogLocationTextField.getText();
 		String SAVE_FOLDER = moveFileToNewLocationAfterConclusionTextField.getText();
+		String LOG_FOLDER = fileLogLocationTextField.getText();
+		Boolean SAVE_LOG = false;
 		KeepWhichFiles KEEP_WHICH_FILES = (filesToKeepAfterConclusionAll.isSelected() ? KeepWhichFiles.ALL
 				: KeepWhichFiles.ONLY_AMEND);
 
 		Boolean MAKE_SUBFOLDER = makeSubFolderForEachFileTypeDefaultCheckBox.isSelected();
-		;
 		Boolean AUTO_DOWNLOAD = downloadFilesAutomaticallyDefaultCheckBox.isSelected();
 		Integer NUMBER_DOWNLOAD_SIMULTANEOUS = (Integer) numberOfSimultaneousDownloadsDefaultSpinner.getValue();
 		Integer MINUTES_FOR_NEXT_ORDER_UPDATE = (Integer) orderUpdatesPerMinuteDefaultSpinner.getValue();
 
 		if (recommendedSettingRadio.isSelected()) {
+			SAVE_LOG = true;
 			MAKE_SUBFOLDER = makeSubFolderForEachFileTypeRecommendedCheckBox.isSelected();
 			AUTO_DOWNLOAD = downloadFilesAutomaticallyRecommendedCheckBox.isSelected();
 			NUMBER_DOWNLOAD_SIMULTANEOUS = (Integer) numberOfSimultaneousDownloadsRecommendedSpinner.getValue();
 			MINUTES_FOR_NEXT_ORDER_UPDATE = (Integer) orderUpdatesPerMinuteRecommendedSpinner.getValue();
 		}
 
-		List<Setting> list = List.of(new Setting(SOFTWARE_NAME, SOFTWARE_PATH, SOFTWARE_PROGRAM, DOWNLOAD_FOLDER,
-				LOG_FOLDER, SAVE_FOLDER, MAKE_SUBFOLDER, AUTO_DOWNLOAD, NUMBER_DOWNLOAD_SIMULTANEOUS,
+		result.add(new Setting(SOFTWARE_NAME, SOFTWARE_PATH, SOFTWARE_PROGRAM, DOWNLOAD_FOLDER,
+				SAVE_FOLDER, LOG_FOLDER, SAVE_LOG, MAKE_SUBFOLDER, AUTO_DOWNLOAD, NUMBER_DOWNLOAD_SIMULTANEOUS,
 				MINUTES_FOR_NEXT_ORDER_UPDATE, KEEP_WHICH_FILES, true));
 
-		return list;
+		return result;
 	}
 
 }

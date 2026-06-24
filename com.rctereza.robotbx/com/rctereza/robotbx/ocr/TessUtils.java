@@ -37,6 +37,10 @@ public class TessUtils {
 	private static final Logger logger = LoggerFactory.getLogger(TessUtils.class);
 	
 	private static Dimension monitorSize;
+	
+	public enum FIELD_TYPE {
+        NONE, NUMERIC, TEXT
+    }
 
 	public static Path prepareTessData() throws IOException {
 
@@ -105,6 +109,38 @@ public class TessUtils {
 		return instance;
 	}
 
+	public static ITesseract getInstance(FIELD_TYPE ft) throws IOException {
+
+		Path dir = prepareTessData();
+
+		ITesseract instance = new Tesseract();
+
+		instance.setDatapath(dir.toString());
+
+		instance.setLanguage("eng+por");
+
+		instance.setOcrEngineMode(1);
+		
+		if (ft == FIELD_TYPE.NONE) {
+			instance.setPageSegMode(6);
+		}
+		else if (ft == FIELD_TYPE.TEXT) {
+			instance.setPageSegMode(7);
+			instance.setVariable(
+					"tessedit_char_whitelist",
+					"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:\\._-/");
+		}		
+		else if (ft == FIELD_TYPE.NUMERIC) {
+			instance.setPageSegMode(8);
+			instance.setVariable(
+			        "tessedit_char_whitelist",
+			        "0123456789");
+		}
+
+		instance.setVariable("user_defined_dpi", "300");
+
+		return instance;
+	}
 
 	public static BufferedImage captureScreen(String windowTitle, Double imageScale) throws IOException, AWTException {
 		
@@ -114,16 +150,16 @@ public class TessUtils {
 		
 		Rectangle captureRect = new Rectangle(screenSize); // full screen
 
-		if (windowTitle != null && !windowTitle.trim().equals("")) {
-			try {
-				WindowDimensions wd = new WindowDimensions(windowTitle);
-				captureRect = wd.getRectangle();
-				monitorSize = wd.getMonitor();
-				logger.info("Found [{}] {}", windowTitle, captureRect);
-			} catch (Exception e) {
-				logger.error("Not found [{}], using full screen instead.\n{}", windowTitle, e.getMessage(), e);
-			}
-		}
+//		if (windowTitle != null && !windowTitle.trim().equals("")) {
+//			try {
+//				WindowDimensions wd = new WindowDimensions(windowTitle);
+//				captureRect = wd.getRectangle();
+//				monitorSize = wd.getMonitor();
+//				logger.info("Found [{}] {}", windowTitle, captureRect);
+//			} catch (Exception e) {
+//				logger.error("Not found [{}], using full screen instead.\n{}", windowTitle, e.getMessage(), e);
+//			}
+//		}
 
 		Robot robot = new Robot();
 
@@ -141,7 +177,7 @@ public class TessUtils {
 
 		if (rect != null) {
 			
-			logger.info("Detected rectangle: {}.", rect);
+//			logger.info("Detected rectangle: {}.", rect);
 
 			// 5. Crop region
 			BufferedImage cropped = screenshot.getSubimage(rect.x, rect.y, rect.width, rect.height);
@@ -206,6 +242,48 @@ public class TessUtils {
 		return imageBigger;
 	}
 
+	public static BufferedImage captureScreenFrom(String windowTitle, Double imageScale, Rectangle rect) throws Exception {
+		
+//		WindowDimensions wd = new WindowDimensions(windowTitle);
+//		Rectangle captureRect = wd.getRectangle();
+//		monitorSize = wd.getMonitor();
+		
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		
+		Rectangle captureRect = new Rectangle(screenSize); // full screen
+
+		logger.info("Found FULL SCREEN [{}] {}/{} - Scale {}", windowTitle, monitorSize, captureRect, imageScale);
+
+		Robot robot = new Robot();
+
+		BufferedImage screenshot = robot.createScreenCapture(captureRect);
+
+		BufferedImage cropped = screenshot.getSubimage(rect.x, rect.y, rect.width, rect.height);
+		
+		//BufferedImage imageRepainted = toGray(cropped);
+
+		//BufferedImage dilated = dilate(cropped);		
+
+		BufferedImage imageBigger = scaleImage(cropped, imageScale);
+
+		//String userDir = System.getProperty(Constants.OCR_SYSTEM_PATH);
+		File dir = new File(Constants.OCR_SYSTEM_PATH);
+		dir.mkdirs();
+
+		// 8. Save the captured image to a file
+		File file = new File(dir, Constants.OCR_IMAGE_NAME);
+		ImageIO.write(imageBigger, "PNG", file);
+
+		logger.info("Screen captured and saved at [{}].",file.getAbsolutePath());
+		
+		// (Optional) Save to verify
+		file = new File(dir, "detected.png");
+		ImageIO.write(screenshot, "PNG", file);
+
+		return imageBigger;
+
+	}
+	
 	public static Dimension getMonitorSize() {
 		return monitorSize;
 	}
@@ -220,6 +298,20 @@ public class TessUtils {
 
 		return gray;
 	}
+	
+//	private static BufferedImage toBlackAndWhite(BufferedImage img) {
+//
+//	    BufferedImage result = new BufferedImage(
+//	    		img.getWidth(),
+//	    		img.getHeight(),
+//	            BufferedImage.TYPE_BYTE_BINARY);
+//
+//	    Graphics2D g = result.createGraphics();
+//	    g.drawImage(img, 0, 0, null);
+//	    g.dispose();
+//
+//	    return result;
+//	}
 
 	private static BufferedImage scaleImage(BufferedImage img, double scale) {
 		int w = (int) (img.getWidth() * scale);
@@ -282,4 +374,36 @@ public class TessUtils {
 		return bestRect;
 	}
 
+//	private static BufferedImage dilate(BufferedImage img) {
+//	    BufferedImage result = new BufferedImage(
+//	            img.getWidth(),
+//	            img.getHeight(),
+//	            BufferedImage.TYPE_BYTE_BINARY);
+//
+//	    for (int y = 1; y < img.getHeight() - 1; y++) {
+//
+//	        for (int x = 1; x < img.getWidth() - 1; x++) {
+//
+//	            boolean black = false;
+//
+//	            for (int dy = -1; dy <= 1; dy++) {
+//	                for (int dx = -1; dx <= 1; dx++) {
+//
+//	                    if ((img.getRGB(x + dx, y + dy) & 0xFFFFFF) == 0) {
+//	                        black = true;
+//	                    }
+//	                }
+//	            }
+//
+//	            result.setRGB(
+//	                    x,
+//	                    y,
+//	                    black
+//	                        ? Color.BLACK.getRGB()
+//	                        : Color.WHITE.getRGB());
+//	        }
+//	    }
+//
+//	    return result;
+//	}
 }

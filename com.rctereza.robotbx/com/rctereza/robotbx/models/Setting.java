@@ -9,8 +9,9 @@ public record Setting(
 		, String  SOFTWARE_PATH
 		, String  SOFTWARE_PROGRAM
 		, String  DOWNLOAD_FOLDER
-		, String  LOG_FOLDER
 		, String  SAVE_FOLDER
+		, String  LOG_FOLDER
+		, Boolean SAVE_LOG
 		, Boolean MAKE_SUBFOLDER
 		, Boolean AUTO_DOWNLOAD
 		, Integer NUMBER_DOWNLOAD_SIMULTANEOUS
@@ -21,7 +22,7 @@ public record Setting(
 		implements Serializable, Wrappable {
 
 	public Setting() {
-		this(null, null, null, null, null, null, null, null, null, null, null, null);
+		this(null, null, null, null, null, null, null, null, null, null, null, null, null);
 	}
 	
 	public enum KeepWhichFiles {

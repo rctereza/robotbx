@@ -88,6 +88,29 @@ public class ValidateDate {
 		return result;
 	}
 	
+	public static boolean isLessOrEqualThanToday(String dateStr) {
+		boolean result = true;
+
+		LocalDate today = LocalDate.now();
+
+		try {
+			// Parse strings into LocalDate objects
+			LocalDate date = LocalDate.parse(dateStr, DTF);
+
+			// Compare dates
+			if (date.isAfter(today)) {
+				result = false;
+			}
+
+		} catch (DateTimeParseException e) {
+			//logger.error(e.getMessage(), e);
+			result = false;
+		}
+
+		return result;
+	}
+	
+	
 	public static Date convertStringToDate(String dateStr) {
 		Date date = null;
 		try {

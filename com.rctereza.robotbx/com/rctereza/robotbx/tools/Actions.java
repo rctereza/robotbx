@@ -109,6 +109,14 @@ public class Actions {
 		robot.delay(defaultDelay);
 	}
 
+	public void Alt_F() {
+		robot.keyPress(KeyEvent.VK_ALT);
+		robot.keyPress(KeyEvent.VK_F);
+		robot.keyRelease(KeyEvent.VK_F);
+		robot.keyRelease(KeyEvent.VK_ALT);
+		robot.delay(defaultDelay);
+	}
+
 	public void Ctrl_A() {
 		robot.keyPress(KeyEvent.VK_CONTROL);
 		robot.keyPress(KeyEvent.VK_A);
