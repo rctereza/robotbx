@@ -431,7 +431,7 @@ public class ProcuratorForm extends JDialog {
 
 		SwingUtilities.invokeLater(() -> passwordField.requestFocusInWindow());
 
-		int option = JOptionPane.showConfirmDialog(null, passwordField, "Informe a senha do certificado",
+		int option = JOptionPane.showConfirmDialog(ProcuratorForm.this, passwordField, "Informe a senha do certificado",
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 		if (option == JOptionPane.OK_OPTION) {

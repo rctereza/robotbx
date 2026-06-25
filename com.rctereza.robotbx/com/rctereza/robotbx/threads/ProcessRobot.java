@@ -46,6 +46,8 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 	private ReceitaBx original;
 	private Dimension monitor;
+	private Boolean updateSetting;
+	private Boolean monitorMoved;
 
 	private String ULTIMO_PEDIDO_SOLICITADO = "";
 	private String DATA_HORA_CONCLUSAO_PROCESSAMENTO = "";
@@ -56,8 +58,10 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 	private Rectangle targetMonitorBounds;
 
-	public ProcessRobot(ReceitaBx original) {
+	public ProcessRobot(ReceitaBx original, Boolean updateSetting) {
 		this.original = original;
+		this.updateSetting = updateSetting;
+		monitorMoved = false;
 	}
 
 	@Override
@@ -148,7 +152,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		int NUMBER_OF_ATTEMPTS = 0;
 
-		Thread.sleep(6000); // pause for six seconds
+		Thread.sleep(10000); // pause for 10 seconds
 
 		Actions actions = new Actions();
 
@@ -427,9 +431,9 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 								Class<ProcessRobot> clazz = ProcessRobot.class;
 
-								Constructor<ProcessRobot> constructor = clazz.getConstructor(ReceitaBx.class);
+								Constructor<ProcessRobot> constructor = clazz.getConstructor(ReceitaBx.class, Boolean.class);
 
-								ProcessRobot obj = constructor.newInstance(original);
+								ProcessRobot obj = constructor.newInstance(original, updateSetting);
 
 								Method method = clazz.getDeclaredMethod(rmg.MESSAGE(), Robot.class, Actions.class);
 
@@ -479,6 +483,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	@SuppressWarnings("unused")
 	private boolean CheckMonitorResolution(Actions actions) {
 		if (ScreenResolution.moveAppTo1920x1080Monitor()) {
+			monitorMoved = true;
 			targetMonitorBounds = ScreenResolution.getTargetMonitorBounds();
 			actions.Wait(3000);
 //			logger.debug("Monitor: {}",targetMonitorBounds);
@@ -490,8 +495,8 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 	@SuppressWarnings("unused")
 	private void CheckMenuOptions(Robot robot, Actions actions) throws Exception {
 
-		if (original.CONFIGURACAO().DATA_UPDATED()) {
-
+		if (updateSetting) {
+			
 			logger.info("Checking the parameters of the menu Tools / Options");
 
 			String salvarOsArquivosEm = original.CONFIGURACAO().DOWNLOAD_FOLDER();
@@ -504,7 +509,19 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 			actions.Alt_F();
 			actions.Enter();
+			actions.Wait(1000);
 
+			if (monitorMoved) {
+				ScreenResolution.moveAppTo1920x1080Monitor();
+//				int absoluteX = targetMonitorBounds.x + rc.VALUEX();
+//				int absoluteY = targetMonitorBounds.y + rc.VALUEY();
+//				logger.debug(
+//						"CALCULATION -> boundX {} + relativeX {} = absoluteY {}, boundY {} + relativeY {} = absoluteY {}",
+//						targetMonitorBounds.x, rc.VALUEX(), absoluteX, targetMonitorBounds.y,
+//						rc.VALUEY(), absoluteY);
+//				actions.Move(absoluteX, absoluteY);
+			}
+			
 			// ------------------------------------------------------------------------------
 			Rectangle rect = new Rectangle(789, // x
 					408, // y

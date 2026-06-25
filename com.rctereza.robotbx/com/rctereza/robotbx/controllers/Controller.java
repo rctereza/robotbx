@@ -29,6 +29,8 @@ public class Controller {
 	
 	private static String sourceFolder;
 	private static String targetFolder;
+	
+	private static Boolean updateSetting;
 
 	public void startRobot(Ref<List<ReceitaBx>> list) throws InterruptedException, ExecutionException, IOException {
 
@@ -45,11 +47,13 @@ public class Controller {
 				if (i == 0) {
 					sourceFolder = params.CONFIGURACAO().DOWNLOAD_FOLDER();
 					targetFolder = params.CONFIGURACAO().SAVE_FOLDER() + "\\" + params.PROCURADOR().CLIENTE();
+					updateSetting = params.CONFIGURACAO().DATA_UPDATED();
 					
 					logger.info("Deleting all files/folders in the directory ({}) before the downloading starts....", sourceFolder);
 					FileUtils.emptyDirectory(sourceFolder);
 					
 				} else {
+					updateSetting = false;
 					logger.info("Waiting 5 seconds before starting to process the next item...");
 					Thread.sleep(5000);
 				}
@@ -60,7 +64,7 @@ public class Controller {
 						params.TIPO_ARQUIVO(), params.TIPO_PESQUISA(), params.ULTIMO_PEDIDO_SOLICITADO(),
 						params.DATA_HORA_CONCLUSAO_PROCESSAMENTO());
 
-				var future = executor.submit(new ProcessRobot(params));
+				var future = executor.submit(new ProcessRobot(params,updateSetting));
 
 				ReceitaBx updated = future.get();
 

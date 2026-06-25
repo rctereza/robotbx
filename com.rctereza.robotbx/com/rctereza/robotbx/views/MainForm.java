@@ -465,8 +465,7 @@ public class MainForm extends JFrame {
 
 					if (systemSearchFieldsPanel != null && systemSearchFieldsPanel.isShowing()) {
 						panelMain.remove(systemSearchFieldsPanel);
-						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, systemSearchType,
-								receitaBx);
+						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, systemSearchType, getItem());
 						panelMain.add(systemSearchFieldsPanel, "cell 0 13, span, grow, wrap");
 						panelMain.revalidate();
 						panelMain.repaint();
@@ -955,11 +954,11 @@ public class MainForm extends JFrame {
 			profileTypeValueTextField.setValue(receitaBx.PERFIL_VALUE());
 		}
 
+		populateGrid();
+
 		systemComboBox.setSelectedItem(receitaBx.SISTEMA());
 		systemFileTypeComboBox.setSelectedItem(receitaBx.TIPO_ARQUIVO());
 		systemSearchTypeComboBox.setSelectedItem(receitaBx.TIPO_PESQUISA());
-
-		populateGrid();
 
 		isConfigurationOkay();
 	}
@@ -1282,6 +1281,45 @@ public class MainForm extends JFrame {
 			}
 		}
 
+		return result;
+	}
+	
+	private ReceitaBx getItem() {
+		
+		ReceitaBx result = null;
+		
+		String sistema = systemComboBox.getSelectedItem().toString();
+		String tipoArquivo = systemFileTypeComboBox.getSelectedItem().toString();
+		String tipoPesquisa = systemSearchTypeComboBox.getSelectedItem().toString();
+		
+		for (int row = 0; row < tableModel.getRowCount(); row++) {
+
+			if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema)
+					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString()
+							.equals(tipoArquivo)
+					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa")).toString()
+							.equals(tipoPesquisa)) {
+
+				result = receitaBxList.get(row);
+				break;
+			}
+		}
+		
+		if (result == null) {
+
+			for (int row = 0; row < tableModel.getRowCount(); row++) {
+
+				if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema)
+						&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString()
+								.equals(tipoArquivo)) {
+
+					result = receitaBxList.get(row);
+					break;
+				}
+			}
+			
+		}
+		
 		return result;
 	}
 

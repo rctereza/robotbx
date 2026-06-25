@@ -141,7 +141,7 @@ public class SettingForm extends JDialog {
 		softwareLocationLabel = new JLabel("Diretório de Instalação:");
 
 		softwareLocationTextField = new JTextField();
-		softwareLocationTextField.setText(originalSetting.SOFTWARE_PATH());
+		softwareLocationTextField.setText(originalSetting.SOFTWARE_PATH());	
 		softwareLocationTextField.setEnabled(false);
 		softwareLocationTextField.setToolTipText(FOLDER_TOOLTIP);
 		softwareLocationTextField.addMouseListener(new java.awt.event.MouseAdapter() {

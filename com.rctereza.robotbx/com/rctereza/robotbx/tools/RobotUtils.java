@@ -410,6 +410,7 @@ public class RobotUtils {
 		commands.clear();
 		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.MOVE, 687, 611, null, null, robotCommandEnabled));
+		commands.add(new RobotCommand(1, Command.WAIT, null, null, 2000, null, robotCommandEnabled));
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 		actions.add(new RobotAction(counter += 10, "Marque todos o resultado da pesquisa", false, null, false, 0, 0,
 				false, false, true, new ArrayList<>(commands)));
@@ -478,7 +479,7 @@ public class RobotUtils {
 		commands.add(new RobotCommand(1, Command.CLICK, null, null, null, null, robotCommandEnabled));
 
 		actions.add(new RobotAction(counter += 10, "Clicar no botão 'Baixar'", true, new ArrayList<>(messages), true,
-				6000, 50, true, true, true, new ArrayList<>(commands)));
+				5000, 100, true, true, true, new ArrayList<>(commands)));
 
 		return actions;
 	}
