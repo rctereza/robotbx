@@ -82,7 +82,7 @@ public class Controller {
 				
 				if (list.get().getFirst().CONFIGURACAO().KEEP_WHICH_FILES().equals(Setting.KeepWhichFiles.ONLY_AMEND)) {
 					logger.info("Keeping only the last file/amended on this new location ({})....", targetFolder);
-					keepOnlyAmendedFiles(targetFolder);
+					//keepOnlyAmendedFiles(targetFolder);
 				}
 			}
 		}
@@ -107,23 +107,36 @@ public class Controller {
 
 		Map<String, ReceitaFile> objects = new HashMap<>();
 
+		String[] values = null;
+		String FILE_NAME = null;
+		String FILE_PATH = null;
+		String FILE_EXTENSION = null;
+		String FILE_SHORT_NAME = null;
+		String DOCUMENT_NAME = null;
+		String DOCUMENT_PERIOD_FROM = null;
+		String DOCUMENT_PERIOD_TO = null;
+		String DOCUMENT_CODE = null;
+		String DOCUMENT_TYPE = null;
+		String DOCUMENT_DATETIME_SENT = null;
+		String DOCUMENT_KEY = null;
+		
 		for (String name : files) {
 
-			String[] values = name.substring(name.lastIndexOf("\\") + 1).split("_");
+			values = name.substring(name.lastIndexOf("\\") + 1).split("_");
 
-			String FILE_NAME = name.substring(name.lastIndexOf("\\") + 1);
-			String FILE_PATH = name.substring(0, name.lastIndexOf("\\") + 1);
-			String FILE_EXTENSION = FILE_NAME.substring(FILE_NAME.lastIndexOf("."));
-			String FILE_SHORT_NAME = FILE_NAME.indexOf("Retificadora") > 0
+			FILE_NAME = name.substring(name.lastIndexOf("\\") + 1);
+			FILE_PATH = name.substring(0, name.lastIndexOf("\\") + 1);
+			FILE_EXTENSION = FILE_NAME.substring(FILE_NAME.lastIndexOf("."));
+			FILE_SHORT_NAME = FILE_NAME.indexOf("Retificadora") > 0
 					? FILE_NAME.substring(0, FILE_NAME.indexOf("Retificadora"))
 					: FILE_NAME.substring(0, FILE_NAME.indexOf("Original"));
-			String DOCUMENT_NAME = values[0];
-			String DOCUMENT_PERIOD_FROM = values[1];
-			String DOCUMENT_PERIOD_TO = values[2];
-			String DOCUMENT_CODE = values[3];
-			String DOCUMENT_TYPE = values[4];
-			String DOCUMENT_DATETIME_SENT = values[5];
-			String DOCUMENT_KEY = values[6].substring(0, values[6].lastIndexOf("."));
+			DOCUMENT_NAME = values[0];
+			DOCUMENT_PERIOD_FROM = values[1];
+			DOCUMENT_PERIOD_TO = values[2];
+			DOCUMENT_CODE = values[3];
+			DOCUMENT_TYPE = values[4];
+			DOCUMENT_DATETIME_SENT = values[5];
+			DOCUMENT_KEY = values[6].substring(0, values[6].lastIndexOf("."));
 
 			objects.put(FILE_SHORT_NAME + DOCUMENT_DATETIME_SENT,
 					new ReceitaFile(FILE_NAME, FILE_PATH, FILE_EXTENSION, FILE_SHORT_NAME + DOCUMENT_DATETIME_SENT,

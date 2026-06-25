@@ -912,7 +912,7 @@ public class MainForm extends JFrame {
 
 		this.add(panelMain);
 
-		setSize(1200, 800);
+		setSize(1200, 810);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setResizable(false);
