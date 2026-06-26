@@ -152,7 +152,7 @@ public class ProcessRobot implements Callable<ReceitaBx> {
 
 		int NUMBER_OF_ATTEMPTS = 0;
 
-		Thread.sleep(10000); // pause for 10 seconds
+		Thread.sleep(10000); // pause for 10 seconds to allow the program to be fully loaded.
 
 		Actions actions = new Actions();
 
