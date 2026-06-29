@@ -1168,6 +1168,35 @@ public class MainForm extends JFrame {
 //				}
 			}
 		}
+		
+		if (result.toString().equals("")) {
+			Boolean found = false; 
+
+			String[] valuesAvailabled = {
+					"SPED Contribuições|Escrituração|Período da Escrituração",
+					"SPED ECF|Escrituração|Período da Escrituração",
+					"SPED Contabil|Dados Agregados de Escrituração Contábil Digital|Por Período da Escrituração",
+					"SPED Contabil|Escrituração Contábil Digital|Por Período da Escrituração",
+					"SPED Fiscal-EFD ICMS IPI|Escrituração Fiscal Digital|Por Período da Escrituração"					
+					};
+			
+			for (String value : valuesAvailabled) {
+			
+				String[] values = value.split("|");
+				
+				if (systemComboBox.getSelectedItem().toString().equals(values[0]) &&
+					systemFileTypeComboBox.getSelectedItem().toString().equals(values[1]) &&
+					systemSearchTypeComboBox.getSelectedItem().toString().equals(values[2])) {
+					found = true;
+					break;
+				}
+			}
+			
+			if (!found) {
+				result.append("A pesquisa de arquivos selecionada não está disponivel.");
+			}
+			
+		}
 
 		return result.toString();
 	}
