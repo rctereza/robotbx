@@ -886,12 +886,12 @@ public class MainForm extends JFrame {
 		panelMain.add(customerComboBox, "pushx, growx, wrap");
 		panelMain.add(customerDocumentLabel, "left, sg 1");
 		panelMain.add(customerDocumentTextField, "pushx, growx, wrap");
-		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 		panelMain.add(profileLabel, "left, sg 1");
 		panelMain.add(profileContribuinte, "split");
 		panelMain.add(profileProcurador);
 		panelMain.add(profileTypeComboBox);
 		panelMain.add(profileTypeValueTextField, "wrap");
+		panelMain.add(new JSeparator(JSeparator.HORIZONTAL), "span, grow, wrap, gapy 5 5");
 		panelMain.add(systemLabel, "left, sg 1");
 		panelMain.add(systemComboBox, "wrap");
 		panelMain.add(systemFileTypeLabel, "left, sg 1");
