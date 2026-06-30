@@ -181,6 +181,8 @@ public class MainForm extends JFrame {
 
 	private JMenuItem setting;
 
+	private boolean reprocess;
+
 	public MainForm() throws Exception {
 		super(softwareNameAndVersion);
 
@@ -465,7 +467,8 @@ public class MainForm extends JFrame {
 
 					if (systemSearchFieldsPanel != null && systemSearchFieldsPanel.isShowing()) {
 						panelMain.remove(systemSearchFieldsPanel);
-						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, systemSearchType, getItem());
+						systemSearchFieldsPanel = SpedUtils.getSearchFields(system, systemFileType, systemSearchType,
+								getItem());
 						panelMain.add(systemSearchFieldsPanel, "cell 0 13, span, grow, wrap");
 						panelMain.revalidate();
 						panelMain.repaint();
@@ -652,6 +655,7 @@ public class MainForm extends JFrame {
 				row = itemsTable.convertRowIndexToModel(row);
 			}
 			tableModel.setValueAt(Status.PENDING, row, getModelColumnIndex("Status"));
+			reprocess = true;
 		});
 
 		JMenuItem deleteItem = new JMenuItem("Remover");
@@ -788,7 +792,7 @@ public class MainForm extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				if (isConfigurationOkay()) {
-					
+
 					if (isTheProgramClosed()) {
 
 						if (tableModel.getRowCount() == 0) {
@@ -811,7 +815,7 @@ public class MainForm extends JFrame {
 
 							list = new Ref<>(getListOfFiles());
 
-							saveListOfFiles(list.get());
+							saveListOfFiles(list.get(), false);
 
 							controller.startRobot(list);
 
@@ -849,7 +853,7 @@ public class MainForm extends JFrame {
 						} finally {
 							if (list != null) {
 								updateGridStatusColumn(list.get());
-								saveListOfFiles(list.get());
+								saveListOfFiles(list.get(), true);
 							}
 						}
 
@@ -918,6 +922,8 @@ public class MainForm extends JFrame {
 	}
 
 	public void init() {
+
+		reprocess = false;
 
 		receitaBxList = Main.getAppData().getLastListAdded(ReceitaBx.class);
 
@@ -998,13 +1004,14 @@ public class MainForm extends JFrame {
 
 		String derbyHiddenFolder = userHome + "\\ReceitanetBX\\db.lck";
 		String derbyHiddenFolderRenamed = derbyHiddenFolder + "1";
-		
+
 		Path source = Paths.get(derbyHiddenFolder);
 		Path target = Paths.get(derbyHiddenFolderRenamed);
 
 		try {
 			Files.move(source, target);
-			//If no error happens it means the program is closed, so we must revert it back to the original name
+			// If no error happens it means the program is closed, so we must revert it back
+			// to the original name
 			Files.move(target, source);
 		} catch (IOException e) {
 			logger.warn("{}", e.getMessage());
@@ -1111,8 +1118,7 @@ public class MainForm extends JFrame {
 					DATA_INICIO = Objects.requireNonNullElse(formattedTextField.getValue(), "").toString();
 					if (!ValidateDate.isValidDate(DATA_INICIO)) {
 						result.append("Favor informar uma data inicial válida. [" + DATA_INICIO + "]\n");
-					}
-					else if (!ValidateDate.isLessOrEqualThanToday(DATA_INICIO)) {
+					} else if (!ValidateDate.isLessOrEqualThanToday(DATA_INICIO)) {
 						result.append("Favor informar uma data inicial que seja menor ou igual a data atual.\n");
 					}
 				} else if (formattedTextField.getName().equals(SpedSearchField.DATA_FIM.getValue())) {
@@ -1122,8 +1128,7 @@ public class MainForm extends JFrame {
 					} else {
 						if (!ValidateDate.isValidRange(DATA_INICIO, DATA_FIM)) {
 							result.append("Favor informar uma data inicial que seja anterior a data final.\n");
-						}
-						else if (!ValidateDate.isLessOrEqualThanToday(DATA_FIM)) {
+						} else if (!ValidateDate.isLessOrEqualThanToday(DATA_FIM)) {
 							result.append("Favor informar uma data final que seja menor ou igual a data atual.\n");
 						}
 					}
@@ -1168,34 +1173,35 @@ public class MainForm extends JFrame {
 //				}
 			}
 		}
-		
-		if (result.toString().equals("")) {
-			Boolean found = false; 
 
-			String[] valuesAvailabled = {
-					"SPED Contribuições|Escrituração|Período da Escrituração",
+		if (result.toString().equals("")) {
+			Boolean found = false;
+
+			String[] valuesAvailabled = { "SPED Contribuições|Escrituração|Período da Escrituração",
 					"SPED ECF|Escrituração|Período da Escrituração",
 					"SPED Contabil|Dados Agregados de Escrituração Contábil Digital|Por Período da Escrituração",
 					"SPED Contabil|Escrituração Contábil Digital|Por Período da Escrituração",
-					"SPED Fiscal-EFD ICMS IPI|Escrituração Fiscal Digital|Por Período da Escrituração"					
-					};
-			
+					"SPED Fiscal-EFD ICMS IPI|Escrituração Fiscal Digital|Por Período da Escrituração" };
+
 			for (String value : valuesAvailabled) {
-			
-				String[] values = value.split("|");
-				
-				if (systemComboBox.getSelectedItem().toString().equals(values[0]) &&
-					systemFileTypeComboBox.getSelectedItem().toString().equals(values[1]) &&
-					systemSearchTypeComboBox.getSelectedItem().toString().equals(values[2])) {
+
+				String[] values = value.split("\\|");
+
+				if (systemComboBox.getSelectedItem().toString().equals(values[0])
+						&& systemFileTypeComboBox.getSelectedItem().toString().equals(values[1])
+						&& systemSearchTypeComboBox.getSelectedItem().toString().equals(values[2])) {
 					found = true;
 					break;
 				}
 			}
-			
+
 			if (!found) {
-				result.append("A pesquisa de arquivos selecionada não está disponivel.");
+				result.append("A pesquisa selecionada não está disponivel para uso no sistema.\n\n");
+				result.append("Sistema.: ").append(systemComboBox.getSelectedItem().toString()).append("\n");
+				result.append("Arquivo..: ").append(systemFileTypeComboBox.getSelectedItem().toString()).append("\n");
+				result.append("Pesquisa: ").append(systemSearchTypeComboBox.getSelectedItem().toString()).append("\n");
 			}
-			
+
 		}
 
 		return result.toString();
@@ -1312,20 +1318,19 @@ public class MainForm extends JFrame {
 
 		return result;
 	}
-	
+
 	private ReceitaBx getItem() {
-		
+
 		ReceitaBx result = null;
-		
+
 		String sistema = systemComboBox.getSelectedItem().toString();
 		String tipoArquivo = systemFileTypeComboBox.getSelectedItem().toString();
 		String tipoPesquisa = systemSearchTypeComboBox.getSelectedItem().toString();
-		
+
 		for (int row = 0; row < tableModel.getRowCount(); row++) {
 
 			if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema)
-					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString()
-							.equals(tipoArquivo)
+					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString().equals(tipoArquivo)
 					&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Pesquisa")).toString()
 							.equals(tipoPesquisa)) {
 
@@ -1333,33 +1338,33 @@ public class MainForm extends JFrame {
 				break;
 			}
 		}
-		
+
 		if (result == null) {
 
 			for (int row = 0; row < tableModel.getRowCount(); row++) {
 
-				if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema)
-						&& tableModel.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString()
-								.equals(tipoArquivo)) {
+				if (tableModel.getValueAt(row, getModelColumnIndex("Sistema")).toString().equals(sistema) && tableModel
+						.getValueAt(row, getModelColumnIndex("Tipo de Arquivo")).toString().equals(tipoArquivo)) {
 
 					result = receitaBxList.get(row);
 					break;
 				}
 			}
-			
+
 		}
-		
+
 		return result;
 	}
 
 	private void emptyGrid() {
-		for (int row = 0; row < tableModel.getRowCount(); row++) {
-			tableModel.removeRow(row);
-		}
+//		logger.debug("emptyGrid()");
+		tableModel.setRowCount(0);
 		rowDynamicData.clear();
 	}
 
 	private void populateGrid() {
+
+//		logger.debug("populateGrid()");
 
 		emptyGrid();
 
@@ -1405,6 +1410,8 @@ public class MainForm extends JFrame {
 			}
 
 			addRowToGrid(status, sistema, tipoArquivo, tipoPesquisa, dynamicFields);
+
+			logger.debug("addRowToGrid({},{},{},{})", status, sistema, tipoArquivo, tipoPesquisa);
 		}
 
 	}
@@ -1650,12 +1657,12 @@ public class MainForm extends JFrame {
 					}
 				}
 
-				result.add(new ReceitaBx(SCREEN, CONFIGURACAO, CERTIFICADO.get(), PROCURADOR, PERFIL,
-						PERFIL_TYPE, PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM,
-						CNPJ_INCORPORADORA, TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO,
-						BUSCAR_TODOS_ESTABLECIMENTOS, INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO,
-						ULTIMO_PEDIDO_SOLICITADO, DATA_HORA_CONCLUSAO_PROCESSAMENTO, MENSAGEM_CONCLUSAO_PROCESSAMENTO,
-						PERIODOS_FALTANDO, TOTAL_PERIODOS_FALTANDO, STATUS));
+				result.add(new ReceitaBx(SCREEN, CONFIGURACAO, CERTIFICADO.get(), PROCURADOR, PERFIL, PERFIL_TYPE,
+						PERFIL_VALUE, SISTEMA, TIPO_ARQUIVO, TIPO_PESQUISA, DATA_INICIO, DATA_FIM, CNPJ_INCORPORADORA,
+						TIPO_EVENTO, BAIXAR_ARQUIVO_ASSINADO, CNPJ_ESTABELECIMENTO, BUSCAR_TODOS_ESTABLECIMENTOS,
+						INSCRICAO_ESTADUAL, ULTIMO_ARQUIVO_TRANSMITIDO, ULTIMO_PEDIDO_SOLICITADO,
+						DATA_HORA_CONCLUSAO_PROCESSAMENTO, MENSAGEM_CONCLUSAO_PROCESSAMENTO, PERIODOS_FALTANDO,
+						TOTAL_PERIODOS_FALTANDO, STATUS));
 			}
 		}
 
@@ -1664,7 +1671,7 @@ public class MainForm extends JFrame {
 		return result;
 	}
 
-	private void saveListOfFiles(List<ReceitaBx> list) {
+	private void saveListOfFiles(List<ReceitaBx> list, Boolean updateSettings) {
 
 		logger.info("Saving customer data...");
 
@@ -1672,32 +1679,48 @@ public class MainForm extends JFrame {
 			Main.getAppData().setSequence(ReceitaBx.class, Main.getAppData().nextSequence(ReceitaBx.class));
 		}
 
-		Main.getAppData().addList(ReceitaBx.class, Main.getAppData().getSequence(ReceitaBx.class), list);
+		if (!reprocess) {
+			Main.getAppData().addList(ReceitaBx.class, Main.getAppData().getSequence(ReceitaBx.class), list);
+		} else {
+			for (ReceitaBx obj1 : list) {
+				for (ReceitaBx obj2 : receitaBxList) {
+					if (obj1.SISTEMA().equals(obj2.SISTEMA()) && obj1.TIPO_ARQUIVO().equals(obj2.TIPO_ARQUIVO())
+							&& obj1.TIPO_PESQUISA().equals(obj2.TIPO_PESQUISA())) {
+						
+					}
+				}
+			}
+		}
 
 		Main.saveAppData();
 
 		logger.info("Customer data was saved with success.");
-		
+
 		receitaBxList = Main.getAppData().getLastListAdded(ReceitaBx.class);
-		
-		if (receitaBxList.getLast().CONFIGURACAO().DATA_UPDATED() == false) {
-			
-			logger.info("Saving setting data...");
-			
-			List<Setting> settingList = Main.getAppData().getLastListAdded(Setting.class);
-			
-			Setting setting = settingList.getLast();
-			
-			settingList.set(settingList.size() - 1, new Setting(setting.SOFTWARE_NAME(), setting.SOFTWARE_PATH(), setting.SOFTWARE_PROGRAM(), setting.DOWNLOAD_FOLDER(),
-					setting.SAVE_FOLDER(), setting.LOG_FOLDER(), setting.SAVE_LOG(), setting.MAKE_SUBFOLDER(), setting.AUTO_DOWNLOAD(), setting.NUMBER_DOWNLOAD_SIMULTANEOUS(),
-					setting.MINUTES_FOR_NEXT_ORDER_UPDATE(), setting.KEEP_WHICH_FILES(), false));
-			
-			Main.getAppData().addList(Setting.class, Main.getAppData().getSequence(Setting.class), settingList);
 
-			Main.saveAppData();
-			
-			logger.info("Setting data was saved with success.");
+		if (!reprocess && updateSettings) {
 
+			if (receitaBxList.getLast().CONFIGURACAO().DATA_UPDATED() == false) {
+
+				logger.info("Saving setting data...");
+
+				List<Setting> settingList = Main.getAppData().getLastListAdded(Setting.class);
+
+				Setting setting = settingList.getLast();
+
+				settingList.set(settingList.size() - 1,
+						new Setting(setting.SOFTWARE_NAME(), setting.SOFTWARE_PATH(), setting.SOFTWARE_PROGRAM(),
+								setting.DOWNLOAD_FOLDER(), setting.SAVE_FOLDER(), setting.LOG_FOLDER(),
+								setting.SAVE_LOG(), setting.MAKE_SUBFOLDER(), setting.AUTO_DOWNLOAD(),
+								setting.NUMBER_DOWNLOAD_SIMULTANEOUS(), setting.MINUTES_FOR_NEXT_ORDER_UPDATE(),
+								setting.KEEP_WHICH_FILES(), false));
+
+				Main.getAppData().addList(Setting.class, Main.getAppData().getSequence(Setting.class), settingList);
+
+				Main.saveAppData();
+
+				logger.info("Setting data was saved with success.");
+			}
 		}
 	}
 
@@ -1826,7 +1849,7 @@ public class MainForm extends JFrame {
 
 		newCustomer.setEnabled(false);
 		historic.setEnabled(false);
-		
+
 		JMenu fileMenu = new JMenu("Menu");
 		fileMenu.setMnemonic(KeyEvent.VK_M);
 		fileMenu.add(newCustomer);
